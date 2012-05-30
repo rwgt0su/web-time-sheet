@@ -1,4 +1,6 @@
 <?php
+
+//establish connetcion to DB
 $mysqli = new mysqli("localhost", "web", "10paper", "test");
 if ($mysqli->connect_errno) {
     echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
