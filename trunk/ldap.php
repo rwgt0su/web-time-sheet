@@ -1,6 +1,10 @@
 <?php
 
-// using ldap bind
+  /* script to authenticate using ldap bind */
+  
+if ( !isset($_POST['user']) || !isset($_POST['pass']) )
+    echo $_SERVER['PHP_SELF'];
+
 $ldaprdn  = $_POST['user'] . '@sheriff.mahoning.local';     // ldap rdn or dn
 $ldappass = $_POST['pass'];  // associated password
 
@@ -8,7 +12,7 @@ $ldappass = $_POST['pass'];  // associated password
 $ldapconn = ldap_connect("10.1.35.110")
     or die("Could not connect to LDAP server.");
 
-echo $ldaprdn;
+  echo $ldaprdn . "</br>";
 
 if ($ldapconn)
   {
