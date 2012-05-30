@@ -1,14 +1,17 @@
 <?php
 
   /* script to authenticate using ldap bind */
-  
-if (!isset($_POST['user']) || !isset($_POST['pass']))
-{
-  echo "One or more fields blank. Bound anonymously</br>";
-}
 
 $ldaprdn  = $_POST['user'] . '@sheriff.mahoning.local';     // ldap rdn or dn
 $ldappass = $_POST['pass'];  // associated password
+
+if (isset($_POST['Submit']))
+    echo "Submit button pressed!";
+
+if (!isset($ldaprdn) || !isset($ldappass))
+{
+  echo "One or more fields blank. Bound anonymously</br>";
+}
 
 // connect to ldap server
 $ldapconn = ldap_connect("10.1.35.110")
