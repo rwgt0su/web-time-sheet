@@ -13,7 +13,7 @@ if ($mysqli->connect_errno) {
 
 $ID=$_POST['ID'];
 
-$myq = "SELECT * FROM EMPLOYEE WHERE ID=$ID";
+$myq = "SELECT * FROM EMPLOYEE WHERE ID='" . $ID . "';";
 $result = $mysqli->query($myq);
 ?>
 
