@@ -7,6 +7,7 @@
 
 //show errors
 error_reporting(E_ALL);
+ini_set("display_errors", 1);
 
 //establish connetcion to DB
 $mysqli = new mysqli("localhost", "web", "10paper", "PAYROLL");
@@ -25,13 +26,17 @@ Contents of employee table</br>
 <table border="1">
 <tr>
 <?php
-$numOfCols = mysql_num_fields($result);
+$numOfCols = $mysqli->field_count;
+echo "Columns:" . $numOfCols . "/<br>";
 //$numOfRows = mysql_num_rows($result);
 
-for($i=0; $numOfCols > $i+1; $i++)
+while($finfo = mysqli_fetch_field($result))
+    echo "<th>" . $finfo->name . "</th>";
+
+/*for($i=0; $numOfCols > $i; $i++)
 {
 echo "<th>" . mysql_field_name($result, $i) . "</th>";
-}
+}*/
 ?>
     
 </tr>
