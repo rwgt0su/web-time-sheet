@@ -47,10 +47,10 @@ echo "<th>" . mysql_field_name($result, $i) . "</th>";
 $fieldCounter=0;
 
 $result->data_seek(0);  //moves internal pointer to 0, fetch starts here
-while ($row = $result->fetch_assoc()) //fetch assoc array && pointer++
+while ($row = $result->fetch_array(MYSQLI_NUM)) //fetch num array && pointer++
    {
-    $fieldName=mysql_field_name($result, $fieldCounter);
-	 echo "<td>${row["$fieldName"]}</td>";
+    
+	 echo "<td>${row["$fieldCounter"]}</td>";
          $fieldCounter++;
    }
 ?>
