@@ -5,6 +5,9 @@
  * and open the template in the editor.
  */
 
+//show errors
+error_reporting(E_ALL);
+
 //establish connetcion to DB
 $mysqli = new mysqli("localhost", "web", "10paper", "PAYROLL");
 if ($mysqli->connect_errno) {
@@ -14,6 +17,7 @@ if ($mysqli->connect_errno) {
 $ID=$_POST['ID'];
 
 $myq = "SELECT * FROM EMPLOYEE WHERE ID='" . $ID . "';";
+echo $myq . "</br>";
 $result = $mysqli->query($myq);
 ?>
 
