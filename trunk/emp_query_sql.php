@@ -44,14 +44,14 @@ echo "<th>" . mysql_field_name($result, $i) . "</th>";
 <tr>
 <?php
 
-$fieldCounter=0;
-
 $result->data_seek(0);  //moves internal pointer to 0, fetch starts here
 while ($row = $result->fetch_array(MYSQLI_NUM)) //fetch num array && pointer++
    {
-    
+        for($fieldCounter=0; $numOfCols > $fieldCounter; $fieldCounter++)
+        {
 	 echo "<td>${row["$fieldCounter"]}</td>";
-         $fieldCounter++;
+        }
+         
    }
 ?>
 </tr>
