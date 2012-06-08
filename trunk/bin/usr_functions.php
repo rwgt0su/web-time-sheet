@@ -8,13 +8,18 @@ function registerUser($user,$pass1,$pass2, $adminLvl){
 	elseif (strlen($pass1) < 6)
             $errorText = "Password is too short!";
 
-        //Check for user existence
-
         // If everything is OK -> store user data
-        //Hash the password
-	$userpass = md5($pass1);
+        //Hash the password with salt
+	$userpass = saltyHash($pass1);
 
-        //write data: $user, $pass1, $adminLvl
+        //Insert new user record using $user, $pass1, $adminLvl
+        $mysqli = connectToSQL();
+        $myq = "INSERT INTO EMPLOYEE ('ID','PASSWD','ADMINLVL') VALUES
+                 ('".$user."','".$userpass."','".$adminLvl."')";
+        $result = $mysqli->query($myq);
+        
+        if($result)
+            //How to indicate operation successful?
 
     fclose($pfile);
 
@@ -31,12 +36,13 @@ function loginUser($user,$pass){
         $myq="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". $user . "'";
         $result = $mysqli->query($myq);
         
+        //show SQL error msg if query failed
         if (!$result) {
         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
         }
-
         
-        $resultAssoc = $result->fetch_assoc(); //no loop, should be exactly one result
+        //no loop, should be exactly one result
+        $resultAssoc = $result->fetch_assoc(); 
         
 	// Check user existence
         if (strcasecmp($user, $resultAssoc['ID']) == 0) 
@@ -44,12 +50,9 @@ function loginUser($user,$pass){
             $errorText = "User Found";
             $admin = 100;
         
-        /*if (strcmp($user, "user") == 0){
-			$errorText = "User Found";
-			$admin = 100;*/
 
             //check password entry with stored password
-            if (strcmp(trim($resultAssoc['PASSWD']), trim(md5($pass))) == 0)
+            if (strcmp(trim($resultAssoc['PASSWD']), trim(saltyHash($pass))) == 0)
             {
 				$errorText .= " and Valid password ";
                 $_SESSION['userName'] = $user;
@@ -81,9 +84,16 @@ function logoutUser(){
 }
 function delUser($user){
 	$errorText = '';
-
-        //verify user exists
+        
         //remove user from database
+        $mysqli = connectToSQL();
+        $myq="DELETE FROM EMPLOYEE WHERE ID='". $user . "'";
+        $result = $mysqli->query($myq);
+        
+        if(!result)
+            $errorText = "No such user";
+        
+        
 
    return $error;
 }
