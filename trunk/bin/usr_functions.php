@@ -14,9 +14,14 @@ function registerUser($user,$pass1,$pass2, $adminLvl){
 
         //Insert new user record using $user, $pass1, $adminLvl
         $mysqli = connectToSQL();
-        $myq = "INSERT INTO EMPLOYEE ('ID','PASSWD','ADMINLVL') VALUES
+        $myq = "INSERT INTO EMPLOYEE (ID,PASSWD,ADMINLVL) VALUES
                  ('".strtoupper($user)."','".$userpass."','".$adminLvl."')";
         $result = $mysqli->query($myq);
+        
+        //show SQL error msg if query failed
+        if (!$result) {
+        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        }
         
         if($result)
             $errorText = "New user registered successfully.";
