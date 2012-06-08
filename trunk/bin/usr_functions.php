@@ -31,7 +31,7 @@ function loginUser($user,$pass){
         $query="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". $user . "';";
         $result = $mysqli->query($query);
         
-        $resultAssoc = $result->fetch_assoc; //no loop, should be exactly one result
+        $resultAssoc = $result->fetch_assoc(); //no loop, should be exactly one result
         
 	// Check user existence
         if (strcasecmp($user, $resultAssoc['ID']) == 0) 
