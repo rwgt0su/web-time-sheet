@@ -6,9 +6,9 @@ function registerUser($user,$pass1,$pass2, $adminLvl){
 	if ($pass1 != $pass2)
             $errorText = "Passwords are not identical!";
 	elseif (strlen($pass1) < 6)
-            $errorText = "Password is to short!";
+            $errorText = "Password is too short!";
 
-        //Check for user existance
+        //Check for user existence
 
         // If everything is OK -> store user data
         //Hash the password
@@ -26,13 +26,26 @@ function loginUser($user,$pass){
 	$errorText = '';
 	$validUser = false;
 
-	// Check user existance
-        if (strcmp($user, "user") == 0){
+        //user lookup
+        $mysqli=connectToSQL(); 
+        $query="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". $user . "';";
+        $result = $mysqli->query($query);
+        
+        $resultAssoc = $result->fetch_assoc; //no loop, should be exactly one result
+        
+	// Check user existence
+        if (strcasecmp($user, $resultAssoc['ID']) == 0) 
+       {
+            $errorText = "User Found";
+            $admin = 100;
+        
+        /*if (strcmp($user, "user") == 0){
 			$errorText = "User Found";
-			$admin = 100;
+			$admin = 100;*/
 
             //check password entry with stored password
-            if (strcmp(md5(trim("password")), trim(md5($pass))) == 0){
+            if (strcmp(trim($resultAssoc['PASSWD']), trim(md5($pass))) == 0)
+            {
 				$errorText .= " and Valid password ";
                 $_SESSION['userName'] = $user;
                 $_SESSION['admin'] = $admin;
