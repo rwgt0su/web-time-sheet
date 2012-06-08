@@ -13,7 +13,7 @@ require_once 'bin/common.php';
 $ID=$_POST['ID'];
 $pass1=$_POST['pass1'];
 $pass2=$_POST['pass1'];
-$adminLvl=$_POST['sdminLvl'];
+$adminLvl=$_POST['adminLvl'];
 
 $msg = registerUser($ID,$pass1,$pass2,$adminLvl);
 echo $msg;
