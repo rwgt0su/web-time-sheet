@@ -27,4 +27,13 @@
         
 	<p><input type="submit" name="Submit" value="Submit"></p>
 </form>
+<form name="insert" method="post" action="insert_sql.php">
+        <p>This form calls the custom function instead</p>
+        <p>Login ID:<input type="text" name="ID"></p>
+	<p>Password:<input type="password" name="pass1"></p>
+        <p>Re-type password:<input type="password" name="pass2"></p>
+        <p>Admin Level:<input type="text" name="adminLvl"></p>
+        
+        <p><input type="submit" name="Submit" value="Submit"></p>
+</form>
 </body></html>

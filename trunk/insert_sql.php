@@ -8,7 +8,17 @@
 ?>
 
 <?php
+$ID=$_POST['ID'];
+$pass1=$_POST['pass1'];
+$pass2=$_POST['pass1'];
+$adminLvl=$_POST['sdminLvl'];
 
+$msg = registerUser($ID,$pass1,$pass2,$adminLvl);
+echo $msg;
+?>
+
+<?php
+/*
 //establish connetcion to DB
 $mysqli = new mysqli("localhost", "web", "10paper", "PAYROLL");
 if ($mysqli->connect_errno) {
@@ -43,5 +53,5 @@ $result = $mysqli->query($myq);
 
 //if query successful, say so
 if ($result)
-    echo "New record successfully inserted.";
+    echo "New record successfully inserted.";*/
 ?>
