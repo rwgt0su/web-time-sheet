@@ -27,12 +27,12 @@ function loginUser($user,$pass){
 	$validUser = false;
 
         //user lookup
-        $this->mysqli = connectToSQL();
+        $mysqli = connectToSQL();
         $myq="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". $user . "'";
-        $result = $this->mysqli->query($myq);
+        $result = $mysqli->query($myq);
         
         if (!$result) {
-        throw new Exception("Database Error [{$this->mysqli->errno}] {$this->myqsli->error}");
+        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
         }
 
         
