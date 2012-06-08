@@ -27,9 +27,14 @@ function loginUser($user,$pass){
 	$validUser = false;
 
         //user lookup
-        $mysqli=connectToSQL(); 
-        $query="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". $user . "';";
-        $result = $mysqli->query($query);
+        $this->mysqli = connectToSQL();
+        $myq="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". $user . "'";
+        $result = $this->mysqli->query($myq);
+        
+        if (!$result) {
+        throw new Exception("Database Error [{$this->mysqli->errno}] {$this->myqsli->error}");
+        }
+
         
         $resultAssoc = $result->fetch_assoc(); //no loop, should be exactly one result
         
