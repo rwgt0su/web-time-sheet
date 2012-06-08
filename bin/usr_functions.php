@@ -4,9 +4,16 @@ function registerUser($user,$pass1,$pass2, $adminLvl){
 
 	// Check passwords
 	if ($pass1 != $pass2)
+        {
             $errorText = "Passwords are not identical!";
+            return $errorText;   
+        }
 	elseif (strlen($pass1) < 6)
+        { 
             $errorText = "Password is too short!";
+            return $errorText;
+        }
+            
 
         // If everything is OK -> store user data
         //Hash the password with salt
