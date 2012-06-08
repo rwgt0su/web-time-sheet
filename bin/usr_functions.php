@@ -15,14 +15,11 @@ function registerUser($user,$pass1,$pass2, $adminLvl){
         //Insert new user record using $user, $pass1, $adminLvl
         $mysqli = connectToSQL();
         $myq = "INSERT INTO EMPLOYEE ('ID','PASSWD','ADMINLVL') VALUES
-                 ('".$user."','".$userpass."','".$adminLvl."')";
+                 ('".strtoupper($user)."','".$userpass."','".$adminLvl."')";
         $result = $mysqli->query($myq);
         
         if($result)
-            //How to indicate operation successful?
-
-    fclose($pfile);
-
+            $errorText = "New user registered successfully.";
 
 	return $errorText;
 }
@@ -33,7 +30,7 @@ function loginUser($user,$pass){
 
         //user lookup
         $mysqli = connectToSQL();
-        $myq="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". $user . "'";
+        $myq="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". strtoupper($user) . "'";
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
@@ -90,12 +87,12 @@ function delUser($user){
         $myq="DELETE FROM EMPLOYEE WHERE ID='". $user . "'";
         $result = $mysqli->query($myq);
         
-        if(!result)
+        if(!$result)
             $errorText = "No such user";
         
         
 
-   return $error;
+   return $errorText;
 }
 
 function displayLogin(){
