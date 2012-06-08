@@ -49,5 +49,12 @@ function checkAdmin(){
 		header('Location: index.php');
 		}
 }
+function saltyHash($plain){
+    //double hash a salt string, then append it to password, and md5 that
+	$salt = "1Jpt34dM2s49kCy8";
+        $salt = sha1(md5($salt));
+	$cipher = md5($salt.$plain);
+        return $cipher;		
+}
 
 ?>
