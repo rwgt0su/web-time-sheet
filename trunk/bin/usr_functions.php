@@ -1,38 +1,34 @@
 <?php
-function registerUser($user,$pass1,$pass2, $adminLvl){
+function registerUser($user,$pass1,$pass2,$adminLvl){
 	$errorText = '';
-
+ 
 	// Check passwords
-	if ($pass1 != $pass2)
-        {
-            $errorText = "Passwords are not identical!";
-            return $errorText;   
-        }
-	elseif (strlen($pass1) < 6)
-        { 
-            $errorText = "Password is too short!";
-            return $errorText;
-        }
-            
-
+	if (strcmp($pass1, $pass2) != 0){
+		$errorText = "Passwords are not identical!";
+	}
+	elseif (strlen($pass1) < 6){
+		$errorText = "Password is too short!";
+	}
+	else{
         // If everything is OK -> store user data
         //Hash the password with salt
-	$userpass = saltyHash($pass1);
-
-        //Insert new user record using $user, $pass1, $adminLvl
-        $mysqli = connectToSQL();
-        $myq = "INSERT INTO EMPLOYEE (ID,PASSWD,ADMINLVL) VALUES
-                 ('".strtoupper($user)."','".$userpass."','".$adminLvl."')";
-        $result = $mysqli->query($myq);
-        
-        //show SQL error msg if query failed
-        if (!$result) {
-        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        }
-        
-        if($result)
-            $errorText = "New user registered successfully.";
-
+		$userpass = saltyHash($pass1);
+		//popUpMessage("userpass: ".$userpass);
+		
+		//Insert new user record using $user, $pass1, $adminLvl
+		$mysqli = connectToSQL();
+		$myq = "INSERT INTO EMPLOYEE (ID,PASSWD,ADMINLVL) VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."')";
+		$result = $mysqli->query($myq);
+		
+		//show SQL error msg if query failed
+		if (!$result) {
+			throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+		}		
+		else{
+			//User added to database with no error
+			$errorText = NULL;
+		}
+	}
 	return $errorText;
 }
 

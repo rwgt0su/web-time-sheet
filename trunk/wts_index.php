@@ -2,6 +2,7 @@
 
 require_once('bin/common.php');
 
+
 $error = '0';
 $noPass = false;
 $noUser = false;
@@ -48,7 +49,7 @@ if (isset($_POST['submitBtn'])){
 		displayLogin();
 	}
 	
-	displayMenu(); 
+	displayMenu($config); 
 	?>
 	
 <?php	
