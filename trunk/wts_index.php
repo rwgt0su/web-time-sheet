@@ -43,6 +43,7 @@ if (isset($_POST['submitBtn'])){
     <div id="main">
 	<div class="caption"><?php echo $config->getTitle(); ?></div>
 	  <div id="icon3">&nbsp;</div>
+	  <div id="left-menu">
 	<?php 
 	if ((isset($_SESSION['validUser'])) && ($_SESSION['validUser'] == true)){
 		$error = '';
@@ -51,12 +52,11 @@ if (isset($_POST['submitBtn'])){
 	
 	displayMenu($config); 
 	?>
-	
+	</div><div id="result">
 <?php	
  if ($error != '') {
 //First time seeing this screen or Invalid User Input
 ?>
-
       <div class="caption"><?php echo $config->getTitle(); ?></div>
       <div id="icon">&nbsp;</div>
       <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="loginform">
@@ -79,10 +79,12 @@ if (isset($_POST['submitBtn'])){
 	  <div id="result">
 		<br /><?php echo $error; ?><br /><br />
 	</div>
+	
 	<?php
 	}
 }
 ?>
+	</div>
 	<div id="source"><?php echo $config->getVersion(); ?></div>
     </div>
 </body>
