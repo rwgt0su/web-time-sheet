@@ -7,7 +7,7 @@
 <html>
 <head>
     <title><?php echo $config->getTitle(); ?></title>
-	<?php echo '<meta http-equiv="refresh" content="3;url=wts_login.php"/>'; ?>
+	<?php echo '<meta http-equiv="refresh" content="3;url=/"/>'; ?>
    <link href="style/style.css" rel="stylesheet" type="text/css" />
 	<LINK REL="SHORTCUT ICON" HREF="../favicon.ico">
 </head>
