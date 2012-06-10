@@ -31,22 +31,28 @@ session_save_path('/var/www/sessions');
 session_start();
 
 require_once 'bin/usr_functions.php';
+require_once 'bin/usr_display.php';
 require_once 'bin/db_sqli.php';
 require_once 'bin/db_config.php';
 require_once 'bin/db_usr_menu.php';
 
 $config = new Config();
+$config->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : '-1');
 
+function popUpMessage($message){
+	echo '<script type="text/javascript">';
+	echo "alert(\"".$message."\")</script>";
+}
 function checkUser(){
 	if ((!isset($_SESSION['validUser'])) || ($_SESSION['validUser'] != true)){
-		header('Location: login.php');
+		header('Location: /');
 	}
 }
 function checkAdmin(){
 	if ((isset($_SESSION['admin'])) || ($_SESSION['admin'] >= 1)){
 	}
 	else{
-		header('Location: index.php');
+		header('Location: /');
 		}
 }
 function saltyHash($plain){
