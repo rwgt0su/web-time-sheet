@@ -47,10 +47,11 @@ if (isset($_POST['submitBtn'])){
 	<?php 
 	if ((isset($_SESSION['validUser'])) && ($_SESSION['validUser'] == true)){
 		$error = '';
-		displayLogin();
+		displayLogout();
 	}
 	
-	displayMenu($config); 
+	displayMenu(); 
+        displayAdmin($config);
 	?>
 	</div><div id="result">
 <?php	
