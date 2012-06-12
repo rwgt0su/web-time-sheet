@@ -87,6 +87,7 @@ function logoutUser(){
 	
 	session_destroy(); 
 }
+
 function delUser($user){
 	$errorText = '';
         
@@ -103,7 +104,7 @@ function delUser($user){
    return $errorText;
 }
 
-function displayLogin(){
+function displayLogout(){
     	echo '<div id="result" align="right">Logged in as: <font size="3">';
         echo $_SESSION['userName'];
 		echo "</font>";
@@ -111,4 +112,62 @@ function displayLogin(){
         echo "</div>";
 }
 
+function displayLogin($config){
+    if (!isValidUser()){
+        $error = '0';
+    
+        if (isset($_POST['submitBtn'])){
+            $noPass = false;
+            $noUser = false;
+            $username = isset($_POST['username']) ? $_POST['username'] : '';
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+            if(empty($username)) {
+                    $noUser = true;
+            }
+            if(empty($password)){
+                    $noPass = true;
+            }
+
+            // Try to login the user
+            if($noUser && $noPass){
+                    $error = 'Please Provide a Username and Password';
+            }
+            else{
+                    $error = loginUser($username,$password);
+            }
+        } 
+        if ($error != '') {
+            //First time seeing this screen or Invalid User Input
+            ?>
+            <div class="thumbnail"><img src="/style/icon4.gif" alt="" /></div>
+            <h3><?php echo $config->getTitle(); ?></h3>
+            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="loginform">
+                <table width="50%">
+                <tr><td>Username:</td><td> <input class="text" name="username" type="text" 
+                                        <?php echo "value=\"$username\""; if ($noUser) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?> /></td></tr>
+                <tr><td>Password:</td><td> <input class="text" name="password" type="password" 
+                                        <?php if (isset($_POST['submitBtn'])) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?>/></td></tr>
+                <tr><td>&nbsp</td><td>&nbsp</td></tr>
+                <tr><td></td><td align="center"><input style="font-size: 20px;" class="text" type="submit" name="submitBtn" value="Login" /></td></tr>
+                </table>
+                <div class="post_footer">
+                    <div align="center"></div>
+                </div>
+            </form>
+            <?php
+            //User had input but had an error.  Display the error
+            if (isset($_POST['submitBtn'])){        
+                ?>
+                <div class="thumbnail"><img src="/style/icon2.gif" alt="" /></div>  
+                <h3>Error Message:</h3>
+                <p><?php echo $error; ?></p>
+            <?php
+            }
+        } 
+    }
+    else{
+        displayLogout();
+    }
+}
 ?>
