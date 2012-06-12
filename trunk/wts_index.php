@@ -1,92 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 <?php
 
 require_once('bin/common.php');
 
-
-$error = '0';
-$noPass = false;
-$noUser = false;
-if (isset($_POST['submitBtn'])){
-	// Get user input
-	$username = isset($_POST['username']) ? $_POST['username'] : '';
-	$password = isset($_POST['password']) ? $_POST['password'] : '';
-	
-	if(empty($username)) {
-		$noUser = true;
-	}
-	if(empty($password)){
-		$noPass = true;
-	}
-
-	// Try to login the user
-	if($noUser && $noPass){
-		$error = 'Please Provide a Username and Password';
-	}
-	else{
-		$error = loginUser($username,$password);
-	}
-}
-
-
 ?>
-
-
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title><?php echo $config->getTitle(); ?></title>
-   <link href="style/style.css" rel="stylesheet" type="text/css" />
-	<LINK REL="SHORTCUT ICON" HREF="../favicon.ico">
+    <link type="text/css" href="templetes/DarkTemp/styles/reset.css" rel="stylesheet" media="all" />
+    <link type="text/css" href="templetes/DarkTemp/styles/text.css" rel="stylesheet" media="all" />
+    <link type="text/css" href="templetes/DarkTemp/styles/960.css" rel="stylesheet" media="all" />
+    <link type="text/css" href="templetes/DarkTemp/styles/style.css" rel="stylesheet" media="all" />
+    
 </head>
 <body>
-    <div id="main">
-	<div class="caption"><?php echo $config->getTitle(); ?></div>
-	  <div id="icon3">&nbsp;</div>
-	  <div id="left-menu">
-	<?php 
-	if ((isset($_SESSION['validUser'])) && ($_SESSION['validUser'] == true)){
-		$error = '';
-		displayLogout();
-	}
-	
-	displayMenu(); 
-        displayAdmin($config);
-	?>
-	</div><div id="result">
-<?php	
- if ($error != '') {
-//First time seeing this screen or Invalid User Input
-?>
-      <div class="caption"><?php echo $config->getTitle(); ?></div>
-      <div id="icon">&nbsp;</div>
-      <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="loginform">
-        <table width="100%">
-          <tr><td>Username:</td><td> <input class="text" name="username" type="text" 
-				<?php echo "value=\"$username\""; if ($noUser) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?> /></td></tr>
-          <tr><td>Password:</td><td> <input class="text" name="password" type="password" 
-				<?php if (isset($_POST['submitBtn'])) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?>/></td></tr>
-          <tr><td colspan="2" align="center"><input class="text" type="submit" name="submitBtn" value="Login" /></td></tr>
-        </table>
-      </form>
+    <div class="header_cotainer">
+        <div class="container_12">
+            <div class="grid_3">
+                <a href="/" ><h1 class="logo">MCSO</h1></a>
+            </div>
+            <div class="grid_9">
+                <div class="menu_items">                
+                    <a href="/" class="button_link" title="Home">Home</a>
+                    <a href="/" class="button_link" title="Email">Email</a>
+                    <a href="/" class="button_link" title="About">About</a>
 
-      &nbsp
-	<?php
-	if (isset($_POST['submitBtn'])){
-	//User had input but had an error.  Display the error
-	?>
-	  <div class="caption">Error Message:</div>
-	  <div id="icon2">&nbsp;</div>
-	  <div id="result">
-		<br /><?php echo $error; ?><br /><br />
-	</div>
-	
-	<?php
-	}
-}
-?>
-	</div>
-	<div id="source"><?php echo $config->getVersion(); ?></div>
+                    <div class="search">
+                        <input type="text" name="search" />
+                        <input type="submit" name="submit" value="Search" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Content Section -->
+    <div class="content_container">
+        <div class="container_12 content_highlight">
+            <!--Left Menu Section -->
+            <div class="grid_4">
+                <?php displayMenu($config); ?>
+                <div class="divider"></div>
+                <?php displayAdmin($config); ?>
+            </div>
+            
+            <!--Center Content Section -->
+            <div class="grid_8">
+                <!--Content Login Section -->
+                <div class="post">
+                    <?php displayLogin($config); ?>
+                    <div class="clear"></div>
+                </div> 
+             
+                <div class="divider"></div>
+                
+                <!--Content Section -->
+                <?php displayContent($wts_content, $config); ?>
+                
+                <!--Content Post 2 Section -->
+                <!-- <div class="post">
+                    <div class="thumbnail"><a href="#"><img src="templetes/DarkTemp/images/image.jpg" alt="" /></a></div>
+                    <h3><a href="#">Sample Header</a></h3>
+                    <p>Sample content wouuld be placed within this paragraph</p>
+                    <div class="post_footer">
+                        <div class="comments">left column</div>
+                        <div class="more"><a href="#">right column</a></div>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                
+                <div class="divider"></div> -->
+                
+
+                
+               <!--End Content Post Section --> 
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+    
+    <!--Footer Section -->
+    <div class="footer_container">
+        <div class="container_12">
+            <div class="grid_4">© Mahoning County Sheriff's Office 2012</div>
+            <div class="grid_8">
+                <a href="https://www.facebook.com/pages/Mahoning-County-Sheriffs-Office/211950208818335" target="_blank"><img src="templetes/DarkTemp/images/facebook_icon.jpg" alt="" /></a>
+            </div>
+        </div>
     </div>
 </body>
 </html>
