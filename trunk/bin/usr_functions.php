@@ -38,7 +38,8 @@ function loginUser($user,$pass){
 
         //user lookup
         $mysqli = connectToSQL();
-        $myq="SELECT ID, PASSWD FROM EMPLOYEE WHERE ID='". strtoupper($user) . "'";
+        $user = strtoupper($mysqli->real_escape_string($user));
+        $myq="SELECT ID, PASSWD, ADMINLVL FROM EMPLOYEE WHERE ID='". $user . "'";
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
@@ -53,7 +54,7 @@ function loginUser($user,$pass){
         if (strcasecmp($user, $resultAssoc['ID']) == 0) 
        {
             $errorText = "User Found";
-            $admin = 100;
+            $admin = $resultAssoc['ADMINLVL'];
         
 
             //check password entry with stored password
@@ -93,7 +94,7 @@ function delUser($user){
         
         //remove user from database
         $mysqli = connectToSQL();
-        $myq="DELETE FROM EMPLOYEE WHERE ID='". $user . "'";
+        $myq="DELETE FROM EMPLOYEE WHERE ID='". $mysqli->real_escape_string($user) . "'";
         $result = $mysqli->query($myq);
         
         if(!$result)
