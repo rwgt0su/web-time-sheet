@@ -20,7 +20,7 @@ $auditid = strtoupper($_SESSION['userName']);
 
 $myq="INSERT INTO REQUEST (ID, USEDATE, HOURS, TIMETYPEID, NOTE, APPROVE, REQDATE, AUDITID, IP)
         VALUES ('$ID', '$usedate', '$hours', '$type', 
-                '$comment', '0', '$reqdate','$auditid',INET_ATON('${SERVER['REMOTE_ADDR']}'))";
+                '$comment', '0', '$reqdate','$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
 echo $myq; //DEBUG
 $result = $mysqli->query($myq);
 
