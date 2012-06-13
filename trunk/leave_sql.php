@@ -16,7 +16,7 @@ $reqdate = $mysqli->real_escape_string(date("Y-m-d")); //current date in SQL dat
 
 //query to insert the record
 
-$myq="INSERT INTO REQUEST VALUES (ID, USEDATE, HOURS, TIMETYPEID, NOTE, APPROVE, REQDATE)
+$myq="INSERT INTO REQUEST (ID, USEDATE, HOURS, TIMETYPEID, NOTE, APPROVE, REQDATE)
         VALUES ('$ID', '$usedate', '$hours', '$type', '$comment', '0', '$reqdate')";
 popUpMessage($myq); //DEBUG
 $result = $mysqli->query($myq);
