@@ -15,10 +15,10 @@ function connectToSQL(){
  * Pass the link indentifier and the result
  */
 function resultTable($mysqli, $result){
-    echo '<table border="1"><tr>';
 
 $numOfCols = $mysqli->field_count; //get number of columns
 
+echo '<table border="1"><tr>';
 //fetch and write field names
 while($finfo = mysqli_fetch_field($result))
     echo "<th>" . $finfo->name . "</th>"; 

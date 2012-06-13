@@ -14,11 +14,13 @@ $hours = $mysqli->real_escape_string($_POST['hours']);
 $type = $mysqli->real_escape_string($_POST['type']);
 $comment = $mysqli->real_escape_string($_POST['comment']);
 $reqdate = $mysqli->real_escape_string(date("Y-m-d")); //current date in SQL date format YYYY-MM-DD
+$auditid = strtoupper($_SESSION['userName']);
 
 //query to insert the record
 
 $myq="INSERT INTO REQUEST (ID, USEDATE, HOURS, TIMETYPEID, NOTE, APPROVE, REQDATE, AUDITID)
-        VALUES ('$ID', '$usedate', '$hours', '$type', '$comment', '0', '$reqdate','$_SESSION[userName]')";
+        VALUES ('$ID', '$usedate', '$hours', '$type', 
+                '$comment', '0', '$reqdate','$auditid')";
 echo $myq; //DEBUG
 $result = $mysqli->query($myq);
 
