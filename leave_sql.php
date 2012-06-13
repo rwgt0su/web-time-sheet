@@ -4,7 +4,7 @@
  * Insert a new record in REQUEST table from 
  * user-entered form data
  */
-
+require_once 'bin/common.php';
 
 $ID = strtoupper($_POST['ID']);
 $usedate = $_POST['usedate'];
