@@ -8,6 +8,8 @@
 ?>
 
 <?php
+require_once 'bin/common.php';
+
 //query to get currently available types of time 
 $mysqli = connectToSQL();
 $myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE";
