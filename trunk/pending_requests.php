@@ -12,8 +12,10 @@ $myq = "SELECT REFER 'Ref. No.', REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs
             T.DESCR 'Type', NOTE 'Comment', IF(APPROVE=1,'Yes','No') 'Approved?', 
             AUDITID 'Last Mod.', REASON 'Reason' 
         FROM REQUEST R, TIMETYPE T
-        WHERE ID=" . $_SESSION['userName'] .
-        "AND R.TIMETYPEID=T.TIMETYPEID";
+        WHERE ID='" . $_SESSION['userName'] .
+        "' AND R.TIMETYPEID=T.TIMETYPEID";
+echo $myq . "</br>"; //DEBUG
+
 $result = $mysqli->query($myq);
 if (!$result) 
 throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
