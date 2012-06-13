@@ -44,6 +44,8 @@ switch($admin) {
 
         //build table
         resultTable($mysqli, $result);
+        echo '</hr>';
+        resultForm($mysqli, $result);
         break;
         
 }

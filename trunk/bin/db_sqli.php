@@ -39,4 +39,31 @@ while ($row = $result->fetch_array(MYSQLI_NUM))
 echo '</tr></table>';
 }
 
+function resultForm($mysqli, $result){
+
+$numOfCols = $mysqli->field_count; //get number of columns
+
+echo '<table border="1"><tr>';
+//fetch and write field names
+while($finfo = mysqli_fetch_field($result))
+    echo "<th>" . $finfo->name . "</th>"; 
+
+echo '</tr>'; //end the table heading record
+echo '<form>';
+$result->data_seek(0);  
+while ($row = $result->fetch_array(MYSQLI_NUM))
+   {
+    echo '<tr>'; //begin data record
+        for($fieldCounter=0; $numOfCols > $fieldCounter; $fieldCounter++)
+        {
+	 echo "<td><input type='text' name='$fieldCounter' value='${row["$fieldCounter"]}'></td>";
+        } //loop through fields
+    echo '</tr>'; //end data record
+    echo '<tr><input type="submit" value="Save" /></tr>';
+   } //loop through records
+
+echo '</tr></table>';
+echo '</form>';
+}
+
 ?>
