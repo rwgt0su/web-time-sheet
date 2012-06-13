@@ -5,19 +5,20 @@
  * user-entered form data
  */
 require_once 'bin/common.php';
+$mysqli = connectToSQL();
 
-$ID = strtoupper($_POST['ID']);
-$usedate = $_POST['usedate'];
-$hours = $_POST['hours'];
-$type = $_POST['type'];
-$comment = $_POST['comment'];
-$reqdate = date("YY-MM-DD"); //current date in SQL date format YYYY-MM-DD
+$ID = $mysqli->real_escape_string(strtoupper($_POST['ID']));
+$usedate = $mysqli->real_escape_string($_POST['usedate']);
+$hours = $mysqli->real_escape_string($_POST['hours']);
+$type = $mysqli->real_escape_string($_POST['type']);
+$comment = $mysqli->real_escape_string($_POST['comment']);
+$reqdate = $mysqli->real_escape_string(date("YY-MM-DD")); //current date in SQL date format YYYY-MM-DD
 
 //query to insert the record
-$mysqli = connectToSQL();
+
 $myq="INSERT INTO REQUEST VALUES (ID, USEDATE, HOURS, TIMETYPEID, NOTE, APPROVE, REQDATE)
         VALUES ('$ID', '$usedate', '$hours', '$type', '$comment', '0', $reqdate)";
-$myq = $mysqli->real_escape_string($myq);
+popUpMessage($myq); //DEBUG
 $result = $mysqli->query($myq);
 
 //show SQL error msg if query failed
