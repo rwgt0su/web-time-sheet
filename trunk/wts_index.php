@@ -24,7 +24,7 @@ require_once('bin/common.php');
             <div class="grid_9">
                 <div class="menu_items">                
                     <a href="/" class="button_link" title="Home">Home</a>
-                    <a href="/" class="button_link" title="Email">Email</a>
+                    <a href="/" class="button_link" title="Email">Email 2</a>
                     <a href="/" class="button_link" title="About">About</a>
 
                     <div class="search">
