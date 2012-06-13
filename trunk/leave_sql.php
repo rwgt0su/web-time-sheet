@@ -8,7 +8,8 @@ require_once 'bin/common.php';
 $mysqli = connectToSQL();
 
 $ID = $mysqli->real_escape_string(strtoupper($_POST['ID']));
-$usedate = $mysqli->real_escape_string($_POST['usedate']);
+$usedate = new DateTime($mysqli->real_escape_string($_POST['usedate']));
+$usedate->format("Y-m-d"); //format user's date properly
 $hours = $mysqli->real_escape_string($_POST['hours']);
 $type = $mysqli->real_escape_string($_POST['type']);
 $comment = $mysqli->real_escape_string($_POST['comment']);
