@@ -58,8 +58,8 @@ while ($row = $result->fetch_array(MYSQLI_NUM))
         {
 	 echo "<td><input type='text' name='$fieldCounter' value='${row["$fieldCounter"]}'></td>";
         } //loop through fields
+    echo '<td><input type="submit" value="Save" /></td>';
     echo '</tr>'; //end data record
-    echo '<tr><input type="submit" value="Save" /></tr>';
    } //loop through records
 
 echo '</tr></table>';
