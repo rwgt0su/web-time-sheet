@@ -41,6 +41,9 @@ echo '</tr></table>';
 
 function resultForm($mysqli, $result){
 
+if (isset($_POST['editBtn']))
+    $modquery="UPDATE";
+    
 $numOfCols = $mysqli->field_count; //get number of columns
 
 echo '<table border="1"><tr>';
@@ -49,7 +52,11 @@ while($finfo = mysqli_fetch_field($result))
     echo "<th>" . $finfo->name . "</th>"; 
 
 echo '</tr>'; //end the table heading record
-echo '<form>';
+?>
+
+<form action="<?php echo $_SERVER['PHP_SELF']; ?>?saveBtn=true" method="post" name="saveBtn">
+<?
+//make each
 $result->data_seek(0);  
 while ($row = $result->fetch_array(MYSQLI_NUM))
    {
@@ -58,12 +65,12 @@ while ($row = $result->fetch_array(MYSQLI_NUM))
         {
 	 echo "<td><input type='text' name='$fieldCounter' value='${row["$fieldCounter"]}'></td>";
         } //loop through fields
-    echo '<td><input type="submit" value="Save" /></td>';
+    echo '<td><input type="submit" name="saveBtn" value="Save" /></td>';
     echo '</tr>'; //end data record
    } //loop through records
-
-echo '</tr></table>';
-echo '</form>';
+?>
+</tr></table>
+</form>
 }
 
-?>
+
