@@ -18,7 +18,7 @@ $reqdate = $mysqli->real_escape_string(date("Y-m-d")); //current date in SQL dat
 
 $myq="INSERT INTO REQUEST (ID, USEDATE, HOURS, TIMETYPEID, NOTE, APPROVE, REQDATE)
         VALUES ('$ID', '$usedate', '$hours', '$type', '$comment', '0', '$reqdate')";
-popUpMessage($myq); //DEBUG
+echo $myq; //DEBUG
 $result = $mysqli->query($myq);
 
 //show SQL error msg if query failed
