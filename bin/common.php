@@ -94,21 +94,21 @@ function showDynamicTable($tableName, $rowArray){
     // left cell
     var cellLeft = row.insertCell(0);
     var textNode = document.createTextNode(iteration);
-    cellLeft.appendChild(textNode);
+    //cellLeft.appendChild(textNode);
 
     // right cell
-    var cellRight = row.insertCell(1);
+    //var cellRight = row.insertCell(1);
     
     <?php
     //New Row to Add based on passed values
-    $columnCount = 1;
+    $columnCount = 0;
     foreach ($rowArray as $column){
         echo "var newCode".$columnCount." = ";
         echo '"<input type=\"text\"size=\"10\"name=\"'.$column.$columnCount.'\" value=\"\" />"';        
             echo ";\n";
         $columnCount = $columnCount + 1;
     }
-    for ($i = 1; $i < $columnCount; $i++){
+    for ($i = 0; $i < $columnCount; $i++){
         echo "\n row.insertCell(".$i.").innerHTML = newCode".$i.";";
     }
     ?>

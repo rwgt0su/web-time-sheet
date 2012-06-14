@@ -17,7 +17,7 @@ a {
 }
 
     h1.logo {
-        background: url(../images/logo.gif) no-repeat;
+        background: url(../images/logo.jpg) no-repeat;
         display: block;
         width: 300px;
         height: 70px;
@@ -30,27 +30,44 @@ a {
 
         .menu_items a {
             display: block;
-            text-align: center;
-            font-size: 22px;
+            text-indent: -9999px;
             width: 96px;
             height: 36px;
             margin: 17px 12px 0 0;
             float: left;
         }
 
-        a.button_link {
-            background: url(../images/button.jpg) no-repeat;  
-            text-decoration: none;
-            font-weight: bold;
-            color: #FFF;
+        a.home_link {
+            background: url(../images/home.jpg) no-repeat;        
         }
-        
 
-
-        a.button_link:hover {
-           background: url(../images/button_h.jpg) no-repeat;       
+        a.home_link:hover {
+            background: url(../images/home_h.jpg) no-repeat;        
         }
-        
+
+        a.blog_link {
+            background: url(../images/blog.jpg) no-repeat;        
+        }
+
+        a.blog_link:hover {
+            background: url(../images/blog_h.jpg) no-repeat;        
+        }
+
+        a.about_link {
+            background: url(../images/about.jpg) no-repeat;        
+        }
+
+        a.about_link:hover {
+            background: url(../images/about_h.jpg) no-repeat;        
+        }
+
+        a.contact_link {
+            background: url(../images/contact.jpg) no-repeat;        
+        }
+
+        a.contact_link:hover {
+            background: url(../images/contact_h.jpg) no-repeat;        
+        }
 
         .search {
             display: block;
@@ -58,7 +75,7 @@ a {
             width: 200px;
             height: 36px;
             margin: 17px 0 0 0;
-            background: url(../images/search.jpg) no-repeat;
+            background: url(../images/search.kjpg) no-repeat;
         }
 
             .search input[type=text] {
@@ -80,7 +97,6 @@ a {
                 cursor: pointer;
             }
 
-
 .content_container {
     width: 100%;
     min-height: 524px;
@@ -93,11 +109,13 @@ a {
         min-height: 524px;
         display: block;
         background-position: center top;
+        width: 30px;
     }
 
         .content_highlight .grid_4 {
             background: url(../images/divider_ver.jpg) repeat-y;
             background-position: right top;
+            width: 20px;
             padding: 20px 0 0 0;
             min-height: 524px;
         }
@@ -123,7 +141,7 @@ a {
             
                 .content_highlight ul li:hover {
                     background: #000;
-                    padding-left: 35px;
+                    padding-left: 30px;
                 }
 
                 .content_highlight ul li a {
@@ -135,13 +153,13 @@ a {
             display: block;
             height: 3px;
             background: url(../images/divider_hor.jpg) repeat-x;
-            margin: 0 2px 25px 0;
+            margin: 0 2px 5px 0;
         }
 
             .content_highlight .grid_4 .thumbnail {
                 background: #000;
-                width: 72px;
-                height: 72px;
+                width: 30px;
+                height: 20px;
                 float: left;
                 display: block;
                 margin: 0 20px 12px 0;
@@ -160,7 +178,7 @@ a {
                 }
 
                 .content_highlight .grid_4 .thumbnail img {
-                    width: 63px;
+                    width: 30px;
                     height: 63px;
                     border: 1px solid #272626;
                     margin: 4px 0 0 4px;
@@ -171,7 +189,7 @@ a {
                     }
 
         .content_highlight .grid_8 {
-            padding: 20px 0 0 0;
+            padding: 20px 0 0 0px;
         }
 
             .content_highlight .grid_8 .divider {
@@ -193,20 +211,6 @@ a {
             display: block;
             clear: both;
         }
-        
-        .content_highlight .post table {
-            border: 1px solid #cccccc;
-            
-        }
-        
-        .content_highlight .post table td {
-            border: 1px solid #cccccc;
-            padding: 4px;
-        }
-        
-        .content_highlight .post table tr {
-            border: 1px solid #cccccc;
-        } 
 
             .content_highlight .post .thumbnail {
                 background: #000;
