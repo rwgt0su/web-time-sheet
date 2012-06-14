@@ -58,7 +58,7 @@ function resultTable($mysqli, $result, $action){
 
     echo '</tr></table>';
     
-    if($isEditBtn)
-    showDynamicTable('pending',$fieldNameArray); 
+    //if($isEditBtn)
+    //showDynamicTable('pending',$fieldNameArray); 
 
     }

@@ -228,8 +228,13 @@ if (!$result)
         ?>
                </select></td>
         <td><input type="text" name="comment"></td></tr>
-
+        </table>
+       <?php 
+       $fieldNameArray = array('ID','usedate','hours','type','comment');
+        
+       ?>
 	<p><input type="submit" name="submit" value="Submit"></p>
+        <?php showDynamicTable('leave',$fieldNameArray); ?>
 </form>
 </body></html>
 <?php //} ?>
@@ -285,11 +290,20 @@ if (isset($_POST['saveBtn'])) {
     for ($i=0; $i < $numOfCols; $i++)
         $newValue[$i] = $_POST["$i"];
 
-$updateQuery="UPDATE REQUEST 
+switch($admin) {
+    case 0:
+        $updateQuery="UPDATE REQUEST 
+            SET TIMETYPEID='$newValue[4]', USEDATE='$newValue[2]', HOURS='$newValue[3]',
+            NOTE='$newValue[5]', AUDITID='${_SESSION['userName']}'
+            WHERE REFER='$newValue[0]'";
+    case 100:
+        $updateQuery="UPDATE REQUEST 
             SET TIMETYPEID='$newValue[2]', USEDATE='$newValue[4]', HOURS='$newValue[5]',
             NOTE='$newValue[6]', APPROVE='$newValue[7]', REASON='$newValue[8]',
             AUDITID='${_SESSION['userName']}'
             WHERE REFER='$newValue[0]'";
+        break;
+}
 $result = $mysqli->query($updateQuery);
 if (!$result) 
 throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
