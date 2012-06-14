@@ -1,6 +1,7 @@
 <?php
 
-/*
+/*NOTE: THIS FILE IS NOW UNNECESSARY
+ * IT IS CONTAINED WITHIN LEAVE_FORM
  * Insert a new record in REQUEST table from 
  * user-entered form data
  */
