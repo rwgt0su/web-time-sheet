@@ -349,9 +349,9 @@ function displayLeaveApproval(){
         $numOfCols = $mysqli->field_count;
 
         //build table
-        resultTable($mysqli, $result, '/?pending=true');
+        resultTable($mysqli, $result, '/?approve=true');
         ?>
-        <form action="/?pending=true" method="post" name="editBtn">
+        <form action="/?approve=true" method="post" name="editBtn">
             <p><input type="submit" name="editBtn" value="Edit"></p></form>
         <hr>
         <table>
@@ -375,13 +375,13 @@ function displayLeaveApproval(){
             for ($j=0; $i > $j; $j++) {
                 $check = $check . $j;
                 $reason = $reason . $j;
-                if (!strcmp(${_POST['$check']},'1')) {
+                if (!strcmp($_POST['$check'],'1')) {
                     $approveQuery="UPDATE REQUEST 
-                                    SET APPROVE='".${_POST['$check']}."',
-                                        REASON='".${_POST['$reason']}"'.
+                                    SET APPROVE='".$_POST['$check']."',
+                                        REASON='".$_POST['$reason']."'.
                                     WHERE REFER='$refs[$j]'";   
                     $approveResult = $mysqli->query($approveQuery);
-                    if (!$approveRresult) 
+                    if (!$approveResult) 
                         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
                 }
             }
