@@ -5,6 +5,7 @@ Class wts_content {
     public $isDBTest;
     public $isLeaveForm;
     public $isPending;
+    public $isLeaveApproval;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -13,6 +14,7 @@ Class wts_content {
         $this->isDBTest = isset($_GET['dbtest']) ? $_GET['dbtest'] : false;
         $this->isLeaveForm = isset($_GET['leave']) ? $_GET['leave'] : false;
         $this->isPending = isset($_GET['pending']) ? $_GET['pending'] : false;
+        $this->isLeaveApproval = isset($_GET['approve']) ? $_GET['approve'] : false;
     }
     
     public function isWelcome(){
