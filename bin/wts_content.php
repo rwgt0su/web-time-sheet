@@ -21,6 +21,11 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayPendingRequests(); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
+    if($wts_content->isLeaveApproval){
+        ?>
+        <div class="post"><?php displayLeaveApproval(); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
     /*if(false){}
     else{
         ?>
@@ -292,10 +297,12 @@ if (isset($_POST['saveBtn'])) {
 
 switch($admin) {
     case 0:
-        $updateQuery="UPDATE REQUEST 
-            SET TIMETYPEID='$newValue[4]', USEDATE='$newValue[2]', HOURS='$newValue[3]',
+        $updateQuery="UPDATE REQUEST R, TIMETYPE T
+            SET R.TIMETYPEID = T.TIMETYPEID,  USEDATE='$newValue[2]', HOURS='$newValue[3]',
             NOTE='$newValue[5]', AUDITID='${_SESSION['userName']}'
-            WHERE REFER='$newValue[0]'";
+            WHERE REFER='$newValue[0]'
+            AND T.DESCR ='$newValue[4]'";
+            break;
     case 100:
         $updateQuery="UPDATE REQUEST 
             SET TIMETYPEID='$newValue[2]', USEDATE='$newValue[4]', HOURS='$newValue[5]',
@@ -314,3 +321,74 @@ throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     <p><input type="submit" name="editBtn" value="Edit"></p></form>
 
 <?php } ?>
+
+<?php
+function displayLeaveApproval(){   
+    /*
+    * A report of recent leave requests with
+    * different views according to admin level
+    */
+    $admin = $_SESSION['admin'];
+    if($admin > 0) { 
+
+        $mysqli = connectToSQL();
+
+        $myq = "SELECT REFER 'Ref. No.', REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs',
+                        T.DESCR 'Type', NOTE 'Comment', IF(APPROVE=1,'Yes','No') 'Approved?', 
+                        AUDITID 'Last Mod.', REASON 'Reason' 
+                    FROM REQUEST R, TIMETYPE T
+                    WHERE ID='" . $_SESSION['userName'] .
+                    "' AND R.TIMETYPEID=T.TIMETYPEID";
+
+
+
+        $result = $mysqli->query($myq);
+        if (!$result) 
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+
+        $numOfCols = $mysqli->field_count;
+
+        //build table
+        resultTable($mysqli, $result, '/?pending=true');
+        ?>
+        <form action="/?pending=true" method="post" name="editBtn">
+            <p><input type="submit" name="editBtn" value="Edit"></p></form>
+        <hr>
+        <table>
+            <form action="/?approve=true" method="post" name="approveBtn">
+            <tr><th>Ref #</th><th>Approve?</th><th>Reason</th></tr>
+            <?php
+            $refs = array();
+            for ($i = 0; $assoc = $result->fetch_assoc(); $i++) {
+                $refs[$i] = $assoc['REFER'];
+                echo "<tr><td>'$refs[$i]'</td>
+                    <td><input type='checkbox' name='check$i' value='1' /></td>
+                    <td><input type='text' name='reason$i'></td>";
+            }
+            ?>
+            <p><input type="submit" name="approveBtn" value="Approve"></p>
+            </form>
+        </table>
+
+        <?php 
+        if (isset($_POST['approveBtn'])) {
+            for ($j=0; $i > $j; $j++) {
+                $check = $check . $j;
+                $reason = $reason . $j;
+                if (!strcmp(${_POST['$check']},'1')) {
+                    $approveQuery="UPDATE REQUEST 
+                                    SET APPROVE='".${_POST['$check']}."',
+                                        REASON='".${_POST['$reason']}"'.
+                                    WHERE REFER='$refs[$j]'";   
+                    $approveResult = $mysqli->query($approveQuery);
+                    if (!$approveRresult) 
+                        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+                }
+            }
+        }
+
+    }
+    else
+        echo "Permission Denied.";
+}
+?>
