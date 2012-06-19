@@ -36,6 +36,11 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayInsertUser(); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
+    if($wts_content->isUserMenu){
+        ?>
+        <div class="post"><?php displayUserMenu($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
     if($wts_content->isLogout()){
         logoutUser("You have logged out");
     }
