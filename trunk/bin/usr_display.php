@@ -1,4 +1,31 @@
-<?php     
+<?php    
+function displayUserMenu($config){	
+	if (isset($_GET['ChangeBtn'])){
+		displayPassChange(false, false);
+	}
+	else if (isset($_GET['AddUserBtn'])){
+		displayPassChange(true, true);
+	}
+	else if (isset($_GET['EditUserBtn'])){
+		displayPassChange(true, false);
+	}
+	else if (isset($_GET['DelUserBtn'])){
+		displayDelUser();
+	} 
+	else{ ?>
+		<div id="icon">&nbsp;</div>
+		<h3>User Management Menu</h3>
+		<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&ChangeBtn=true">Change Your Password</a><br />
+		<?php 
+		if($config->getAdmin() >= 75){ 
+			?>
+			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&AddUserBtn=true">Add Users</a><br />
+			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&EditUserBtn=true">Edit Users</a><br />
+			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&DelUserBtn=true">Remove User</a><br />
+		<?php 
+		}
+	}
+}	
 function displayPassChange($useAdmin, $addUser){
 	$error = '';
 	$adminLvl = 75;
