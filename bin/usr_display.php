@@ -15,9 +15,9 @@ function displayUserMenu($config){
 	else{ ?>
 		<div id="icon">&nbsp;</div>
 		<h3>User Management Menu</h3>
-		<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&ChangeBtn=true">Change Your Password</a><br />
+		<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&ChangeBtn=true">Change Your Password</a><br />
 		<?php 
-		if($config->getAdmin() >= 75){ 
+		if($config->adminLvl >= 75){ 
 			?>
 			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&AddUserBtn=true">Add Users</a><br />
 			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&EditUserBtn=true">Edit Users</a><br />
