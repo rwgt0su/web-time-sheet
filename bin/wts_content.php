@@ -1,6 +1,11 @@
 <?php
 
 function displayContent($wts_content, $config){
+    if($wts_content->isHome){
+        ?>
+        <div class="post"><?php displayWelcome($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
     if($wts_content->isWelcome()){
         ?>
         <div class="post"><?php displayWelcome($config); ?><div class="clear"></div></div><div class="divider"></div>
