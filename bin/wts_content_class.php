@@ -15,6 +15,7 @@ Class wts_content {
         $this->isLeaveForm = isset($_GET['leave']) ? $_GET['leave'] : false;
         $this->isPending = isset($_GET['pending']) ? $_GET['pending'] : false;
         $this->isLeaveApproval = isset($_GET['approve']) ? $_GET['approve'] : false;
+        $this->isInsertUser = isset($_GET['newuser']) ? $_GET['newuser'] : false;
     }
     
     public function isWelcome(){

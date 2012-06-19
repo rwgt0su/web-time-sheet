@@ -15,11 +15,14 @@ function connectToSQL(){
  * Pass the link indentifier and the result
  */
 //build an HTML table of results, or a form if edit button is pressed
-function resultTable($mysqli, $result, $action){
+function resultTable($mysqli, $result){
 
+    //get the current page name to use as form action
+    $action = $_SERVER['REQUEST_URI'];
+    
     $numOfCols = $mysqli->field_count; //get number of columns
     $isEditBtn = isset($_POST['editBtn']);
-    echo '<table border="1" id="pending"><tr>';
+    echo '<table border="1"><tr>';
     //fetch and write field names
     $i = 0;
     $fieldNameArray = array();
@@ -40,7 +43,7 @@ function resultTable($mysqli, $result, $action){
         for($fieldCounter=0; $numOfCols > $fieldCounter; $fieldCounter++)
         {
             if ($isEditBtn) {
-                echo "<td><input type='text' name='$fieldCounter' value='${row["$fieldCounter"]}'></td>";
+                echo "<td><input type='text' name='$fieldNameArray[$fieldCounter]' value='${row["$fieldCounter"]}'></td>";
             }
             else {
                 echo "<td>${row["$fieldCounter"]}</td>";
