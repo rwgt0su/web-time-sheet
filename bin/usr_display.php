@@ -130,7 +130,7 @@ function displayDelUser(){
     if ((!isset($_POST['submitBtn'])) || ($error != '')) {?>
         <div class="caption">Delete User</div>
         <div id="icon">&nbsp;</div>
-        <div id="results"><a href="<?php echo$_SERVER['PHP_SELF']; ?>">Back</a></div>
+        <div id="results"><a href="<?php echo $_SERVER['PHP_SELF']; ?>">Back</a></div>
         <form action="<?php echo $_SERVER['PHP_SELF']; ?>?DelUserBtn=true" method="post" name="delform">
             <table width="100%"><?php
 		if($_SESSION['admin'] == 1){

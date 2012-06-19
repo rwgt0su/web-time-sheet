@@ -2,7 +2,7 @@
 Class Config {
 	public $webTitle;
 	public $version;
-	public $admin;
+	public $adminLvl;
 	private $mysqli;
 
 	public function Config(){
@@ -27,10 +27,7 @@ Class Config {
 		return $this->version;
 	}
 	public function setAdmin($var){
-		$this->admin = $var;
-	}
-	public function getAdmin(){
-		return $this->admin;
+		$this->adminLvl = $var;
 	}
 }
 

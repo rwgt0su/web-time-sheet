@@ -36,15 +36,9 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayInsertUser(); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
-    /*if(false){}
-    else{
-        ?>
-        <div class="post"><?php displayWelcome($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }*/
     if($wts_content->isLogout()){
         logoutUser();
-        echo '<meta http-equiv="refresh" content="3;url=/"/>';
+        echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
         echo '<div class="post">You have logged out<div class="clear"></div></div><div class="divider"></div>';
     }
          

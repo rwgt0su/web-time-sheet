@@ -64,7 +64,8 @@ function loginUser($user,$pass){
                 $_SESSION['userName'] = $user;
                 $_SESSION['admin'] = $admin;
                 $_SESSION['validUser'] = true;
-				$validUser = true;
+                $validUser = true;
+                echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
             }
        }
        else{
