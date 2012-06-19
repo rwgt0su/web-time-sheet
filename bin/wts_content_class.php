@@ -6,6 +6,7 @@ Class wts_content {
     public $isLeaveForm;
     public $isPending;
     public $isLeaveApproval;
+    public $isHome;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -16,6 +17,13 @@ Class wts_content {
         $this->isPending = isset($_GET['pending']) ? $_GET['pending'] : false;
         $this->isLeaveApproval = isset($_GET['approve']) ? $_GET['approve'] : false;
         $this->isInsertUser = isset($_GET['newuser']) ? $_GET['newuser'] : false;
+        
+        if(empty($_GET)){
+            $this->isHome = "true";
+        }
+        else
+            $this->isHome = "false";
+        //popUpMessage("isHome: ".$this->isHome);
     }
     
     public function isWelcome(){
