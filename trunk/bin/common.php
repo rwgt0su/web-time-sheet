@@ -40,7 +40,7 @@ require_once 'bin/usr_display.php';
     
     //Class Declarations for User Based Control
     $config = new Config();
-    $config->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : '-1');
+    $config->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
 
 //Content Based Files
 require_once 'bin/wts_content.php';

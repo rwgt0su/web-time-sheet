@@ -42,10 +42,6 @@ require_once('bin/common.php');
             <!--Left Menu Section -->
             <div class="grid_4">
                 <?php displayMenu($config); ?>
-                <div class="divider"></div>
-                <?php displaySupv($config); ?>
-                <div class="divider"></div>
-                <?php displayAdmin($config); ?>
             </div>
             
             <!--Center Content Section -->
