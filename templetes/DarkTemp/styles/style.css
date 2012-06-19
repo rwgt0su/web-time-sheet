@@ -100,6 +100,7 @@ a {
             background-position: right top;
             padding: 20px 0 0 0;
             min-height: 524px;
+            width: 200px;
         }
 
         .content_highlight h2 {
