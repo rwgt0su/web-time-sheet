@@ -23,9 +23,9 @@ require_once('bin/common.php');
             </div>
             <div class="grid_9">
                 <div class="menu_items">                
-                    <a href="/" class="button_link" title="Home">Home</a>
-                    <a href="/" class="button_link" title="Email">Email 2</a>
-                    <a href="/" class="button_link" title="About">About</a>
+                    <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="button_link" title="Home">Home</a>
+                    <a href="https://mail.mahoningcountyoh.gov" target="_blank" class="button_link" title="Email">Email</a>
+                    <a href="?about=true" class="button_link" title="About">About</a>
 
                     <div class="search">
                         <input type="text" name="search" />
