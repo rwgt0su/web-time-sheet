@@ -51,7 +51,7 @@ require_once('bin/common.php');
             <!--Center Content Section -->
             <div class="grid_8">
                 <!--Content Login Section -->
-                <div class="post">
+                <div class="login">
                     <?php displayLogin($config); ?>
                     <div class="clear"></div>
                 </div> 

@@ -166,7 +166,6 @@ function displayLogin($config){
             <?php
             }
         }
-        
     }
     else{
         displayLogout();
