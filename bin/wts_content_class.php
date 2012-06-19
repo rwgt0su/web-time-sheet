@@ -19,10 +19,10 @@ Class wts_content {
         $this->isInsertUser = isset($_GET['newuser']) ? $_GET['newuser'] : false;
         
         if(empty($_GET)){
-            $this->isHome = "true";
+            $this->isHome = true;
         }
         else
-            $this->isHome = "false";
+            $this->isHome = false;
         //popUpMessage("isHome: ".$this->isHome);
     }
     
