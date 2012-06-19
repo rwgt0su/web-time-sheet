@@ -41,6 +41,7 @@ require_once 'bin/usr_display.php';
     //Class Declarations for User Based Control
     $config = new Config();
     $config->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
+    
 
 //Content Based Files
 require_once 'bin/wts_content.php';
@@ -55,10 +56,19 @@ function popUpMessage($message){
 }
 function isValidUser(){
 	if ((!isset($_SESSION['validUser'])) || ($_SESSION['validUser'] != true)){
-            return false;
+                return false;
 	}
-        else
-            return true;
+        else{
+            $timeout = 60;
+            if ($_SESSION['timeout'] + ($timeout * 60) < time()) {
+                //User has been inactive for 30 minutes
+                popUpMessage("Your Session has Timed Out. Please log back in");
+                logoutUser("Session Timeout after ".$timeout." Minutes");
+                return false;
+            }
+            else
+                return true;
+        }
 }
 function checkUser(){
 	if ((!isset($_SESSION['validUser'])) || ($_SESSION['validUser'] != true)){

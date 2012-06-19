@@ -64,6 +64,7 @@ function loginUser($user,$pass){
                 $_SESSION['userName'] = $user;
                 $_SESSION['admin'] = $admin;
                 $_SESSION['validUser'] = true;
+                $_SESSION['timeout'] = time();
                 $validUser = true;
                 echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
             }
@@ -82,12 +83,15 @@ function loginUser($user,$pass){
 	return $errorText;
 }
 
-function logoutUser(){
+function logoutUser($message){
 	unset($_SESSION['validUser']);
 	unset($_SESSION['userName']);
 	unset($_SESSION['admin']);
 	
 	session_destroy(); 
+        
+        echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
+        echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
 }
 
 function delUser($user){

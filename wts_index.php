@@ -90,3 +90,4 @@ require_once('bin/common.php');
     </div>
 </body>
 </html>
+<?php $_SESSION['timeout'] = time(); ?>
