@@ -115,9 +115,7 @@ function displayPassChange($useAdmin, $addUser){
 
     <?php            
 	}
-}
-	
-        
+}        
 function displayDelUser(){
 	checkAdmin();
 	$error = '';
@@ -165,7 +163,6 @@ function displayDelUser(){
     <?php            
 	}
 }
-
 function showAllUsers(){
 	?>
 	<tr><td>Username:</td><td><SELECT name="username">
