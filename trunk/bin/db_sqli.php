@@ -26,6 +26,7 @@ function resultTable($mysqli, $result){
     //fetch and write field names
     $i = 0;
     $fieldNameArray = array();
+    $result->data_seek(0);
     while($finfo = mysqli_fetch_field($result)) {
         echo "<th>" . $finfo->name . "</th>"; 
         $fieldNameArray[$i] = $finfo->name;
@@ -60,8 +61,4 @@ function resultTable($mysqli, $result){
     } //loop through records
 
     echo '</tr></table>';
-    
-    //if($isEditBtn)
-    //showDynamicTable('pending',$fieldNameArray); 
-
-    }
+}

@@ -11,7 +11,10 @@ function displayUserMenu($config){
 	}
 	else if (isset($_GET['DelUserBtn'])){
 		displayDelUser();
-	} 
+	}
+        else if (isset($_GET['DispUsers'])){
+		displayUsers();
+        }
 	else{ ?>
 		<div id="icon">&nbsp;</div>
 		<h3>User Management Menu</h3>
@@ -19,9 +22,10 @@ function displayUserMenu($config){
 		<?php 
 		if($config->adminLvl >= 75){ 
 			?>
-			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&AddUserBtn=true">Add Users</a><br />
-			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&EditUserBtn=true">Edit Users</a><br />
-			<a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true&DelUserBtn=true">Remove User</a><br />
+			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&AddUserBtn=true">Add Users</a><br />
+			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&EditUserBtn=true">Edit Users</a><br />
+			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&DelUserBtn=true">Remove User</a><br />
+                        <a href="<?php echo $_SERVER['REQUEST_URI']; ?>&DispUsers=true">Display/Edit All Users</a><br />
 		<?php 
 		}
 	}
@@ -180,5 +184,62 @@ function showAdminLvls(){
 	echo '<option value="50">Human Resource Managers</option>';
 	echo '<option value="99">Sheriff</option>';
 	echo '<option value="100">Full Admin</option>';
+}
+?>
+                    
+<?php
+function displayUsers(){   
+/*
+ * Shows all users and gives the option to edit any fields
+ */
+    $admin = $_SESSION['admin'];
+    
+    if($admin >= 50 && isValidUser()) { 
+        $mysqli = connectToSQL();
+        $myq = "SELECT *
+                FROM EMPLOYEE";
+        $result = $mysqli->query($myq);
+        if (!$result) 
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+
+      //build table
+        resultTable($mysqli, $result);
+
+    //write any updates to DB when Save is pressed
+    if (isset($_POST['saveBtn'])) { //saveBtn created in resultTable()
+        $result = $mysqli->query($myq);
+        
+        $i = 0;
+        $fieldNameArray = array();
+        $values = array();
+        
+        while($finfo = mysqli_fetch_field($result)) {
+            $tableName = $finfo->orgtable;
+            $fieldNameArray[$i] = $finfo->orgname;
+            $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] ."="."'". $mysqli->real_escape_string($_POST["$fieldNameArray[$i]"])."'";
+            $i++;
+        }
+        
+        //turn the array into comma seperated values
+        $csvValues = implode(',' , $values);
+        
+        $updateQuery = "UPDATE ".$tableName." SET ".$csvValues." 
+            WHERE " .$values['ID'];
+        
+       echo "<br>" . $updateQuery;
+        $updateResult = $mysqli->query($updateQuery);
+
+        if (!$updateResult) 
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        }
+        ?>
+
+        <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="editBtn">
+            <p><input type="submit" name="editBtn" value="Edit"></p></form>
+
+    <?php   
+
+    } 
+ 
 }
 ?>
