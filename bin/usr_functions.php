@@ -109,7 +109,7 @@ function displayLogout(){
     	echo '<div id="result" align="right">Logged in as: <font size="3">';
         echo $_SESSION['userName'];
 		echo "</font>";
-		echo '<br /><a href="/?logout=true">Log Out </a><br /><br />';
+		echo '<br /><a href="?logout=true">Log Out </a><br /><br />';
         echo "</div>";
 }
 
