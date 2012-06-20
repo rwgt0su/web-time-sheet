@@ -1,22 +1,26 @@
 <?php    
 function displayUserMenu($config){	
 	if (isset($_GET['ChangeBtn'])){
+            if(isValidUser())
 		displayPassChange(false, false);
 	}
 	else if (isset($_GET['AddUserBtn'])){
+            if(isValidUser())
 		displayPassChange(true, true);
 	}
 	else if (isset($_GET['EditUserBtn'])){
+            if(isValidUser())
 		displayPassChange(true, false);
 	}
 	else if (isset($_GET['DelUserBtn'])){
+            if(isValidUser())
 		displayDelUser();
 	}
         else if (isset($_GET['DispUsers'])){
 		displayUsers();
         }
 	else{ ?>
-		<div id="icon">&nbsp;</div>
+		<div align="center">&nbsp;
 		<h3>User Management Menu</h3>
 		<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&ChangeBtn=true">Change Your Password</a><br />
 		<?php 
@@ -28,6 +32,7 @@ function displayUserMenu($config){
                         <a href="<?php echo $_SERVER['REQUEST_URI']; ?>&DispUsers=true">Display/Edit All Users</a><br />
 		<?php 
 		}
+                echo '</div>';
 	}
 }	
 function displayPassChange($useAdmin, $addUser){

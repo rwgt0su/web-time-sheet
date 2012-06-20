@@ -50,6 +50,11 @@ function displayContent($wts_content, $config){
     if($wts_content->isLogout()){
         logoutUser("You have logged out");
     }
+    if($wts_content->isSearching){
+        ?>
+        <div class="post"><?php searchPage(); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
          
 }
 
