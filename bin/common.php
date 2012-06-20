@@ -53,6 +53,9 @@ require_once 'bin/wts_content_class.php';
 //Announcements with Admin backend
 require_once 'bin/wts_announce.php';
 
+//Searching
+require_once 'bin/wts_search.php';
+
 function popUpMessage($message){
 	echo '<script type="text/javascript">';
 	echo "alert(\"".$message."\")</script>";

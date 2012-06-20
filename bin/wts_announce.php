@@ -83,20 +83,17 @@ function displayAdminAnnounce($config){
             <?php
 
             //Update with presented information
-            if (isset($_POST['editor110']) && isset($_POST['editorShort'])) {
+            if (isset($_POST['saveBtn'])) {
                 $mysqli = connectToSQL();
-                $myq = "UPDATE `PAYROLL`.`NEWS` SET `SHORTNAME` = '".$editorOldShort."',
+                $myq = "UPDATE `PAYROLL`.`NEWS` SET `SHORTNAME` = '".$editorShort."',
                     `TITLE` = '".$editorTitle."',
                     `BODY` = '".$editorData."',
                     `PUBLISH` = '".$editorPublish."',
                     `TSTAMP` = NOW( ),
                     `AUDITID` = '".strtoupper($_SESSION['userName'])."',
                     `IP` = 'INET_ATON(\'".$_SERVER['REMOTE_ADDR']."\')' 
-                    WHERE CONVERT( `NEWS`.`SHORTNAME` USING utf8 ) = '".$editorOldShort."' LIMIT 1 ;";
-                //$myq = "UPDATE `PAYROLL`.`NEWS` (`SHORTNAME`, `TITLE`, `BODY`, `PUBLISH`, `TSTAMP`, `AUDITID`, `IP`) 
-                        //VALUES ('".$editorShort."', '".$editorTitle."', '".$editorData."', '".$editorPublish."', NOW(), '"
-                        //strtoupper($_SESSION['userName'])."', INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
-                
+                    WHERE CONVERT( `NEWS`.`SHORTNAME` USING utf8 ) = '".$editorShort."' LIMIT 1 ;";
+                popUpMessage($myq);
                 $result = $mysqli->query($myq);
                 if (!$result) 
                     throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
