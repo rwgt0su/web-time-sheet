@@ -1,4 +1,4 @@
-﻿body {
+body {
     color: #fff;
     background: #000;
     font-size: 12px;
@@ -173,6 +173,7 @@ a {
 
         .content_highlight .grid_8 {
             padding: 20px 0 0 0;
+            height: 100%;
         }
 
             .content_highlight .grid_8 .divider {
