@@ -28,8 +28,10 @@ require_once('bin/common.php');
                     <a href="?about=true" class="button_link" title="About">About</a>
 
                     <div class="search">
-                        <input type="text" name="search" />
-                        <input type="submit" name="submit" value="Search" />
+                        <form action="<?php echo $_SERVER['PHP_SELF']; ?>" name="Search_Form" method="POST" >
+                        <input type="text" name="searchInput" />
+                        <input type="submit" name="searchBtn" value="Search" />
+                        </form>
                     </div>
                 </div>
             </div>
