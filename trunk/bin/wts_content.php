@@ -5,10 +5,16 @@ function displayContent($wts_content, $config){
         ?>
         <div class="post"><?php displayWelcome($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
+        displayAnnounce($config);
     }
     if($wts_content->isWelcome()){
         ?>
         <div class="post"><?php displayWelcome($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
+    if($wts_content->isAnounceAdmin){
+        ?>
+        <div class="post"><?php displayAdminAnnounce($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
     if($wts_content->isDBTest()){

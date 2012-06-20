@@ -49,6 +49,9 @@ require_once 'bin/wts_content_class.php';
 
     //Class Declarations for Content Based Control
     $wts_content = new wts_content();
+    
+//Announcements with Admin backend
+require_once 'bin/wts_announce.php';
 
 function popUpMessage($message){
 	echo '<script type="text/javascript">';

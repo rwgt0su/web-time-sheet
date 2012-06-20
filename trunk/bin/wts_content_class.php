@@ -8,6 +8,7 @@ Class wts_content {
     public $isLeaveApproval;
     public $isHome;
     public $isUserMenu;
+    public $isAnounceAdmin;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -19,6 +20,7 @@ Class wts_content {
         $this->isLeaveApproval = isset($_GET['approve']) ? $_GET['approve'] : false;
         $this->isInsertUser = isset($_GET['newuser']) ? $_GET['newuser'] : false;
         $this->isUserMenu = isset($_GET['usermenu']) ? $_GET['usermenu'] : false;
+        $this->isAnounceAdmin = isset($_GET['isAnounceAdmin']) ? $_GET['isAnounceAdmin'] : false;
         
         if(empty($_GET)){
             $this->isHome = true;
