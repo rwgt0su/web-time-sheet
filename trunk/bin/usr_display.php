@@ -236,13 +236,7 @@ function displayUsers(){
 
         if (!$updateResult) 
             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        }
-        ?>
-
-        <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="editBtn">
-            <p><input type="submit" name="editBtn" value="Edit"></p></form>
-
-    <?php   
+        } 
 
     } 
  
