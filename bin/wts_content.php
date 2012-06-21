@@ -277,9 +277,9 @@ $admin = $_SESSION['admin'];
     switch($admin) { //switch to show different users different reports
         case 0: //normal user, list only user's own reqs
 
-        $myq = "SELECT REFER 'Ref. No.', REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs',
-                        T.DESCR 'Type', NOTE 'Comment', IF(APPROVE=1,'Yes','No') 'Approved?', 
-                        AUDITID 'Last Mod.', REASON 'Reason' 
+        $myq = "SELECT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs',
+                        T.DESCR 'Type', NOTE 'Comment', IF(APPROVE=1,'Yes','No') 'Approved', 
+                        AUDITID 'LastMod', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T
                     WHERE ID='" . $_SESSION['userName'] .
                     "' AND R.TIMETYPEID=T.TIMETYPEID";
@@ -307,11 +307,10 @@ $numOfCols = $mysqli->field_count;
 
 //build table
 resultTable($mysqli, $result);
-
-//}//end else
+/*
 if (isset($_POST['saveBtn'])) {
     for ($i=0; $i < $numOfCols; $i++)
-        $newValue[$i] = $_POST["$i"];
+        $newValue[$i] = $_POST["$i"]; //this needs re-written for assoc array
 
 switch($admin) {
     case 0:
@@ -332,11 +331,8 @@ switch($admin) {
 $result = $mysqli->query($updateQuery);
 if (!$result) 
 throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-}
+}*/
 ?>
-
-<form action="/?pending=true" method="post" name="editBtn">
-    <p><input type="submit" name="editBtn" value="Edit"></p></form>
 
 <?php } ?>
 
