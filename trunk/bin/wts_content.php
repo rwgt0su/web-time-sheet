@@ -196,17 +196,20 @@ if (isset($_POST['submit'])) {
     $ID = $mysqli->real_escape_string(strtoupper($_POST['ID']));
     $usedate = new DateTime($mysqli->real_escape_string($_POST['usedate']));
     $usedate = $usedate->format("Y-m-d"); //format user's date properly for SQL
-    $hours = $mysqli->real_escape_string($_POST['hours']);
+    $beg = new DateTime($mysqli->real_escape_string($_POST['beg']));
+    $beg = $beg->format("H:i:s");
+    $end = new DateTime($mysqli->real_escape_string($_POST['end']));
+    $end = $end->format("H:i:s");
     $type = $mysqli->real_escape_string($_POST['type']);
     $comment = $mysqli->real_escape_string($_POST['comment']);
     $reqdate = $mysqli->real_escape_string(date("Y-m-d")); //current date in SQL date format YYYY-MM-DD
     $auditid = strtoupper($_SESSION['userName']);
-
+    $hours = $end - $beg;
     //query to insert the record
 
-    $myq="INSERT INTO REQUEST (ID, USEDATE, HOURS, TIMETYPEID, NOTE, APPROVE, REQDATE, AUDITID, IP)
-            VALUES ('$ID', '$usedate', '$hours', '$type', 
-                    '$comment', '0', '$reqdate','$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
+    $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, NOTE, STATUS, REQDATE, AUDITID, IP)
+            VALUES ('$ID', '$usedate', '$beg', '$end', '$hours', '$type', 
+                    '$comment', 'PENDING', '$reqdate','$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
     //echo $myq; //DEBUG
     $result = $mysqli->query($myq);
 
@@ -232,35 +235,34 @@ if (!$result)
     throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
 ?>
 <html><body>
-<form name="leave" method="post" action="/?leave=true">
+<form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
     
 	<h2>Employee Leave Request</h2>
-        <table id="leave" border="1">
-        <tr><th>User ID</th><th>Date of use/accumulation</th><th>Number of hours</th><th>Time type</th><th>Comment</th></tr>
-	<tr><td><input type="text" name="ID" value="<?php echo $_SESSION['userName']; ?>"></td>
-        <td><input type="text" name="usedate" value="<?php echo date("Y-m-d"); ?>"></td>
-        <td><input type="text" name="hours"></td>
-        <td> <select name="type">
-        <?php
+        
+        <p>User ID: <input type="text" name="ID" value="<?php echo $_SESSION['userName']; ?>"></p>
+        <p>Date of use/accumulation: <input type="text" name="usedate" value="<?php echo date("Y-m-d"); ?>"></p>
+        <p>Start time: <input type="text" name="beg">
+        End time: <input type="text" name="end"></p>
+        <p>Time type: <?php dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?></p>
+        <p>Comment: <input type="text" name="comment"></p>
+	
+                
+        <?php /*
             //build a drop-down from query result
             $result->data_seek(0);  
             while ($row = $result->fetch_assoc()) 
                {
                  echo '<option value="' . $row['TIMETYPEID'] . '">' . $row['DESCR'] . '</option>';
                }
-        ?>
-               </select></td>
-        <td><input type="text" name="comment"></td></tr>
-        </table>
-       <?php 
-       $fieldNameArray = array('ID','usedate','hours','type','comment');
+       */ ?>
+             
         
-       ?>
+        
+       
 	<p><input type="submit" name="submit" value="Submit"></p>
-        <?php showDynamicTable('leave',$fieldNameArray); ?>
+        
 </form>
 </body></html>
-<?php //} ?>
 
  <?php } ?>
 
@@ -277,9 +279,10 @@ $admin = $_SESSION['admin'];
     switch($admin) { //switch to show different users different reports
         case 0: //normal user, list only user's own reqs
 
-        $myq = "SELECT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs',
-                        T.DESCR 'Type', NOTE 'Comment', IF(APPROVE=1,'Yes','No') 'Approved', 
-                        AUDITID 'LastMod', REASON 'Reason' 
+        $myq = "SELECT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+                        ENDTIME 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
+                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T
                     WHERE ID='" . $_SESSION['userName'] .
                     "' AND R.TIMETYPEID=T.TIMETYPEID";
@@ -287,7 +290,18 @@ $admin = $_SESSION['admin'];
             break;
 
         case 25: //supervisor, list division
-            //custom query goes here
+            $myq = "SELECT DISTINCT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+                        ENDTIME 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
+                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                    WHERE R.TIMETYPEID=T.TIMETYPEID                
+                    AND E.DIVISIONID IN
+                        (SELECT DIVISIONID 
+                        FROM EMPLOYEE
+                        WHERE ID='" . $_SESSION['userName'] . "')
+                    ORDER BY REFER";
+            break;
         case 50: //HR
             //custom query goes here
         case 99: //Sheriff
@@ -346,13 +360,21 @@ function displayLeaveApproval(){
     if($admin > 0) { 
 
         $mysqli = connectToSQL();
+        
+        //what divison is current supervisor in?
+        $divq = "SELECT DIVISIONID FROM EMPLOYEE
+                 WHERE ID='". $_SESSION['userName'] . "'";
+        $result = $mysqli->query($divq);
+        if (!$result) 
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        $div = $result->fetch_assoc();
 
-        $myq = "SELECT REFER 'Ref. No.', REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs',
-                        T.DESCR 'Type', NOTE 'Comment', IF(APPROVE=1,'Yes','No') 'Approved?', 
-                        AUDITID 'Last Mod.', REASON 'Reason' 
-                    FROM REQUEST R, TIMETYPE T
-                    WHERE ID='" . $_SESSION['userName'] .
-                    "' AND R.TIMETYPEID=T.TIMETYPEID";
+        $myq = "SELECT REFER 'RefNo', R.ID, REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs', T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', APPROVEDBY 'ApprovedBy', REASON 'Reason' 
+                FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                WHERE E.DIVISIONID=" . $div['DIVISIONID'] . 
+                " AND R.TIMETYPEID=T.TIMETYPEID
+                AND E.ID=R.ID";
+        echo $myq; //DEBUG
 
 
 
@@ -365,35 +387,38 @@ function displayLeaveApproval(){
         //build table
         resultTable($mysqli, $result);
         ?>
-        <form action="/?approve=true" method="post" name="editBtn">
-            <p><input type="submit" name="editBtn" value="Edit"></p></form>
+        
         <hr>
         <table>
-            <form action="/?approve=true" method="post" name="approveBtn">
+            <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn">
             <tr><th>Ref #</th><th>Approve?</th><th>Reason</th></tr>
             <?php
             $refs = array();
+            $result->data_seek(0);
             for ($i = 0; $assoc = $result->fetch_assoc(); $i++) {
-                $refs[$i] = $assoc['REFER'];
-                echo "<tr><td>'$refs[$i]'</td>
-                    <td><input type='checkbox' name='check$i' value='1' /></td>
-                    <td><input type='text' name='reason$i'></td>";
+                $refs[$i] = $assoc['RefNo'];
+                echo "<tr><td>$refs[$i]</td>
+                    <td><input type='radio' name='approve$i' value='APPROVED' /> Approved 
+                        <input type='radio' name='approve$i' value='DENIED'> Denied</td>
+                        <td><input type='text' name='reason$i' size='50'/></td>";
             }
             ?>
-            <p><input type="submit" name="approveBtn" value="Approve"></p>
+           </table> <p><input type="submit" name="approveBtn" value="Approve"></p>
             </form>
-        </table>
+        
 
         <?php 
         if (isset($_POST['approveBtn'])) {
             for ($j=0; $i > $j; $j++) {
-                $check = $check . $j;
-                $reason = $reason . $j;
-                if (!strcmp($_POST['$check'],'1')) {
+                $approve = 'approve' . $j;
+                $reason = 'reason' . $j;
+                if (isset($_POST["$approve"])) {
                     $approveQuery="UPDATE REQUEST 
-                                    SET APPROVE='".$_POST['$check']."',
-                                        REASON='".$_POST['$reason']."'.
-                                    WHERE REFER='$refs[$j]'";   
+                                    SET STATUS='".$_POST["$approve"]."',
+                                        REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
+                                        APPROVEDBY='".$_SESSION['userName']."' 
+                                    WHERE REFER='$refs[$j]'";
+                    echo $approveQuery; //DEBUG
                     $approveResult = $mysqli->query($approveQuery);
                     if (!$approveResult) 
                         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");

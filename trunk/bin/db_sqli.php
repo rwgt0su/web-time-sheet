@@ -80,23 +80,26 @@ function resultTable($mysqli, $result){
         $joinOn = NULL;
         //print_r($fieldNameArray); //DEBUG
        for($i=0; $i < $numOfCols; $i++) {
-          if( !($fieldNameArray[$i] == 'AUDITID' || $fieldNameArray[$i] == 'IP' || $fieldNameAliasArray[$i] == 'Approved') )
-            $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] ."="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
-            
-            if ( strcmp($tableNameArray[0], $tableNameArray[$i]) && !empty($tableNameArray[$i]) ) {
+          if( !($fieldNameArray[$i] == 'AUDITID' || $fieldNameArray[$i] == 'IP' || $fieldNameAliasArray[$i] == 'Approved') ) {
+            if($fieldNameArray[$i] == 'DESCR')
+                $values["$fieldNameArray[$i]"] = $tableNameArray[$i] . "ID="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
+            else
+                $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] ."="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
+          }
+            /*if ( strcmp($tableNameArray[0], $tableNameArray[$i]) && !empty($tableNameArray[$i]) ) {
                     //echo $tableNameArray[$i];
                     $joinOn = $tableNameArray[$i];  //store dimension table if they don't match
                     //echo '(IN LOOP) JOIN ON = '.$joinOn; //DEBUG
-            }
+            }*/
         }
-        print_r($tableNameArray);
-        echo 'JOIN ON = '.$joinOn; //DEBUG
+        //print_r($tableNameArray); //DEBUG
+        //echo 'JOIN ON = '.$joinOn; //DEBUG
         //turn the array into comma seperated values
         $csvValues = implode(',' , $values);
        //put the update query together
         //Primary key must be the first field for this to work!
         //PROBLEM: Update on join. test tablename != tablename[0]?
-        switch($joinOn) {
+       /* switch($joinOn) {
             case 'TIMETYPE':
                 $updateQuery="UPDATE REQUEST R, TIMETYPE T
                     SET R.TIMETYPEID = T.TIMETYPEID,  ${values['USEDATE']}, ${values['HOURS']},
@@ -108,7 +111,9 @@ function resultTable($mysqli, $result){
                 $updateQuery = "UPDATE ".$tableNameArray[0]." SET ".$csvValues." 
                     WHERE " . $values["$fieldNameArray[0]"];
         
-        }
+        }*/
+        $updateQuery = "UPDATE ".$tableNameArray[0]." SET ".$csvValues." 
+                    WHERE " . $values["$fieldNameArray[0]"];
         echo "<br>" . $updateQuery;  //DEBUG
         //send the update
         $updateResult = $mysqli->query($updateQuery);
@@ -126,6 +131,7 @@ function resultTable($mysqli, $result){
 function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     if (!strcmp($fieldName, 'DESCR') && !strcmp($tableName, 'TIMETYPE')) {
         $myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE";
+        
         $result = $mysqli->query($myq);
 
         //show SQL error msg if query failed
@@ -143,6 +149,9 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     $result->data_seek(0);  
     while ($row = $result->fetch_assoc()) 
         {
+            if ($value == FALSE)
+                echo '<option value="" style="display:none;" selected="selected"></option>';
+            
             echo '<option value="' . $row["$fieldNameArray[0]"] . '"';
             if (!strcmp($value, $row["$fieldNameArray[1]"]))
                 echo ' selected="selected"';
