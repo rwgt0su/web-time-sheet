@@ -196,17 +196,28 @@ if (isset($_POST['submit'])) {
     $ID = $mysqli->real_escape_string(strtoupper($_POST['ID']));
     $usedate = new DateTime($mysqli->real_escape_string($_POST['usedate']));
     $usedate = $usedate->format("Y-m-d"); //format user's date properly for SQL
+    
     $beg = new DateTime($mysqli->real_escape_string($_POST['beg']));
-    $beg = $beg->format("H:i:s");
     $end = new DateTime($mysqli->real_escape_string($_POST['end']));
+    //interval calculation in hours
+    $endSec = strtotime($end->format("H:i:s"));  
+    $begSec = strtotime($beg->format("H:i:s"));
+    $hours = ($endSec - $begSec) / 3600;
+    //SQL TIME format
+    $beg = $beg->format("H:i:s");  
     $end = $end->format("H:i:s");
+    
     $type = $mysqli->real_escape_string($_POST['type']);
     $comment = $mysqli->real_escape_string($_POST['comment']);
     $reqdate = $mysqli->real_escape_string(date("Y-m-d")); //current date in SQL date format YYYY-MM-DD
     $auditid = strtoupper($_SESSION['userName']);
-    $hours = $end - $beg;
+    
+    if ($type == 'PR' && !($hours == 8 || $hours == 12) ) {
+        exit ("Error: Personal time can only be used for an entire shift of 8 or 12 hours.");
+    }
+        
+    
     //query to insert the record
-
     $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, NOTE, STATUS, REQDATE, AUDITID, IP)
             VALUES ('$ID', '$usedate', '$beg', '$end', '$hours', '$type', 
                     '$comment', 'PENDING', '$reqdate','$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
@@ -276,6 +287,49 @@ function displayPendingRequests(){
 $mysqli = connectToSQL();
 $admin = $_SESSION['admin'];
 
+//what pay period are we currently in?
+$payPeriodQuery = "SELECT * FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
+$ppResult = $mysqli->query($payPeriodQuery);
+$ppArray = $ppResult->fetch_assoc();
+
+/* $ppOffset stands for the number of pay periods to adjust the query by 
+ * relative to the current period
+ */
+$ppOffset = isset($_GET['ppOffset']) ? $_GET['ppOffset'] : '0';
+//set the right URI for link
+if(isset($ppOffset))
+    //strip off the old GET variable and its value
+    $uri =  preg_replace("/&ppOffset=.*/", "", $_SERVER['REQUEST_URI'])."&ppOffset=";
+else
+    $uri = $_SERVER['REQUEST_URI']."&ppOffset="; //1st set
+
+$startDate = new DateTime("${ppArray['PPBEG']}");
+if($ppOffset < 0)
+    //backward in time by $ppOffset number of periods
+    $startDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+else
+    //forward in time by $ppOffset number of periods
+    $startDate->add(new DateInterval("P".($ppOffset*14)."D"));
+//set the result in SQL DATE format
+$startDate = $startDate->format('Y-m-d');
+//echo " START DATE = ".$startDate; //DEBUG
+
+$endDate = new DateTime("${ppArray['PPEND']}");
+if($ppOffset < 0)
+    //backward in time by $ppOffset number of periods
+    $endDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+else
+    //forward in time by $ppOffset number of periods
+    $endDate->add(new DateInterval("P".($ppOffset*14)."D"));
+//set the result in SQL DATE format
+$endDate = $endDate->format('Y-m-d');
+//echo " END DATE = ".$endDate; //DEBUG
+?>
+<p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
+   <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
+<h3><center>Gain/Use Requests for pay period <?php echo $startDate; ?> through <?php echo $endDate; ?>.</center></h3>
+
+<?php
     switch($admin) { //switch to show different users different reports
         case 0: //normal user, list only user's own reqs
 
@@ -285,17 +339,20 @@ $admin = $_SESSION['admin'];
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T
                     WHERE ID='" . $_SESSION['userName'] .
-                    "' AND R.TIMETYPEID=T.TIMETYPEID";
+                    "' AND R.TIMETYPEID=T.TIMETYPEID
+                    AND USEDATE BETWEEN '". $startDate."' AND '".$endDate."' 
+                    ORDER BY REFER";
             
             break;
 
-        case 25: //supervisor, list division
+        case 25: //supervisor, list by division
             $myq = "SELECT DISTINCT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
                         T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
                     WHERE R.TIMETYPEID=T.TIMETYPEID                
+                    AND USEDATE BETWEEN '". $startDate."' AND '".$endDate."' 
                     AND E.DIVISIONID IN
                         (SELECT DIVISIONID 
                         FROM EMPLOYEE
