@@ -346,12 +346,12 @@ $endDate = $endDate->format('Y-m-d');
             break;
 
         case 25: //supervisor, list by division
-            $myq = "SELECT DISTINCT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+            $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
                         T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.TIMETYPEID=T.TIMETYPEID                
+                    WHERE R.TIMETYPEID=T.TIMETYPEID                   
                     AND USEDATE BETWEEN '". $startDate."' AND '".$endDate."' 
                     AND E.DIVISIONID IN
                         (SELECT DIVISIONID 
@@ -410,37 +410,32 @@ throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
 <?php
 function displayLeaveApproval(){   
     /*
-    * A report of recent leave requests with
-    * different views according to admin level
+    * Form used to approve leave
+    * 
     */
     $admin = $_SESSION['admin'];
-    if($admin > 0) { 
+    if($admin >= 25) { 
 
         $mysqli = connectToSQL();
         
-        //what divison is current supervisor in?
-        $divq = "SELECT DIVISIONID FROM EMPLOYEE
-                 WHERE ID='". $_SESSION['userName'] . "'";
-        $result = $mysqli->query($divq);
-        if (!$result) 
-            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        $div = $result->fetch_assoc();
-
-        $myq = "SELECT REFER 'RefNo', R.ID, REQDATE 'Requested', USEDATE 'Used', HOURS 'Hrs', T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', APPROVEDBY 'ApprovedBy', REASON 'Reason' 
-                FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                WHERE E.DIVISIONID=" . $div['DIVISIONID'] . 
-                " AND R.TIMETYPEID=T.TIMETYPEID
-                AND E.ID=R.ID";
+        $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+                        ENDTIME 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
+                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                    WHERE R.TIMETYPEID=T.TIMETYPEID                   
+                    AND STATUS='PENDING'
+                    AND E.DIVISIONID IN
+                        (SELECT DIVISIONID 
+                        FROM EMPLOYEE
+                        WHERE ID='" . $_SESSION['userName'] . "')
+                    ORDER BY REFER";
         echo $myq; //DEBUG
-
-
 
         $result = $mysqli->query($myq);
         if (!$result) 
             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-
-        $numOfCols = $mysqli->field_count;
-
+       
         //build table
         resultTable($mysqli, $result);
         ?>
