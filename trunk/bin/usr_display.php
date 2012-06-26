@@ -45,20 +45,20 @@ function displayPassChange($useAdmin, $addUser){
 		$password2 = isset($_POST['password2']) ? $_POST['password2'] : '';
 		$admin = isset($_POST['admin']) ? $_POST['admin'] : '';
 		if($useAdmin && !$addUser)
-            $error .= delUser($username)."<br />";
+                    $error .= delUser($username)."<br />";
 		$error .= registerUser($username,$password1,$password2, $admin);
     }
     if ((!isset($_POST['submitBtn'])) || ($error != '')) {
         if(!$addUser){
-			echo '<div class="caption">Change Password</div>';
-		}
-		else{
-			echo '<div class="caption">Add User</div>';
-		}
-		?>
+            echo '<div class="caption">Change Password</div>';
+        }
+        else{
+            echo '<div class="caption">Add User</div>';
+        }
+        ?>
         <div id="icon">&nbsp;</div>
         <div id="results"></div>
-        <form action="<?php echo $_SERVER['PHP_SELF']; if($addUser) echo "?AddUserBtn=true"; else if ($useAdmin) echo "EditUserBtn"; else echo "?ChangeBtn=true"; ?>" method="post" name="registerform">
+        <form action="<?php echo $_SERVER['REQUEST_URI'];  ?>" method="post" name="registerform">
 		<table width="100%"><a href="<?php echo$_SERVER['PHP_SELF']; ?>">Back</a><br /><br /><?php
 		
 		if($useAdmin && $addUser){
