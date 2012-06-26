@@ -4,6 +4,8 @@ Class Config {
 	public $version;
 	public $adminLvl;
 	private $mysqli;
+        public $domain;
+        public $ldap_server;
 
 	public function Config(){
 		$this->mysqli = connectToSQL();
@@ -17,6 +19,12 @@ Class Config {
 			}
 			if (strcmp($row['Variable'], "Ver") == 0){
 				$this->version = $row['Value'];
+			}
+                        if (strcmp($row['Variable'], "Domain") == 0){
+				$this->domain = $row['Value'];
+			}
+                        if (strcmp($row['Variable'], "ldap_server") == 0){
+				$this->ldap_server = $row['Value'];
 			}
 		}	
 	}
