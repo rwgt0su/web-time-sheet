@@ -1,5 +1,5 @@
 <?php
-function registerUser($user,$pass1,$pass2,$adminLvl){
+function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
 	$errorText = '';
  
 	// Check passwords
@@ -17,7 +17,7 @@ function registerUser($user,$pass1,$pass2,$adminLvl){
 		
 		//Insert new user record using $user, $pass1, $adminLvl
 		$mysqli = connectToSQL();
-		$myq = "INSERT INTO EMPLOYEE (ID,PASSWD,ADMINLVL) VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."')";
+		$myq = "INSERT INTO EMPLOYEE (ID,PASSWD,ADMINLVL,isLDAP) VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."','".$useAD."')";
 		$result = $mysqli->query($myq);
 		
 		//show SQL error msg if query failed
@@ -82,12 +82,109 @@ function loginUser($user,$pass){
 	
 	return $errorText;
 }
+function loginLDAPUser($user,$pass,$config){
+	$errorText = '';
+	$validUser = false;
+
+        //user lookup
+        $mysqli = connectToSQL();
+        $sql_user = strtoupper($mysqli->real_escape_string($user));
+        $myq = "SELECT * FROM EMPLOYEE WHERE ID='". $sql_user . "'";
+        $result = $mysqli->query($myq);
+        
+        //show SQL error msg if query failed
+        if (!$result) {
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        }
+        
+        //no loop, should be exactly one result
+        $resultAssoc = $result->fetch_assoc(); 
+        
+	// Check user existence
+        if (strcasecmp($user, $resultAssoc['ID']) == 0) {
+            $errorText = "User Found <br />";
+            $admin = $resultAssoc['ADMINLVL'];
+            
+            //Check LDAP status
+            if ($resultAssoc['isLDAP']){
+                //login using LDAP Password
+                if ($user != "" && $pass != "") {
+                    $ds = ldap_connect($config->ldap_server);
+                    $ldaprdn = $user . '@' . $config->domain;
+                    ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
+                    ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
+                    if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
+                        //Authorization success
+                        $errorText .= " and Valid password ";
+                        $_SESSION['userName'] = $user;
+                        $_SESSION['admin'] = $admin;
+                        $_SESSION['validUser'] = true;
+                        $_SESSION['timeout'] = time();
+                        $validUser = true;
+                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
+                    }
+                    else
+                        $errorText .= "Failed to authenticate user: " . $ldapbind;
+                }                        
+            }
+            else{
+                //check password entry with database stored password
+                if (strcmp(trim($resultAssoc['PASSWD']), trim(saltyHash($pass))) == 0){
+                    $errorText .= " and Valid password ";
+                    $_SESSION['userName'] = $user;
+                    $_SESSION['admin'] = $admin;
+                    $_SESSION['validUser'] = true;
+                    $_SESSION['timeout'] = time();
+                    $validUser = true;
+                    echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
+                }
+            }
+       }
+       //User not found within database, check for Active Directory
+       else{
+           if (empty($user) || empty($pass)){
+                echo "One or more fields blank. Bound anonymously</br>";
+            }
+            else{
+               if ($user != "" && $pass != "") {
+                    $ds = ldap_connect($config->ldap_server);
+                    $ldaprdn = $user . '@' . $config->domain;
+                    ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
+                    ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
+                    if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
+                        //Authorization success
+                        $admin = "0";
+                        registerUser($user, $pass, $pass, $admin, "1");
+                        $errorText .= " and Valid password ";
+                        $_SESSION['userName'] = $user;
+                        $_SESSION['admin'] = $admin;
+                        $_SESSION['validUser'] = true;
+                        $_SESSION['timeout'] = time();
+                        $validUser = true;
+                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
+                    }
+                    else
+                        $errorText .= "Failed to authenticate user: " . $ldapbind;
+                } 
+            }
+       }
+
+    if ($validUser != true)
+        $errorText .= "Invalid username or password!";
+
+   else{
+        $errorText = NULL;
+    }
+	
+    return $errorText;
+}
 
 function logoutUser($message){
 	unset($_SESSION['validUser']);
 	unset($_SESSION['userName']);
 	unset($_SESSION['admin']);
-	
+        unset($_SESSION['timeout']);
+        
 	session_destroy(); 
         
         echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
@@ -140,7 +237,8 @@ function displayLogin($config){
                     $error = 'Please Provide a Username and Password';
             }
             else{
-                    $error = loginUser($username,$password);
+                    //$error = loginUser($username,$password);
+                    $error = loginLDAPUser($username,$password, $config);
             }
         } 
         if ($error != '') {
