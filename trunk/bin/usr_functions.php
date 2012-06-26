@@ -26,7 +26,7 @@ function registerUser($user,$pass1,$pass2,$adminLvl){
 		}		
 		else{
 			//User added to database with no error
-			$errorText = NULL;
+			$errorText = '';
 		}
 	}
 	return $errorText;

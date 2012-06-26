@@ -95,7 +95,7 @@ function displayPassChange($useAdmin, $addUser){
     <?php   
 	}
 	if (isset($_POST['submitBtn'])){
-
+                
     ?>
         <div class="caption">Result:</div>
         <div id="icon2">&nbsp;</div>
@@ -108,12 +108,12 @@ function displayPassChange($useAdmin, $addUser){
                     echo ' <a href="/">Home</a>';
 
             }
-			else if ($error == '' && $useAdmin && $addUser) {
-				echo "User Added!!!<br/><br/>";
-				?><a href="<?php echo$_SERVER['PHP_SELF']; ?>?AddUserBtn=true">Add Another User</a><br /><?php
-				//history('Changed Password');
-				echo ' <a href="/">Home</a>';
-			}
+            else if ($error == '' && $useAdmin && $addUser) {
+                    echo "User Added!!!<br/><br/>";
+                    ?><a href="<?php echo$_SERVER['PHP_SELF']; ?>?AddUserBtn=true">Add Another User</a><br /><?php
+                    //history('Changed Password');
+                    echo ' <a href="/">Home</a>';
+            }
             else 
 				echo $error;
 
