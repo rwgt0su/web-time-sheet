@@ -119,6 +119,7 @@ function loginLDAPUser($user,$pass,$config){
                         $_SESSION['userName'] = $user;
                         $_SESSION['admin'] = $admin;
                         $_SESSION['validUser'] = true;
+                        $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
                         $validUser = true;
                         echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['REQUEST_URI'].'" />';
@@ -134,6 +135,7 @@ function loginLDAPUser($user,$pass,$config){
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
                     $_SESSION['validUser'] = true;
+                    $_SESSION['isLDAP'] = false;
                     $_SESSION['timeout'] = time();
                     $validUser = true;
                     echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
@@ -155,6 +157,7 @@ function loginLDAPUser($user,$pass,$config){
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
                     $_SESSION['validUser'] = true;
+                    $_SESSION['isLDAP'] = true;
                     $_SESSION['timeout'] = time();
                     $validUser = true;
                     echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'?updateProfile=true" />';
@@ -182,6 +185,7 @@ function logoutUser($message){
 	unset($_SESSION['userName']);
 	unset($_SESSION['admin']);
         unset($_SESSION['timeout']);
+        unset($_SESSION['isLDAP']);
         
 	session_destroy(); 
         
@@ -189,25 +193,32 @@ function logoutUser($message){
         echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
 }
 function displayUpdateProfile(){
+    
     ?>
-    <form name="update" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-        First Name: <input name="fname" type="text" /><br />
-        Last Name: <input name="lname" type="text" /><br />
-        <?php 
-        displayRanks(); echo "<br />";
-        displayDivisionID(); echo "<br />";
-        displayAssign(); echo "<br />";
-        displaySUPVDropDown(); echo "<br />";
-        ?>
-        Hire Date: <?php displayDateSelect("tis"); ?><br />
-        Radio Number: <input name="radio" type="text" /><br />
-        <input type="submit" name="updateBtn" value="Update Profile" />
-    </form>
+        <form name="update" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
+        </div><div align="center" class="login">
+                <table>
+                    <tr><td>First Name: </td><td><input name="fname" type="text" /></td></tr>
+                    <tr><td>Last Name: </td><td><input name="lname" type="text" /></td></tr>
+                    <?php 
+                    echo "<tr><td>Rank:</td><td>"; displayRanks(); echo "</td></tr>";
+                    echo "<tr><td>Division:</td><td>"; displayDivisionID(); echo "</td></tr>";
+                    echo "<tr><td>Assigned Shift:</td><td>"; displayAssign(); echo "</td></tr>";
+                    echo "<tr><td>Supervisor:</td><td>"; displaySUPVDropDown(); echo "</td></tr>";
+                    ?>
+                    <tr><td>Hire Date: </td><td><?php displayDateSelect("tis"); ?></td></tr>
+                    <tr><td>Radio Number: </td><td><input name="radio" type="text" /></td></tr>
+                    <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
+                </table>
+            </div><div class="clear"></div>
+        </form>
+        <div class="divider"></div>
+        
     <?php
 }
 function displayRanks(){
     ?>
-    Rank: <select name="grade">
+        <select name="grade">
         <option value=""></option>
         <option value="CIV">Civil</option>
         <option value="DEP">Deputy</option>
@@ -229,7 +240,7 @@ function displayDivisionID(){
     if (!$result) {
         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     }
-    echo 'Division: <select name="divisionID"><option value=""></option>';
+    echo '<select name="divisionID"><option value=""></option>';
     
     while ($row = $result->fetch_assoc()){
         echo '<option value="'.$row['DIVISIONID'].'">'.$row['DESCR'].'</option>';
@@ -247,7 +258,7 @@ function displayAssign(){
     if (!$result) {
         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     }
-    echo 'Assigned Shift: <select name="assignment"><option value=""></option>';
+    echo '<select name="assignment"><option value=""></option>';
     
     while ($row = $result->fetch_assoc()){
         echo '<option value="'.$row['ABBREV'].'">'.$row['DESCR'].'</option>';
@@ -267,7 +278,7 @@ function displaySUPVDropDown(){
     if (!$result) {
         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     }
-    echo 'Supervisor: <select name="supervisors"><option value=""></option>';
+    echo '<select name="supervisors"><option value=""></option>';
     
     while ($row = $result->fetch_assoc()){
         echo '<option value="'.$row['ID'].'">'.$row['GRADE']." ".$row['LNAME']." (".$row['ID'].')</option>';
@@ -282,18 +293,14 @@ function displayDateSelect($inputName){
     <script type="text/javascript" src="bin/jQuery/js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="bin/jQuery/js/jquery-ui-1.8.21.custom.min.js"></script>
     <script type="text/javascript">
-    <script>
-    $(function() {
+        $(function() {
             // Datepicker
             $('#datepicker').datepicker({
                     inline: true
             });
-    });
+        });
     </script>
-    <h2 class="demoHeaders">Datepicker</h2>
-    <div id="datepicker"></div>
     <input name="<?php echo $inputName ?>" type="text" id="datepicker" />
-    </div>
     <?php
 }
 
