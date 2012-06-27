@@ -27,7 +27,7 @@ function displayUserMenu($config){
 		if($config->adminLvl >= 75){ 
 			?>
 			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&AddUserBtn=true">Add Users</a><br />
-			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&EditUserBtn=true">Edit Users</a><br />
+			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&EditUserBtn=true">Change User Password or Admin Level</a><br />
 			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&DelUserBtn=true">Remove User</a><br />
                         <a href="<?php echo $_SERVER['REQUEST_URI']; ?>&DispUsers=true">Display/Edit All Users</a><br />
 		<?php 
@@ -44,10 +44,12 @@ function displayPassChange($useAdmin, $addUser){
 		$password1 = isset($_POST['password1']) ? $_POST['password1'] : '';
 		$password2 = isset($_POST['password2']) ? $_POST['password2'] : '';
 		$admin = isset($_POST['admin']) ? $_POST['admin'] : '';
-		if($useAdmin && !$addUser)
-                    $error .= delUser($username)."<br />";
+		if(!$addUser)
+                    $error .= resetPass($username, $password1, $password2, $admin);
+                else
 		$error .= registerUser($username,$password1,$password2, $admin);
     }
+    
     if ((!isset($_POST['submitBtn'])) || ($error != '')) {
         if(!$addUser){
             echo '<div class="caption">Change Password</div>';
@@ -67,7 +69,9 @@ function displayPassChange($useAdmin, $addUser){
 			<?php 
 		}
 		if($_SESSION['admin'] >= $adminLvl && $useAdmin && !$addUser){
-			showAllUsers();        
+                     echo '<tr><td>Username:</td><td><SELECT name="username">';
+                     showAllUsers();      
+                     echo ' </SELECT>';
 		}
 		if(!$useAdmin && !$addUser){
 			?>
@@ -102,11 +106,9 @@ function displayPassChange($useAdmin, $addUser){
         <div id="result">
             <table width="100%"><tr><td><br/>
     <?php
-            if ($error == '' && !$useAdmin && !$addUser) {
+            if ($error == '' && !$addUser) {
                     echo " Password was successfully changed!<br/><br/>";
 					//history('Changed Password');
-                    echo ' <a href="/">Home</a>';
-
             }
             else if ($error == '' && $useAdmin && $addUser) {
                     echo "User Added!!!<br/><br/>";
@@ -115,7 +117,7 @@ function displayPassChange($useAdmin, $addUser){
                     echo ' <a href="/">Home</a>';
             }
             else 
-				echo $error;
+                echo $error;
 
     ?>
                     <br/><br/><br/></td></tr></table>
@@ -174,13 +176,21 @@ function displayDelUser(){
 }
 function showAllUsers(){
 	?>
-	<tr><td>Username:</td><td><SELECT name="username">
+	
 	<?php	
 	//Display all users for drop down scroll selection
 	//Get all users from DB
-	echo '<OPTION value=\"Username\">Username</OPTION>';
+        $mysqli = connectToSQL();
+        $myq = "SELECT ID FROM EMPLOYEE";
+        $result = $mysqli->query($myq);
+        if (!$result) 
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+            
+        while($row = $result->fetch_assoc()) {
+	echo "<OPTION value='" . $row['ID'] . "'>" . $row['ID'] . "</OPTION>";
+        }
 	
-	echo ' </SELECT>';
+	
 }
 function showAdminLvls(){
 	echo '<select name="admin" class="text">';

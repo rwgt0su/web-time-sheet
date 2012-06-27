@@ -30,6 +30,7 @@ ini_set('display_errors', True);
 session_save_path('/var/www/sessions');
 session_start();
 
+//Database related fucntions
 require_once 'bin/db_sqli.php';
 
 //User Based Files
@@ -55,6 +56,9 @@ require_once 'bin/wts_announce.php';
 
 //Searching
 require_once 'bin/wts_search.php';
+
+//Time gain/use (leave) request functions
+require_once 'bin/time_request_functions.php';
 
 function popUpMessage($message){
 	echo '<script type="text/javascript">';

@@ -30,6 +30,36 @@ function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
 		}
 	}
 	return $errorText;
+} // end registerUser()
+
+function resetPass($user, $pass1, $pass2, $admin) {
+    //reset $user's password to $pass
+     
+    // Check passwords match
+	if (strcmp($pass1, $pass2) != 0){
+		$error = "Passwords are not identical!";
+                return $error;
+	}
+	else if (strlen($pass1) < 6){
+		$error = "Password is too short!";
+                return $error;
+	}
+        
+    $mysqli = connectToSQL();
+    $user = strtoupper($mysqli->real_escape_string($user));
+    $pass1 = $mysqli->real_escape_string($pass1);
+    $myq="UPDATE EMPLOYEE SET PASSWD='".saltyHash($pass1)."', ADMINLVL=". $admin ." " 
+            . "WHERE ID='". $user . "' ";
+    $result = $mysqli->query($myq);
+
+    //show SQL error msg if query failed
+    if (!$result) {
+    throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+    $error = "DATABASE ERROR";
+    }
+    else
+        $error = '';
+    return $error;
 }
 
 function loginUser($user,$pass){
@@ -387,4 +417,35 @@ function displayLogin($config){
         displayLogout();
     }
 }
+?>
+
+                <?php
+function displayInsertUser(){
+
+    if (isset($_POST['submit'])) {
+        $ID=$_POST['ID'];
+        $pass1=$_POST['pass1'];
+        $pass2=$_POST['pass1'];
+        $adminLvl=$_POST['adminLvl'];
+
+        $msg = registerUser($ID,$pass1,$pass2,$adminLvl);
+        
+        if(empty($msg))
+            echo "New user <b>".strtoupper($ID)."</b> added successfully.";
+    }
+        
+?>
+        
+<form name="insert" method="post" action="/?newuser=true">
+        <p>Add a new user:</p>
+        <p>Login ID:<input type="text" name="ID"></p>
+	<p>Password:<input type="password" name="pass1"></p>
+        <p>Re-type password:<input type="password" name="pass2"></p>
+        <p>Admin Level:<input type="text" name="adminLvl"></p>
+        
+        <p><input type="submit" name="submit" value="Submit"></p>
+</form>
+        
+<?php        
+}      
 ?>
