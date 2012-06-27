@@ -195,7 +195,20 @@ a {
             display: block;
             clear: both;
         }
-        .content_highlight .login .thumbnail {
+            .content_highlight .login table {
+                
+
+            }
+
+            .content_highlight .login table td {
+                padding: 4px;
+            }
+
+            .content_highlight .login table tr {
+                
+            } 
+            
+            .content_highlight .login .thumbnail {
                 background: #000;
                 width: 130px;
                 height: 130px;
@@ -235,7 +248,7 @@ a {
         
         
         .content_highlight .post table {
-            border: 1px solid #cccccc;
+            border: 2px solid #cccccc;
             
         }
         
