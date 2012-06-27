@@ -10,6 +10,7 @@ Class wts_content {
     public $isUserMenu;
     public $isAnounceAdmin;
     public $isSearching;
+    public $isUpdateProfile; 
     
     public function wts_content(){
         //get passed variables based on URL
@@ -23,6 +24,7 @@ Class wts_content {
         $this->isUserMenu = isset($_GET['usermenu']) ? $_GET['usermenu'] : false;
         $this->isAnounceAdmin = isset($_GET['isAnounceAdmin']) ? $_GET['isAnounceAdmin'] : false;
         $this->isSearching = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
+        $this->isUpdateProfile = isset($_GET['updateProfile']) ? $_GET['updateProfile'] : false;
         
         if(empty($_GET)){
             $this->isHome = true;

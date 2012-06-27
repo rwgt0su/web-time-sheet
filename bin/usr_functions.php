@@ -121,7 +121,7 @@ function loginLDAPUser($user,$pass,$config){
                         $_SESSION['validUser'] = true;
                         $_SESSION['timeout'] = time();
                         $validUser = true;
-                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
+                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['REQUEST_URI'].'" />';
                     }
                     else
                         $errorText .= "Failed to authenticate user: " . $ldapbind;
@@ -142,31 +142,29 @@ function loginLDAPUser($user,$pass,$config){
        }
        //User not found within database, check for Active Directory
        else{
-           if (empty($user) || empty($pass)){
-                echo "One or more fields blank. Bound anonymously</br>";
+            if ($user != "" && $pass != "") {
+                $ds = ldap_connect($config->ldap_server);
+                $ldaprdn = $user . '@' . $config->domain;
+                ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
+                ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
+                if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
+                    //Authorization success
+                    $admin = "0";
+                    registerUser($user, $pass, $pass, $admin, "1");
+                    $errorText .= " and Valid password ";
+                    $_SESSION['userName'] = $user;
+                    $_SESSION['admin'] = $admin;
+                    $_SESSION['validUser'] = true;
+                    $_SESSION['timeout'] = time();
+                    $validUser = true;
+                    echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'?updateProfile=true" />';
+                    
+                }
+                else
+                    $errorText .= "Failed to authenticate user: " . $ldapbind;
             }
-            else{
-               if ($user != "" && $pass != "") {
-                    $ds = ldap_connect($config->ldap_server);
-                    $ldaprdn = $user . '@' . $config->domain;
-                    ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
-                    ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
-                    if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
-                        //Authorization success
-                        $admin = "0";
-                        registerUser($user, $pass, $pass, $admin, "1");
-                        $errorText .= " and Valid password ";
-                        $_SESSION['userName'] = $user;
-                        $_SESSION['admin'] = $admin;
-                        $_SESSION['validUser'] = true;
-                        $_SESSION['timeout'] = time();
-                        $validUser = true;
-                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
-                    }
-                    else
-                        $errorText .= "Failed to authenticate user: " . $ldapbind;
-                } 
-            }
+            $errorText .= "Invalid Input: Missing Arguments";
+            
        }
 
     if ($validUser != true)
@@ -189,6 +187,114 @@ function logoutUser($message){
         
         echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
         echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
+}
+function displayUpdateProfile(){
+    ?>
+    <form name="update" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+        First Name: <input name="fname" type="text" /><br />
+        Last Name: <input name="lname" type="text" /><br />
+        <?php 
+        displayRanks(); echo "<br />";
+        displayDivisionID(); echo "<br />";
+        displayAssign(); echo "<br />";
+        displaySUPVDropDown(); echo "<br />";
+        ?>
+        Hire Date: <?php displayDateSelect("tis"); ?><br />
+        Radio Number: <input name="radio" type="text" /><br />
+        <input type="submit" name="updateBtn" value="Update Profile" />
+    </form>
+    <?php
+}
+function displayRanks(){
+    ?>
+    Rank: <select name="grade">
+        <option value=""></option>
+        <option value="CIV">Civil</option>
+        <option value="DEP">Deputy</option>
+        <option value="SGT">Sergeant</option>
+        <option value="LT">Lieutenant</option>
+        <option value="CPT">Captain</option>
+        <option value="Major">Major</option>
+        <option value="SRF">Sheriff</option>
+    </select>
+    <?php
+}
+
+function displayDivisionID(){
+    $mysqli = connectToSQL();
+    $myq = "SELECT * FROM `DIVISION` WHERE 1";
+    $result = $mysqli->query($myq);
+
+    //show SQL error msg if query failed
+    if (!$result) {
+        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+    }
+    echo 'Division: <select name="divisionID"><option value=""></option>';
+    
+    while ($row = $result->fetch_assoc()){
+        echo '<option value="'.$row['DIVISIONID'].'">'.$row['DESCR'].'</option>';
+    }
+
+    echo '</select>';
+
+}
+function displayAssign(){
+    $mysqli = connectToSQL();
+    $myq = "SELECT * FROM `ASSIGNMENT` WHERE 1";
+    $result = $mysqli->query($myq);
+
+    //show SQL error msg if query failed
+    if (!$result) {
+        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+    }
+    echo 'Assigned Shift: <select name="assignment"><option value=""></option>';
+    
+    while ($row = $result->fetch_assoc()){
+        echo '<option value="'.$row['ABBREV'].'">'.$row['DESCR'].'</option>';
+    }
+
+    echo '</select>';
+
+}
+
+function displaySUPVDropDown(){
+    
+    $mysqli = connectToSQL();
+    $myq = "SELECT * FROM `EMPLOYEE` WHERE `ADMINLVL` >=25";
+    $result = $mysqli->query($myq);
+
+    //show SQL error msg if query failed
+    if (!$result) {
+        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+    }
+    echo 'Supervisor: <select name="supervisors"><option value=""></option>';
+    
+    while ($row = $result->fetch_assoc()){
+        echo '<option value="'.$row['ID'].'">'.$row['GRADE']." ".$row['LNAME']." (".$row['ID'].')</option>';
+    }
+
+    echo '</select>';
+}
+
+function displayDateSelect($inputName){
+    ?>
+    <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="bin/jQuery/js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="bin/jQuery/js/jquery-ui-1.8.21.custom.min.js"></script>
+    <script type="text/javascript">
+    <script>
+    $(function() {
+            // Datepicker
+            $('#datepicker').datepicker({
+                    inline: true
+            });
+    });
+    </script>
+    <h2 class="demoHeaders">Datepicker</h2>
+    <div id="datepicker"></div>
+    <input name="<?php echo $inputName ?>" type="text" id="datepicker" />
+    </div>
+    <?php
 }
 
 function delUser($user){
