@@ -54,14 +54,14 @@ function resultTable($mysqli, $result){
             }
             else {
                 echo "<td>${row["$fieldNameAliasArray[$fieldCounter]"]}</td>";
+                //echo "<td><a href='".$_SERVER['REQUEST_URI']."&editRecord=true'>${row["$fieldNameAliasArray[$fieldCounter]"]}</a></td>";
             }
         } //loop through fields
-        if ($isEditBtn)
+        if ($isEditBtn){
             echo '<td><input type="submit" name="saveBtn" value="Save" /></td>';
-            
-        echo '</tr></form>'; //end data record and form
-       
-       
+            echo '</tr></form>'; //end data record and form
+        }
+                      
         echo '</tr>'; //end data record
        
     } //loop through records
@@ -80,8 +80,10 @@ function resultTable($mysqli, $result){
         $joinOn = NULL;
         //print_r($fieldNameArray); //DEBUG
        for($i=0; $i < $numOfCols; $i++) {
-          if( !($fieldNameArray[$i] == 'AUDITID' || $fieldNameArray[$i] == 'IP' || $fieldNameAliasArray[$i] == 'Approved') ) {
+           //fields that are not allowed to be edited
+          if( !($fieldNameArray[$i] == 'AUDITID' || $fieldNameArray[$i] == 'IP' || $fieldNameArray[$i] == 'STATUS' || $fieldNameArray[$i] == 'APPROVEDBY' || $fieldNameArray[$i] == 'REQDATE' || $fieldNameArray[$i] == 'TSTAMP') ) {
             if($fieldNameArray[$i] == 'DESCR')
+                //append ID to the table name to get correct fieldname
                 $values["$fieldNameArray[$i]"] = $tableNameArray[$i] . "ID="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
             else
                 $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] ."="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
@@ -140,7 +142,15 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     
     //build a drop-down from query result
     ?>
-    <td> <select name="<?php echo $formName; ?>">
+    <script type="text/javascript">
+    $(function(){
+        $("#the_select").change(function(){
+            window.location=window.location.href + '&type=' + this.value
+        });
+    });
+    </script>
+   <!-- <td> <select name="<?php //echo $formName; ?>" onChange="javascript:this.form.action=this.form.action+'?type='+this.options[selectedIndex].value;this.form.change();"> -->
+    <td> <select name="<?php echo $formName; ?>" id="the_select">
     <?php
     $fieldNameArray = array();
     for($i=0;$finfo = $result->fetch_field();$i++)

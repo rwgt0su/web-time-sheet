@@ -24,8 +24,8 @@ if (isset($_POST['submit'])) {
     }
     
     //interval calculation in hours
-    $endSec = strtotime($end->format("H:i:s"));  
-    $begSec = strtotime($beg->format("H:i:s"));
+    $endSec = strtotime($end->format("Y-m-d H:i:s"));  
+    $begSec = strtotime($beg->format("Y-m-d H:i:s"));
     $hours = ($endSec - $begSec) / 3600;
     //SQL TIME format
     $beg = $beg->format("H:i:s");  
@@ -33,7 +33,6 @@ if (isset($_POST['submit'])) {
     
     $type = $mysqli->real_escape_string($_POST['type']);
     $comment = $mysqli->real_escape_string($_POST['comment']);
-    $reqdate = $mysqli->real_escape_string(date("Y-m-d")); //current date in SQL date format YYYY-MM-DD
     $auditid = strtoupper($_SESSION['userName']);
     
     if ($type == 'PR' && !($hours == 8 || $hours == 12) ) {
@@ -44,7 +43,7 @@ if (isset($_POST['submit'])) {
     //query to insert the record
     $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, NOTE, STATUS, REQDATE, AUDITID, IP)
             VALUES ('$ID', '$usedate', '$beg', '$end', '$hours', '$type', 
-                    '$comment', 'PENDING', '$reqdate','$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
+                    '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
     //echo $myq; //DEBUG
     $result = $mysqli->query($myq);
 
@@ -57,28 +56,27 @@ if (isset($_POST['submit'])) {
         echo '<h3>Request accepted. The reference number for this request is <b>' 
             . $mysqli->insert_id . '</b></h3>.';
             }
-}
-//else { //submit not pressed
-//if (!isset($_POST['submit'])) {
-    //query to get currently available types of time 
-$mysqli = connectToSQL();
-$myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE";
-$result = $mysqli->query($myq);
+} //end of 'is submit pressed?'
 
-//show SQL error msg if query failed
-if (!$result) 
-    throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+$mysqli = connectToSQL();
 ?>
 <html><body>
+        <h2>Employee Request</h2>
+ <!-- this worked until I moved things around. Now I have no idea why it stopped working! -->       
 <form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
-    
-	<h2>Employee Leave Request</h2>
-        
-        <p>User ID: <input type="text" name="ID" value="<?php echo $_SESSION['userName']; ?>"></p>
-        <p>Date of use/accumulation: <input type="text" name="usedate" value="<?php echo date("Y-m-d"); ?>"></p>
+        <p><h3>Type of Request: </h3> <?php dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?></p>
+        <p>User ID: <?php echo $_SESSION['userName']; ?> <input type="hidden" name="ID" value="<?php echo $_SESSION['userName']; ?>"></p>
+        <p>Date of use/accumulation: <?php displayDateSelect('usedate'); ?></p>
+        <?php 
+        $type  = isset($_GET['type']) ? $_GET['type'] : '';
+        if($type == 'PR') {
+                echo "<input type='radio' name='shift' value='8'>8 hour shift";
+                echo "<input type='radio' name='shift' value='12'>12 hour shift";
+        }
+        ?> 
         <p>Start time: <input type="text" name="beg">
         End time: <input type="text" name="end"></p>
-        <p>Time type: <?php dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?></p>
+        
         <p>Comment: <input type="text" name="comment"></p>
 	
                 
@@ -191,7 +189,8 @@ $endDate = $endDate->format('Y-m-d');
         case 100: //full admin, complete raw dump
         
             $myq = "SELECT *
-                    FROM REQUEST";
+                    FROM REQUEST
+                    WHERE USEDATE BETWEEN '". $startDate."' AND '".$endDate."'"; 
             break;
 } //end switch
     
