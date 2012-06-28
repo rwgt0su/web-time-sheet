@@ -52,7 +52,7 @@ function displayContent($wts_content, $config){
     }
     if($wts_content->isUpdateProfile){
         ?>
-        <div class="post"><?php displayUpdateProfile(); ?><div class="clear"></div></div><div class="divider"></div>
+        <div class="post"><?php displayUpdateProfile($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
          

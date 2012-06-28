@@ -39,5 +39,9 @@ Class Config {
 	}
 }
 
+function showInputBoxError(){
+    echo 'style="background:#FFFFFF;border:1px solid #FF0000"';
+}
+
 
 ?>
