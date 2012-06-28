@@ -222,22 +222,102 @@ function logoutUser($message){
         echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
         echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
 }
-function displayUpdateProfile(){
-    
+function displayUpdateProfile($config){
+    if($config->adminLvl >= 75){
+        
+    }
+    if(isset($_POST['updateBtn'])){
+        $fname = isset($_POST['fname']) ? $_POST['fname'] : false;
+        $lname = isset($_POST['lname']) ? $_POST['lname'] : false;
+        $rankID = isset($_POST['rankID']) ? $_POST['rankID'] : '';
+        $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
+        $assignID = isset($_POST['assignID']) ? $_POST['assignID'] : false;
+        $supvID = isset($_POST['supvID']) ? $_POST['supvID'] : false;
+        $hireDate = isset($_POST['hireDate']) ? $_POST['hireDate'] : false;
+        $radioID = isset($_POST['radioID']) ? $_POST['radioID'] : false;
+        $munisID = isset($_POST['munisID']) ? $_POST['munisID'] : false;
+        $userID = isset($_POST['userID']) ? $_POST['userID'] : false;
+        
+        $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+            `MUNIS` = '".$munisID."',
+            `LNAME` = '".$lname."',
+            `FNAME` = '".$fname."',
+            `GRADE` = '".$rankID."',
+            `DIVISIONID` = '".$divisionID."',
+            `SUPV` = '".$supvID."',
+            `ASSIGN` = '".$assignID."',
+            `RADIO` = '".$radioID."',
+            `ADMINLVL` = '".$config->adminLvl."' 
+            WHERE CONVERT( `EMPLOYEE`.`ID` USING utf8 ) = '".$userID."' LIMIT 1 ;";
+        //Perform SQL Query
+        $mysqli = connectToSQL();
+        $result = $mysqli->query($myq);
+        
+        //show SQL error msg if query failed
+        if (!$result) {
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        }
+        
+        
+    }
+    else{
+        //Get stored information (first view)
+        $mysqli = connectToSQL();
+        $sql_user = strtoupper($mysqli->real_escape_string($_SESSION['userName']));
+        $myq = "SELECT * FROM EMPLOYEE WHERE ID='". $sql_user . "'";
+        $result = $mysqli->query($myq);
+        
+        //show SQL error msg if query failed
+        if (!$result) {
+            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        }
+        
+        //no loop, should be exactly one result
+        $resultAssoc = $result->fetch_assoc();
+        
+        $fname = $resultAssoc['FNAME'];
+        $lname = $resultAssoc['LNAME'];
+        $rankID = $resultAssoc['GRADE'];
+        $divisionID = $resultAssoc['DIVISIONID'];
+        $assignID = $resultAssoc['ASSIGN'];
+        $supvID = $resultAssoc['SUPV'];
+        $hireDate = $resultAssoc['TIS'];
+        $radioID = $resultAssoc['RADIO'];
+        $munisID = $resultAssoc['MUNIS'];
+        
+    }
+    $username = $_SESSION['userName']
     ?>
         <form name="update" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
         </div><div align="center" class="login">
+            <h3>Username: <?php echo $username; ?></h3>
+            <input type="hidden" name="userID" value="<?php echo $username; ?>" />
                 <table>
-                    <tr><td>First Name: </td><td><input name="fname" type="text" /></td></tr>
-                    <tr><td>Last Name: </td><td><input name="lname" type="text" /></td></tr>
+                    <tr><td>First Name: </td><td><input name="fname" type="text" <?php if(!$fname) showInputBoxError(); else echo 'value="'.$fname.'"'; ?> /></td></tr>
+                    <tr><td>Last Name: </td><td><input name="lname" type="text" <?php if(!$lname) showInputBoxError(); else echo 'value="'.$lname.'"'; ?> /></td></tr>
                     <?php 
-                    echo "<tr><td>Rank:</td><td>"; displayRanks(); echo "</td></tr>";
-                    echo "<tr><td>Division:</td><td>"; displayDivisionID(); echo "</td></tr>";
-                    echo "<tr><td>Assigned Shift:</td><td>"; displayAssign(); echo "</td></tr>";
-                    echo "<tr><td>Supervisor:</td><td>"; displaySUPVDropDown(); echo "</td></tr>";
+                    echo "<tr><td>Division:</td><td>"; displayDivisionID("divisionID", $divisionID); echo "</td></tr>";
+                    echo "<tr><td>Supervisor:</td><td>"; displaySUPVDropDown("supvID", $supvID); echo "</td></tr>";
+                    
+                    //Payrate dependent
+                    if($config->adminLvl >= 75){
+                        echo "<tr><td>Rank:</td><td>"; displayRanks("rankID", $rankID); echo "</td></tr>";
+                        echo "<tr><td>Assigned Shift:</td><td>"; displayAssign("assignID", $assignID); echo "</td></tr>";
+                        ?>
+                        <tr><td>MUNIS ID: </td><td><input name="munisID" type="text" <?php if(!$munisID) showInputBoxError(); else echo 'value="'.$munisID.'"'; ?> /></td></tr>
+                        <?php
+                    }
+                    else{
+                        ?>
+                        <input type="hidden" name="rankID" value="<?php echo $rankID; ?>" />
+                        <input type="hidden" name="assignID" value="<?php echo $assignID; ?>" />
+                        <input type="hidden" name="munisID" value="<?php echo $munisID; ?>" />
+                        <?php
+                    }
+                    
                     ?>
-                    <tr><td>Hire Date: </td><td><?php displayDateSelect("tis"); ?></td></tr>
-                    <tr><td>Radio Number: </td><td><input name="radio" type="text" /></td></tr>
+                    <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", $hireDate, $required=true); ?></td></tr>
+                    <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
                     <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
                 </table>
             </div><div class="clear"></div>
@@ -246,22 +326,28 @@ function displayUpdateProfile(){
         
     <?php
 }
-function displayRanks(){
-    ?>
-        <select name="grade">
-        <option value=""></option>
-        <option value="CIV">Civil</option>
-        <option value="DEP">Deputy</option>
-        <option value="SGT">Sergeant</option>
-        <option value="LT">Lieutenant</option>
-        <option value="CPT">Captain</option>
-        <option value="Major">Major</option>
-        <option value="SRF">Sheriff</option>
-    </select>
-    <?php
+function displayRanks($selectName, $selected=false){
+   $mysqli = connectToSQL();
+    $myq = "SELECT * FROM `Ranks` WHERE 1";
+    $result = $mysqli->query($myq);
+
+    //show SQL error msg if query failed
+    if (!$result) {
+        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+    }
+    echo '<select name="'.$selectName.'"><option value=""></option>';
+    
+    while ($row = $result->fetch_assoc()){
+        echo '<option value="'.$row['ABBREV'].'"';
+        if (strcmp($selected, $row['ABBREV']) == 0)
+            echo " selected ";
+        echo '>'.$row['DESCRIPTION'].'</option>';
+    }
+
+    echo '</select>';
 }
 
-function displayDivisionID(){
+function displayDivisionID($selectName, $selected=false){
     $mysqli = connectToSQL();
     $myq = "SELECT * FROM `DIVISION` WHERE 1";
     $result = $mysqli->query($myq);
@@ -270,16 +356,19 @@ function displayDivisionID(){
     if (!$result) {
         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     }
-    echo '<select name="divisionID"><option value=""></option>';
+    echo '<select name="'.$selectName.'"><option value=""></option>';
     
     while ($row = $result->fetch_assoc()){
-        echo '<option value="'.$row['DIVISIONID'].'">'.$row['DESCR'].'</option>';
+        echo '<option value="'.$row['DIVISIONID'].'"';
+        if (strcmp($selected, $row['DIVISIONID']) == 0)
+            echo " selected ";
+        echo '>'.$row['DESCR'].'</option>';
     }
 
     echo '</select>';
 
 }
-function displayAssign(){
+function displayAssign($selectName, $selected = false){
     $mysqli = connectToSQL();
     $myq = "SELECT * FROM `ASSIGNMENT` WHERE 1";
     $result = $mysqli->query($myq);
@@ -288,17 +377,20 @@ function displayAssign(){
     if (!$result) {
         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     }
-    echo '<select name="assignment"><option value=""></option>';
+    echo '<select name="'.$selectName.'"><option value=""></option>';
     
     while ($row = $result->fetch_assoc()){
-        echo '<option value="'.$row['ABBREV'].'">'.$row['DESCR'].'</option>';
+        echo '<option value="'.$row['ABBREV'].'"';
+        if (strcmp($selected, $row['ABBREV']) == 0)
+            echo " selected ";
+        echo '>'.$row['DESCR'].'</option>';
     }
 
     echo '</select>';
 
 }
 
-function displaySUPVDropDown(){
+function displaySUPVDropDown($selectName, $selected = false){
     
     $mysqli = connectToSQL();
     $myq = "SELECT * FROM `EMPLOYEE` WHERE `ADMINLVL` >=25";
@@ -308,16 +400,19 @@ function displaySUPVDropDown(){
     if (!$result) {
         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     }
-    echo '<select name="supervisors"><option value=""></option>';
+    echo '<select name="'.$selectName.'"><option value=""></option>';
     
     while ($row = $result->fetch_assoc()){
-        echo '<option value="'.$row['ID'].'">'.$row['GRADE']." ".$row['LNAME']." (".$row['ID'].')</option>';
+        echo '<option value="'.$row['ID'].'"';
+        if (strcmp($selected, $row['ID']) == 0)
+            echo " selected ";
+        echo '>'.$row['GRADE']." ".$row['FNAME']. " ".$row['LNAME']." (".$row['ID'].')</option>';
     }
 
     echo '</select>';
 }
 
-function displayDateSelect($inputName){
+function displayDateSelect($inputName, $selected = false, $required = false){
     ?>
     <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
     <script type="text/javascript" src="bin/jQuery/js/jquery-1.7.2.min.js"></script>
@@ -330,7 +425,7 @@ function displayDateSelect($inputName){
             });
         });
     </script>
-    <input name="<?php echo $inputName ?>" type="text" id="datepicker" />
+    <input name="<?php echo $inputName ?>" type="text" id="datepicker" <?php if(!$selected){ if($required) showInputBoxError (); } else echo 'value="'.$selected.'"'; ?> />
     <?php
 }
 
