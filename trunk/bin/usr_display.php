@@ -14,7 +14,7 @@ function displayUserMenu($config){
 	}
 	else if (isset($_GET['DelUserBtn'])){
             if(isValidUser())
-		displayDelUser();
+		displayDelUser($config);
 	}
         else if (isset($_GET['DispUsers'])){
 		displayUsers();
@@ -127,52 +127,47 @@ function displayPassChange($useAdmin, $addUser){
     <?php            
 	}
 }        
-function displayDelUser(){
-	checkAdmin();
+function displayDelUser($config){
+    if($config->adminLvl >= 75){
 	$error = '';
 	
-    if (isset($_POST['submitBtn'])){
-            // Get user input
-            $username  = isset($_POST['username']) ? $_POST['username'] : '';
-            $error = delUser($username);
-    }
-    if ((!isset($_POST['submitBtn'])) || ($error != '')) {?>
-        <div class="caption">Delete User</div>
-        <div id="icon">&nbsp;</div>
-        <div id="results"><a href="<?php echo $_SERVER['PHP_SELF']; ?>">Back</a></div>
-        <form action="<?php echo $_SERVER['PHP_SELF']; ?>?DelUserBtn=true" method="post" name="delform">
-            <table width="100%"><?php
-		if($_SESSION['admin'] == 1){
-			showAllUsers();   
-		}
-		?>
-            </td></tr>
-            <tr><td colspan="2" align="center"><input class="text" type="submit" name="submitBtn" value="Delete User" /></td></tr>
-            </table>  
-        </form>
+        if (isset($_POST['removeBtn'])){
+                // Get user input
+                $username  = isset($_POST['user_to_Delete']) ? $_POST['user_to_Delete'] : '';
+                $error = delUser($username);
+        }
+        if ((!isset($_POST['submitBtn'])) || ($error != '')) {?>
+            <a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true">Back</a>
+            <form action="<?php echo $_SERVER['REQUEST_URI']; ?>?DelUserBtn=true" method="post" name="delform">
+                <table width="100%"><?php
 
-    <?php 
+                        echo '<tr><td align="center"><select name="user_to_Delete">';
+                            showAllUsers(); 
+                            echo '</select>';
+                    ?>
+                </td></tr>
+                <tr><td colspan="2" align="center"><input class="text" type="submit" name="removeBtn" value="Delete User" /></td></tr>
+                </table>  
+            </form>
+
+        <?php 
     }   
-	if (isset($_POST['submitBtn'])){
+	if (isset($_POST['removeBtn'])){
 
     ?>
-        <div class="caption">Deletion result:</div>
+        <h2>Deletion result:</h2>
         <div id="icon2">&nbsp;</div>
         <div id="result">
             <table width="100%"><tr><td><br/>
     <?php
-            if ($error == '') {
-                    echo $username.", Was Successfully Deleted!<br/><br/>";
-                            //history($username.", was deleted from the system");
-                    echo ' <a href="/">Home</a>';
-            }
-            else echo $error;
+         echo $error;
     ?>
 				<br/><br/><br/></td></tr>
 			</table>
 		</div>
     <?php            
 	}
+    }
 }
 function showAllUsers(){
 	?>
