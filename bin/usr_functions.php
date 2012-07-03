@@ -204,16 +204,7 @@ function loginLDAPUser($user,$pass,$config){
                     //Authorization success
                     $admin = "0";
                     $_SESSION['lastLogin'] = "Never";
-                    registerUser($user, $pass, $pass, $admin, "1");
-                    //Update last login
-                    $myq = 'UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT( `EMPLOYEE`.`ID` USING utf8 ) = '.$user.' LIMIT 1 ;';
-                    $mysqli = connectToSQL();
-                    $result = $mysqli->query($myq);
-
-                    //show SQL error msg if query failed
-                    if (!$result) {
-                        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-                    }
+                    registerUser($user, $pass, $pass, $admin, "1");                    
                     $errorText .= " and Valid password ";
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
@@ -476,8 +467,8 @@ function delUser($user){
         
         if(!$result)
             $errorText = "No such user";
-        
-        
+        else
+            $errorText = "The User, ".$user." has been Removed";
 
    return $errorText;
 }
