@@ -144,6 +144,16 @@ function loginLDAPUser($user,$pass,$config){
                     if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
                         //Authorization success
                         $errorText .= " and Valid password ";
+                        
+                        //Update last login
+                        $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT(`EMPLOYEE`.`ID` USING utf8) = '".strtoupper($user)."' LIMIT 1;";
+                        $mysqli = connectToSQL();
+                        $result = $mysqli->query($myq);
+
+                        //show SQL error msg if query failed
+                        if (!$result) {
+                            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+                        }
                         $_SESSION['userName'] = $user;
                         $_SESSION['admin'] = $admin;
                         $_SESSION['validUser'] = true;
@@ -181,6 +191,15 @@ function loginLDAPUser($user,$pass,$config){
                     //Authorization success
                     $admin = "0";
                     registerUser($user, $pass, $pass, $admin, "1");
+                    //Update last login
+                    $myq = 'UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT( `EMPLOYEE`.`ID` USING utf8 ) = '.$user.' LIMIT 1 ;';
+                    $mysqli = connectToSQL();
+                    $result = $mysqli->query($myq);
+
+                    //show SQL error msg if query failed
+                    if (!$result) {
+                        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+                    }
                     $errorText .= " and Valid password ";
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
@@ -449,9 +468,27 @@ function delUser($user){
 }
 
 function displayLogout(){
+        $user = $_SESSION['userName'];
+        $mysqli = connectToSQL();
+        $myq = "SELECT `LASTLOGIN`
+            FROM `EMPLOYEE`
+            WHERE `ID` LIKE CONVERT( _utf8 '".$user."'
+            USING latin1 )
+            COLLATE latin1_swedish_ci
+            LIMIT 0 , 30 ";
+        $result = $mysqli->query($myq);
+
+        //show SQL error msg if query failed
+        if (!$result) {
+                throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        }
     	echo '<div id="result" align="right">Logged in as: <font size="3">';
-        echo $_SESSION['userName'];
-		echo "</font>";
+        echo $user;
+		echo "</font><br />";
+                $resultAssoc = $result->fetch_assoc(); 
+        
+                // Check user existence
+                echo "Last Login: " .$resultAssoc['LASTLOGIN'];
 		echo '<br /><a href="?logout=true">Log Out </a><br /><br />';
         echo "</div>";
 }
