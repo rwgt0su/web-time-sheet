@@ -36,7 +36,7 @@ function displayAdminAnnounce($config){
             <?php
         }
         if(isset($_GET['editAnnounce'])){
-            //get passed form fields
+            //User attempting to edit, get passed form fields
             $editorTitle = isset($_POST['editorTitle']) ? $_POST['editorTitle'] : '';
             $editorShort = isset($_POST['editorShort']) ? $_POST['editorShort'] : '';
             $editorOldShort = isset($_POST['editorOldShort']) ? $_POST['editorOldShort'] : '';
@@ -45,8 +45,8 @@ function displayAdminAnnounce($config){
             if (isset($_POST['editor110']) && !isset($_POST['editorPublish'])) 
                 $editorPublish = 0;
             
-            //no data passed so display data within SQL
-            if (!isset($_POST['editor110']) && !isset($_POST['editorShort'])) {
+            if (!isset($_POST['editorOldShort'])) {
+                //no valid announcement was passed so get data within SQL
                 $mysqli = connectToSQL();
                 $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH` FROM `NEWS` WHERE `SHORTNAME` = 
                     CONVERT( _utf8 '".$editorDisplay."' USING latin1 ) COLLATE latin1_swedish_ci";
@@ -82,18 +82,18 @@ function displayAdminAnnounce($config){
             </form>
             <?php
 
-            //Update with presented information
             if (isset($_POST['saveBtn'])) {
+                //User pressed Save Button, so update with presented information
                 $mysqli = connectToSQL();
-                $myq = "UPDATE `PAYROLL`.`NEWS` SET `SHORTNAME` = '".$editorShort."',
+                $myq = "UPDATE `PAYROLL`.`NEWS` SET 
+                    `SHORTNAME` = '".$editorOldShort."',
                     `TITLE` = '".$editorTitle."',
                     `BODY` = '".$editorData."',
                     `PUBLISH` = '".$editorPublish."',
                     `TSTAMP` = NOW( ),
                     `AUDITID` = '".strtoupper($_SESSION['userName'])."',
                     `IP` = 'INET_ATON(\'".$_SERVER['REMOTE_ADDR']."\')' 
-                    WHERE CONVERT( `NEWS`.`SHORTNAME` USING utf8 ) = '".$editorShort."' LIMIT 1 ;";
-                popUpMessage($myq);
+                    WHERE CONVERT( `NEWS`.`SHORTNAME` USING utf8 ) = '".$editorOldShort."' LIMIT 1 ;";
                 $result = $mysqli->query($myq);
                 if (!$result) 
                     throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
@@ -103,6 +103,7 @@ function displayAdminAnnounce($config){
             }
         }
         if(isset($_POST['addAnnounce'])){
+            //User pressed Add an Announcement
             $editorTitle = isset($_POST['editorTitle']) ? $_POST['editorTitle'] : '';
             $editorShort = isset($_POST['editorShort']) ? $_POST['editorShort'] : '';
             $editorPublish = isset($_POST['editorPublish']) ? $_POST['editorPublish'] : '1';
@@ -132,8 +133,8 @@ function displayAdminAnnounce($config){
             </form>
             <?php
 
-            //Save button pressed, save to database
-            if (isset($_POST['saveBtn']) && !$isShort) {
+            if (isset($_POST['saveBtn'])) {
+                //Save button pressed, save data to database
                 $mysqli = connectToSQL();
                 //$myq = "INSERT INTO `PAYROLL`.`NEWS` (`SHORTNAME`, `TITLE`, `BODY`, `PUBLISH`, `TSTAMP`, `AUDITID`, 'IP') VALUES ('".$editorShort."', '".$editorTitle."', '".$editorData."', '".$editorPublish."', NOW(), 'awturner', '10.1.30.57');";
                 $myq = "INSERT INTO `PAYROLL`.`NEWS` (`SHORTNAME`, `TITLE`, `BODY`, `PUBLISH`, `TSTAMP`, `AUDITID`, `IP`) 
