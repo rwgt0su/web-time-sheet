@@ -31,7 +31,6 @@ function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
 	}
 	return $errorText;
 } // end registerUser()
-
 function resetPass($user, $pass1, $pass2, $admin) {
     //reset $user's password to $pass
      
@@ -61,7 +60,6 @@ function resetPass($user, $pass1, $pass2, $admin) {
         $error = '';
     return $error;
 }
-
 function loginUser($user,$pass){
 	$errorText = '';
 	$validUser = false;
@@ -209,7 +207,6 @@ function loginLDAPUser($user,$pass,$config){
 	
     return $errorText;
 }
-
 function logoutUser($message){
 	unset($_SESSION['validUser']);
 	unset($_SESSION['userName']);
@@ -246,6 +243,7 @@ function displayUpdateProfile($config){
             `DIVISIONID` = '".$divisionID."',
             `SUPV` = '".$supvID."',
             `ASSIGN` = '".$assignID."',
+            `TIS` = '".Date('Y-m-d', strtotime($hireDate))."',    
             `RADIO` = '".$radioID."',
             `ADMINLVL` = '".$config->adminLvl."' 
             WHERE CONVERT( `EMPLOYEE`.`ID` USING utf8 ) = '".$userID."' LIMIT 1 ;";
@@ -257,8 +255,8 @@ function displayUpdateProfile($config){
         if (!$result) {
             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
         }
-        
-        
+        else
+            $result = "Successfully Updated Profile";
     }
     else{
         //Get stored information (first view)
@@ -319,6 +317,11 @@ function displayUpdateProfile($config){
                     <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", $hireDate, $required=true); ?></td></tr>
                     <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
                     <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
+                    <?php 
+                    if(isset($_POST['updateBtn'])){
+                      echo '<tr><td></td><td>'. $result .'</td></tr>';  
+                    }
+                    ?>
                 </table>
             </div><div class="clear"></div>
         </form>
