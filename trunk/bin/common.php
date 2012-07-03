@@ -60,8 +60,8 @@ require_once 'bin/wts_search.php';
 //Time gain/use (leave) request functions
 require_once 'bin/time_request_functions.php';
 
-//Alert functions
-require_once 'bin/wts_alerts.php';
+//Alert functions (not ready yet)
+//require_once 'bin/wts_alerts.php';
 
 function popUpMessage($message){
 	?>
@@ -156,7 +156,7 @@ function showDynamicTable($tableName, $rowArray){
         echo "\n row.insertCell(".$i.").innerHTML = newCode".$i.";";
     }
     ?>
-    }
+    }    
     function keyPressTest(e, obj)
     {
     var validateChkb = document.getElementById('chkValidateOnKeyPress');

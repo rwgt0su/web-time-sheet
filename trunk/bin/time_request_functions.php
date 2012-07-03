@@ -60,14 +60,17 @@ if (isset($_POST['submit'])) {
 
 $mysqli = connectToSQL();
 ?>
-<html><body>
         <h2>Employee Request</h2>
+        
+        <?php //dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?>
+    
  <!-- this worked until I moved things around. Now I have no idea why it stopped working! -->       
-<form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
-        <p><h3>Type of Request: </h3> <?php dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?></p>
+ <form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
+         <p><h3>Type of Request: </h3> <?php dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?></p>
         <p>User ID: <?php echo $_SESSION['userName']; ?> <input type="hidden" name="ID" value="<?php echo $_SESSION['userName']; ?>"></p>
         <p>Date of use/accumulation: <?php displayDateSelect('usedate'); ?></p>
         <?php 
+        if (isset($_GET['type'])) popUpMessage ("GET is set"); //DEBUG
         $type  = isset($_GET['type']) ? $_GET['type'] : '';
         if($type == 'PR') {
                 echo "<input type='radio' name='shift' value='8'>8 hour shift";
@@ -78,24 +81,15 @@ $mysqli = connectToSQL();
         End time: <input type="text" name="end"></p>
         
         <p>Comment: <input type="text" name="comment"></p>
-	
-                
-        <?php /*
-            //build a drop-down from query result
-            $result->data_seek(0);  
-            while ($row = $result->fetch_assoc()) 
-               {
-                 echo '<option value="' . $row['TIMETYPEID'] . '">' . $row['DESCR'] . '</option>';
-               }
-       */ ?>
-             
+
+	<p><input type="submit" name="submit" value="Submit"></p>  
+     
+   
+
+
         
-        
-       
-	<p><input type="submit" name="submit" value="Submit"></p>
-        
-</form>
-</body></html>
+</form> 
+
 <?php
 } // end displayLeaveForm()
 ?>
