@@ -145,6 +145,8 @@ function loginLDAPUser($user,$pass,$config){
                         //Authorization success
                         $errorText .= " and Valid password ";
                         
+                        //Set Last Login
+                        $_SESSION['lastLogin'] = $resultAssoc['LASTLOGIN'];
                         //Update last login
                         $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT(`EMPLOYEE`.`ID` USING utf8) = '".strtoupper($user)."' LIMIT 1;";
                         $mysqli = connectToSQL();
@@ -169,6 +171,17 @@ function loginLDAPUser($user,$pass,$config){
             else{
                 //check password entry with database stored password
                 if (strcmp(trim($resultAssoc['PASSWD']), trim(saltyHash($pass))) == 0){
+                    //Set Last Login
+                    $_SESSION['lastLogin'] = $resultAssoc['LASTLOGIN'];
+                    //Update last login
+                    $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT(`EMPLOYEE`.`ID` USING utf8) = '".strtoupper($user)."' LIMIT 1;";
+                    $mysqli = connectToSQL();
+                    $result = $mysqli->query($myq);
+
+                    //show SQL error msg if query failed
+                    if (!$result) {
+                        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+                    }
                     $errorText .= " and Valid password ";
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
@@ -190,6 +203,7 @@ function loginLDAPUser($user,$pass,$config){
                 if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
                     //Authorization success
                     $admin = "0";
+                    $_SESSION['lastLogin'] = "Never";
                     registerUser($user, $pass, $pass, $admin, "1");
                     //Update last login
                     $myq = 'UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT( `EMPLOYEE`.`ID` USING utf8 ) = '.$user.' LIMIT 1 ;';
@@ -232,6 +246,7 @@ function logoutUser($message){
 	unset($_SESSION['admin']);
         unset($_SESSION['timeout']);
         unset($_SESSION['isLDAP']);
+        unset($_SESSION['lastLogin']);
         
 	session_destroy(); 
         
@@ -469,26 +484,12 @@ function delUser($user){
 
 function displayLogout(){
         $user = $_SESSION['userName'];
-        $mysqli = connectToSQL();
-        $myq = "SELECT `LASTLOGIN`
-            FROM `EMPLOYEE`
-            WHERE `ID` LIKE CONVERT( _utf8 '".$user."'
-            USING latin1 )
-            COLLATE latin1_swedish_ci
-            LIMIT 0 , 30 ";
-        $result = $mysqli->query($myq);
-
-        //show SQL error msg if query failed
-        if (!$result) {
-                throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        }
     	echo '<div id="result" align="right">Logged in as: <font size="3">';
         echo $user;
 		echo "</font><br />";
-                $resultAssoc = $result->fetch_assoc(); 
         
                 // Check user existence
-                echo "Last Login: " .$resultAssoc['LASTLOGIN'];
+                echo "Last Login: " .$_SESSION['lastLogin'];
 		echo '<br /><a href="?logout=true">Log Out </a><br /><br />';
         echo "</div>";
 }
