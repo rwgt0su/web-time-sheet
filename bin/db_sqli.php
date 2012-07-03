@@ -125,8 +125,8 @@ function resultTable($mysqli, $result){
         } 
 }
 
-/* This function is called from resultTable()
- * It will insert a drop down menu where needed
+/*  
+ * This functionwill insert a drop down menu where needed
  * after the edit button is pressed.
  * Each foreign key field will need its own query.
  */
@@ -142,25 +142,20 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     
     //build a drop-down from query result
     ?>
-    <script type="text/javascript">
-    $(function(){
-        $("#the_select").change(function(){
-            window.location=window.location.href + '&type=' + this.value
-        });
-    });
-    </script>
-   <!-- <td> <select name="<?php //echo $formName; ?>" onChange="javascript:this.form.action=this.form.action+'?type='+this.options[selectedIndex].value;this.form.change();"> -->
-    <td> <select name="<?php echo $formName; ?>" id="the_select">
+     <td> <select name="<?php echo $formName; ?>" onchange="window.location=window.location.href + '&type=' + this.value">
     <?php
     $fieldNameArray = array();
     for($i=0;$finfo = $result->fetch_field();$i++)
         $fieldNameArray[$i] = $finfo->orgname;
     
+    $isBlankOption = false; //haven't written a blank option yet
     $result->data_seek(0);  
     while ($row = $result->fetch_assoc()) 
-        {
-            if ($value == FALSE)
+        {     //gotta get this working, only write blank once
+            /*if ($value == FALSE && !$isBlankOption) {
                 echo '<option value="" style="display:none;" selected="selected"></option>';
+                $isBlankOption == true;
+            }*/
             
             echo '<option value="' . $row["$fieldNameArray[0]"] . '"';
             if (!strcmp($value, $row["$fieldNameArray[1]"]))
@@ -169,7 +164,7 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
             echo '>' . $row["$fieldNameArray[1]"] . '</option>';
         }
     ?>
-    </select></td>
+    </select> </td>
     <?php
     return true;
     }
