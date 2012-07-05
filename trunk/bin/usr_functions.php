@@ -356,7 +356,7 @@ function displayUpdateProfile($config){
 }
 function displayRanks($selectName, $selected=false){
    $mysqli = connectToSQL();
-    $myq = "SELECT * FROM `Ranks` WHERE 1";
+    $myq = "SELECT * FROM `GRADE` WHERE 1";
     $result = $mysqli->query($myq);
 
     //show SQL error msg if query failed
@@ -369,7 +369,7 @@ function displayRanks($selectName, $selected=false){
         echo '<option value="'.$row['ABBREV'].'"';
         if (strcmp($selected, $row['ABBREV']) == 0)
             echo " selected ";
-        echo '>'.$row['DESCRIPTION'].'</option>';
+        echo '>'.$row['DESCR'].'</option>';
     }
 
     echo '</select>';
