@@ -3,7 +3,7 @@ Class Config {
 	public $webTitle;
 	public $version;
 	public $adminLvl;
-	private $mysqli;
+	public $mysqli;
         public $domain;
         public $ldap_server;
 

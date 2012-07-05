@@ -14,10 +14,35 @@ if (isset($_POST['submit'])) {
 
     $ID = $mysqli->real_escape_string(strtoupper($_POST['ID']));
     $usedate = new DateTime($mysqli->real_escape_string($_POST['usedate']));
-    $usedate = $usedate->format("Y-m-d"); //format user's date properly for SQL
+    
+    if(isset($_POST['thrudate'])) {
+        $thrudate = new DateTime($mysqli->real_escape_string($_POST['thrudate']));
+        //$thrudate->modify('+1 day'); //add one day to make the range inclusive of end date
+        $daysOffInterval = $usedate->diff($thrudate); //number days in given range
+        $daysOff = $daysOffInterval->format("%d");
+        popUpMessage($daysOff); //debug
+        //$thrudate->modify('-1 day'); //take that day back off before continuing
+
+
+        //$thrudate = $thrudate->format("Y-m-d");
+    
+    }
+    else
+        $daysOff = 0;
+    
+    //$usedate = $usedate->format("Y-m-d"); //format user's date properly for SQL
+    
+    $shiftLength = isset($_POST['shift']) ? $_POST['shift'] : '';
     
     $beg = new DateTime($mysqli->real_escape_string($_POST['beg']));
-    $end = new DateTime($mysqli->real_escape_string($_POST['end']));
+    //setting end to beginning so I can add a shift to it if need be
+    $end = new DateTime($mysqli->real_escape_string($_POST['beg']));
+    
+    if(empty($shiftLength)) //not using a shift length so take the entered time
+        $end = new DateTime($mysqli->real_escape_string($_POST['end']));
+    else //add a shift to the start time
+        $end->add(new DateInterval('PT'.$shiftLength.'H'));    
+    
     if($end < $beg) {
         //add a day to $end if the times crossed midnight
         $end = $end->add(new DateInterval("P1D"));
@@ -33,64 +58,95 @@ if (isset($_POST['submit'])) {
     
     $type = $mysqli->real_escape_string($_POST['type']);
     $comment = $mysqli->real_escape_string($_POST['comment']);
+    $calloff = isset($_POST['calloff']) ? $_POST['calloff'] : 'NO';
+    
     $auditid = strtoupper($_SESSION['userName']);
     
-    if ($type == 'PR' && !($hours == 8 || $hours == 12) ) {
+    /*if ($type == 'PR' && !($hours == 8 || $hours == 12) ) {
         exit ("Error: Personal time can only be used for an entire shift of 8 or 12 hours.");
-    }
+    }*/
         
     
     //query to insert the record
-    $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, NOTE, STATUS, REQDATE, AUDITID, IP)
-            VALUES ('$ID', '$usedate', '$beg', '$end', '$hours', '$type', 
-                    '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'))";
+    for($i=0; $i <= $daysOff; $i++){
+    $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
+            VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', 
+                    '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
     //echo $myq; //DEBUG
+    $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
     $result = $mysqli->query($myq);
-
+    
     //show SQL error msg if query failed
-    if (!$result) {
-    throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+    if (SQLerrorCatch($mysqli, $result)) {
     echo 'Request not accepted.';
     }
     else {
         echo '<h3>Request accepted. The reference number for this request is <b>' 
             . $mysqli->insert_id . '</b></h3>.';
             }
+    }
 } //end of 'is submit pressed?'
 
 $mysqli = connectToSQL();
 ?>
         <h2>Employee Request</h2>
-        
-        <?php //dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?>
-    
- <!-- this worked until I moved things around. Now I have no idea why it stopped working! -->       
+      
  <form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
-         <p><h3>Type of Request: </h3> <?php dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type'); ?></p>
-        <p>User ID: <?php echo $_SESSION['userName']; ?> <input type="hidden" name="ID" value="<?php echo $_SESSION['userName']; ?>"></p>
-        <p>Date of use/accumulation: <?php displayDateSelect('usedate'); ?></p>
-        <?php 
-        if (isset($_GET['type'])) popUpMessage ("GET is set"); //DEBUG
-        $type  = isset($_GET['type']) ? $_GET['type'] : '';
-        if($type == 'PR') {
-                echo "<input type='radio' name='shift' value='8'>8 hour shift";
-                echo "<input type='radio' name='shift' value='12'>12 hour shift";
-        }
-        ?> 
-        <p>Start time: <input type="text" name="beg">
-        End time: <input type="text" name="end"></p>
+     <?php  
+        $type  = isset($_GET['type']) ? $_GET['type'] : ''; 
+        $myq = "SELECT DESCR FROM TIMETYPE WHERE TIMETYPEID='".$type."'";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $typeDescr = $result->fetch_assoc();
         
-        <p>Comment: <input type="text" name="comment"></p>
-
-	<p><input type="submit" name="submit" value="Submit"></p>  
-     
+        if (!empty($type)) { //$_GET['type'] is set
+            //hidden
+            echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
+            echo "<input type='hidden' name='type' value='".$type."'>";
    
+            if ( $_SESSION['admin'] == 0)
+                echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userName']."'></p>";
+            else {
+                echo "User: ";
+                dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $_SESSION['userName'], 'ID');
+            }
+            ?>
+            <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1'); ?>
+                 Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
+            <p>Start time: <input type="text" name="beg">
+            <?php 
+            //if (isset($_GET['type'])) popUpMessage ("GET is set"); //DEBUG
+
+            if($type == 'PR') {
+                    echo "<input type='radio' name='shift' value='8'>8 hour shift";
+                    echo "<input type='radio' name='shift' value='12'>12 hour shift";
+                    echo "</br>(Personal time must be used for an entire shift.)";
+            }
+            else {
+                ?> End time: <input type="text" name="end"></p> <?php
+            }
+
+            ?> 
 
 
-        
-</form> 
+            </br>
+            <p>Comment: <input type="text" name="comment"></p>
+            <p><input type="checkbox" name='calloff' value="YES">Check if calling in sick.</p>
 
-<?php
+            <p><input type="submit" name="submit" value="Submit"></p>  
+
+    </form> 
+
+
+    <?php
+        }
+        else {
+             
+            //not hidden
+            echo "<p><h3>Type of Request: </h3>";
+            dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type');
+            echo "</p>";
+        }
 } // end displayLeaveForm()
 ?>
 
@@ -152,7 +208,7 @@ $endDate = $endDate->format('Y-m-d');
 
         $myq = "SELECT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T
                     WHERE ID='" . $_SESSION['userName'] .
@@ -165,7 +221,7 @@ $endDate = $endDate->format('Y-m-d');
         case 25: //supervisor, list by division
             $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
                     WHERE R.TIMETYPEID=T.TIMETYPEID                   
