@@ -115,7 +115,7 @@ function loginLDAPUser($user,$pass,$config){
 	$validUser = false;
 
         //user lookup
-        $mysqli = connectToSQL();
+        $mysqli = $config->mysqli;
         $sql_user = strtoupper($mysqli->real_escape_string($user));
         $myq = "SELECT * FROM EMPLOYEE WHERE ID='". $sql_user . "'";
         $result = $mysqli->query($myq);
@@ -339,7 +339,7 @@ function displayUpdateProfile($config){
                     }
                     
                     ?>
-                    <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", $hireDate, $required=true); ?></td></tr>
+                    <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", "date_1", $hireDate, $required=true); ?></td></tr>
                     <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
                     <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
                     <?php 
@@ -440,7 +440,7 @@ function displaySUPVDropDown($selectName, $selected = false){
     echo '</select>';
 }
 
-function displayDateSelect($inputName, $selected = false, $required = false){
+function displayDateSelect($inputName, $id, $selected = false, $required = false){
     ?>
     <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
     <script type="text/javascript" src="bin/jQuery/js/jquery-1.7.2.min.js"></script>
@@ -448,12 +448,12 @@ function displayDateSelect($inputName, $selected = false, $required = false){
     <script type="text/javascript">
         $(function() {
             // Datepicker
-            $('#datepicker').datepicker({
+            $('.datepicker').datepicker({
                     inline: true
             });
         });
     </script>
-    <input name="<?php echo $inputName ?>" type="text" id="datepicker" <?php if(!$selected){ if($required) showInputBoxError (); } else echo 'value="'.$selected.'"'; ?> />
+    <input name="<?php echo $inputName ?>" type="text" class="datepicker" id="<?php echo $id; ?>" <?php if(!$selected){ if($required) showInputBoxError (); } else echo 'value="'.$selected.'"'; ?> />
     <?php
 }
 
