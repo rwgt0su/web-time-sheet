@@ -24,7 +24,7 @@ function displayUserMenu($config){
 		<h3>User Management Menu</h3>
 		<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&ChangeBtn=true">Change Your Password</a><br />
 		<?php 
-		if($config->adminLvl >= 75){ 
+		if($config->adminLvl >= 50){ 
 			?>
 			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&AddUserBtn=true">Add Users</a><br />
 			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&EditUserBtn=true">Change User Password or Admin Level</a><br />
@@ -112,7 +112,7 @@ function displayPassChange($useAdmin, $addUser){
             }
             else if ($error == '' && $useAdmin && $addUser) {
                     echo "User Added!!!<br/><br/>";
-                    ?><a href="<?php echo$_SERVER['PHP_SELF']; ?>?AddUserBtn=true">Add Another User</a><br /><?php
+                    ?><a href="<?php echo $_SERVER['REQUEST_URI']; ?>">Add Another User</a><br /><?php
                     //history('Changed Password');
                     echo ' <a href="/">Home</a>';
             }

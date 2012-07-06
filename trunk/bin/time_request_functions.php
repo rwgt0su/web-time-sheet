@@ -20,7 +20,7 @@ if (isset($_POST['submit'])) {
         //$thrudate->modify('+1 day'); //add one day to make the range inclusive of end date
         $daysOffInterval = $usedate->diff($thrudate); //number days in given range
         $daysOff = $daysOffInterval->format("%d");
-        popUpMessage($daysOff); //debug
+        //popUpMessage($daysOff); //debug
         //$thrudate->modify('-1 day'); //take that day back off before continuing
 
 
@@ -67,7 +67,7 @@ if (isset($_POST['submit'])) {
     }*/
         
     
-    //query to insert the record
+    //query to insert the record. loops until number of days is reached
     for($i=0; $i <= $daysOff; $i++){
     $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
             VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', 
@@ -174,7 +174,7 @@ if(isset($ppOffset))
     //strip off the old GET variable and its value
     $uri =  preg_replace("/&ppOffset=.*/", "", $_SERVER['REQUEST_URI'])."&ppOffset=";
 else
-    $uri = $_SERVER['REQUEST_URI']."&ppOffset="; //1st set
+    $uri = $_SERVER['REQUEST_URI']."&ppOffset="; //1st time set
 
 $startDate = new DateTime("{$ppArray['PPBEG']}");
 if($ppOffset < 0)
@@ -183,9 +183,6 @@ if($ppOffset < 0)
 else
     //forward in time by $ppOffset number of periods
     $startDate->add(new DateInterval("P".($ppOffset*14)."D"));
-//set the result in SQL DATE format
-$startDate = $startDate->format('Y-m-d');
-//echo " START DATE = ".$startDate; //DEBUG
 
 $endDate = new DateTime("{$ppArray['PPEND']}");
 if($ppOffset < 0)
@@ -194,15 +191,37 @@ if($ppOffset < 0)
 else
     //forward in time by $ppOffset number of periods
     $endDate->add(new DateInterval("P".($ppOffset*14)."D"));
-//set the result in SQL DATE format
-$endDate = $endDate->format('Y-m-d');
-//echo " END DATE = ".$endDate; //DEBUG
+
+?>
+<p><a href="<?php echo $_SERVER['REQUEST_URI'].'&cust=true'; ?>">Use Custom Date Range</a></br>
+<?php 
+if (isset($_GET['cust'])) {
+    echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
+    echo "<p> Start";
+    displayDateSelect('start', 'date_1');   
+    echo "End";
+    displayDateSelect('end', 'date_2');
+    echo "<input type='submit' value='Go' /></p></form>";
+    //overwrite current period date variables with 
+    //those provided by user
+    if ( isset($_POST['start']) && isset($_POST['end']) ) {
+        $startDate =  new DateTime( $_POST['start'] );
+        $endDate =  new DateTime( $_POST['end'] );
+        ?> <h3><center>Gain/Use Requests for <?php echo $startDate->format('Y-m-d'); ?> through <?php echo $endDate->format('Y-m-d'); ?>.</center></h3> <?php
+    }
+}
+else {
 ?>
 <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
    <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
-<h3><center>Gain/Use Requests for pay period <?php echo $startDate; ?> through <?php echo $endDate; ?>.</center></h3>
+<h3><center>Gain/Use Requests for pay period <?php echo $startDate->format('Y-m-d'); ?> through <?php echo $endDate->format('Y-m-d'); ?>.</center></h3>
+<?php 
+} ?>
+
+
 
 <?php
+
     switch($admin) { //switch to show different users different reports
         case 0: //normal user, list only user's own reqs
 
@@ -213,7 +232,7 @@ $endDate = $endDate->format('Y-m-d');
                     FROM REQUEST R, TIMETYPE T
                     WHERE ID='" . $_SESSION['userName'] .
                     "' AND R.TIMETYPEID=T.TIMETYPEID
-                    AND USEDATE BETWEEN '". $startDate."' AND '".$endDate."' 
+                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     ORDER BY REFER";
             
             break;
@@ -225,7 +244,7 @@ $endDate = $endDate->format('Y-m-d');
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
                     WHERE R.TIMETYPEID=T.TIMETYPEID                   
-                    AND USEDATE BETWEEN '". $startDate."' AND '".$endDate."' 
+                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     AND E.DIVISIONID IN
                         (SELECT DIVISIONID 
                         FROM EMPLOYEE
@@ -233,14 +252,24 @@ $endDate = $endDate->format('Y-m-d');
                     ORDER BY REFER";
             break;
         case 50: //HR
-            //custom query goes here
+            $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', BEGTIME 'Start',
+                        ENDTIME 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R, TIMETYPE T
+                    WHERE R.TIMETYPEID=T.TIMETYPEID
+                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    ORDER BY REFER";
+            break;
         case 99: //Sheriff
             //custom query goes here
+            break;
         case 100: //full admin, complete raw dump
         
             $myq = "SELECT *
                     FROM REQUEST
-                    WHERE USEDATE BETWEEN '". $startDate."' AND '".$endDate."'"; 
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'"; 
             break;
 } //end switch
     
@@ -265,18 +294,19 @@ function displayLeaveApproval(){
 
         $mysqli = connectToSQL();
         
-        $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+        $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
                         T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.TIMETYPEID=T.TIMETYPEID                   
+                    WHERE R.TIMETYPEID=T.TIMETYPEID
+                    AND   R.ID=E.ID
                     AND STATUS='PENDING'
                     AND E.DIVISIONID IN
                         (SELECT DIVISIONID 
                         FROM EMPLOYEE
                         WHERE ID='" . $_SESSION['userName'] . "')
-                    ORDER BY REFER";
+                    ORDER BY RADIO DESC, REFER";
         echo $myq; //DEBUG
 
         $result = $mysqli->query($myq);
@@ -329,4 +359,46 @@ function displayLeaveApproval(){
     else
         echo "Permission Denied.";
 } // end displayLeaveApproval()
+
+/* This function will display all requests for the queried user
+ * within a given date range.
+ * Intended for use by supervisors and above.
+ * Possibly add call off functionality
+ */
+function displayRequestLookup($config) {
+   
+    if( isValidUser() && isset($_POST['lname']) ) {
+        $lname = strtoupper( $_POST['lname'] );
+        $startDate = new DateTime ($_POST['start']);
+        $endDate = new DateTime ($_POST['end']);
+        $mysqli = $config->mysqli;
+        $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+                        ENDTIME 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                    WHERE R.TIMETYPEID=T.TIMETYPEID 
+                    AND E.ID=R.ID
+                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    AND LNAME LIKE '%".$lname."%'";
+        //popUpMessage($myq); //DEBUG
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        resultTable($mysqli, $result);
+        
+    }
+    else {
+        ?>
+        <form name="lookup" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
+	<h1>Lookup Requests by Employee</h1>
+        
+	<p>Search by last name:<input type="text" name="lname"></p>
+        <p>Date range: From <?php   displayDateSelect('start','date_1'); ?>
+            to <?php   displayDateSelect('end','date_2'); ?></p>
+
+	<p><input type="submit" name="Submit" value="Search"></p>
+        </form>
+        <?php
+    }
+}
 ?>

@@ -22,7 +22,7 @@ function resultTable($mysqli, $result){
     
     $numOfCols = $mysqli->field_count; //get number of columns
     $isEditBtn = isset($_POST['editBtn']);
-    echo '<table border="1"><tr>';
+    echo '<table border="1" width="900"><tr>';
     //fetch and write field names
     $i = 0;
     $fieldNameArray = array(); //to store original column names as in SQL
@@ -69,8 +69,11 @@ function resultTable($mysqli, $result){
     echo '</tr></table>';
     ?>
     <form action="<?php echo $action; ?>" method="post" name="editBtn">
-    <p><input type="submit" name="editBtn" value="Edit"></p></form>
-    <?php
+    <?php 
+    //only let supervisors or higher edit requests
+    if ($_SESSION['admin'] > 0)
+        echo "<p><input type='submit' name='editBtn' value='Edit'></p></form>";
+    
     //write any updates to DB when Save is pressed
     if (isset($_POST['saveBtn'])) { 
         //$result = $mysqli->query($myq);
@@ -83,7 +86,7 @@ function resultTable($mysqli, $result){
            //fields that are not allowed to be edited
           if( !($fieldNameArray[$i] == 'AUDITID' || $fieldNameArray[$i] == 'IP' || $fieldNameArray[$i] == 'STATUS' || $fieldNameArray[$i] == 'APPROVEDBY' || $fieldNameArray[$i] == 'REQDATE' || $fieldNameArray[$i] == 'TSTAMP') ) {
             if($fieldNameArray[$i] == 'DESCR')
-                //append ID to the table name to get correct fieldname
+                //append ID to the table name to get correct fieldname (this requires a DB naming convention to be followed
                 $values["$fieldNameArray[$i]"] = $tableNameArray[$i] . "ID="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
             else
                 $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] ."="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
@@ -203,7 +206,7 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
    
 }
 
-//try catch providing db errors in a pop-up window
+//try/catch providing db errors in a pop-up window
 //returns true if an error is caught, false if not
 function SQLerrorCatch($mysqli, $result) {
     try {
