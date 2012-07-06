@@ -11,6 +11,7 @@ Class wts_content {
     public $isAnounceAdmin;
     public $isSearching;
     public $isUpdateProfile; 
+    public $isLookup; 
     
     public function wts_content(){
         //get passed variables based on URL
@@ -24,6 +25,7 @@ Class wts_content {
         $this->isAnounceAdmin = isset($_GET['isAnounceAdmin']) ? $_GET['isAnounceAdmin'] : false;
         $this->isSearching = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
         $this->isUpdateProfile = isset($_GET['updateProfile']) ? $_GET['updateProfile'] : false;
+        $this->isLookup = isset($_GET['lookup']) ? $_GET['lookup'] : false;
         
         if(empty($_GET)){
             $this->isHome = true;

@@ -55,6 +55,11 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayUpdateProfile($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
+    if($wts_content->isLookup){
+        ?>
+        <div class="post"><?php displayRequestLookup($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
          
 }
 
