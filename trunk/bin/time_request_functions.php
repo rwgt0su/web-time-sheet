@@ -279,7 +279,7 @@ if (!$result)
     
 //build table
 resultTable($mysqli, $result);
-
+echo '<a href="javascript:window.print()">Print</a>';
 } //end displaySubmittedRequests()
 ?>
 
@@ -357,7 +357,7 @@ function displayLeaveApproval(){
 
     }
     else
-        echo "Permission Denied.";
+        echo "Permission Denied.";   
 } // end displayLeaveApproval()
 
 /* This function will display all requests for the queried user

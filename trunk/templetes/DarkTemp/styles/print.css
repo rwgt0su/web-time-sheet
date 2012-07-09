@@ -1,0 +1,26 @@
+/* 
+    Document   : print
+    Created on : Jul 9, 2012, 11:14:51 AM
+    Author     : dalumpp
+    Description:
+        
+    Format a printable page
+*/
+
+.header_cotainer, .grid_4, .grid_8, .footer_container { display: none; }
+ /*.header_cotainer { display: none; }*/
+
+/*body {
+background-color: transparent;
+font-size: 12pt;
+font-family:'Times New Roman',Times,serif;
+color:#000000; }
+
+#content   { 
+background-color:transparent;
+padding: 0px;
+margin: 0px;
+}*/
+
+
+
