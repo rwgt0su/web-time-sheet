@@ -13,6 +13,7 @@ require_once('bin/common.php');
     <link type="text/css" href="templetes/DarkTemp/styles/text.css" rel="stylesheet" media="all" />
     <link type="text/css" href="templetes/DarkTemp/styles/960.css" rel="stylesheet" media="all" />
     <link type="text/css" href="templetes/DarkTemp/styles/style.css" rel="stylesheet" media="all" />
+    <link type="text/css" href="templetes/DarkTemp/styles/print.css" rel="stylesheet" media="print" />
     
 </head>
 <body>
