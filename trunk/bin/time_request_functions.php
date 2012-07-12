@@ -17,20 +17,12 @@ if (isset($_POST['submit'])) {
     
     if(isset($_POST['thrudate'])) {
         $thrudate = new DateTime($mysqli->real_escape_string($_POST['thrudate']));
-        //$thrudate->modify('+1 day'); //add one day to make the range inclusive of end date
+
         $daysOffInterval = $usedate->diff($thrudate); //number days in given range
         $daysOff = $daysOffInterval->format("%d");
-        //popUpMessage($daysOff); //debug
-        //$thrudate->modify('-1 day'); //take that day back off before continuing
-
-
-        //$thrudate = $thrudate->format("Y-m-d");
-    
     }
     else
-        $daysOff = 0;
-    
-    //$usedate = $usedate->format("Y-m-d"); //format user's date properly for SQL
+        $daysOff = 0;    
     
     $shiftLength = isset($_POST['shift']) ? $_POST['shift'] : '';
     
@@ -59,18 +51,13 @@ if (isset($_POST['submit'])) {
     $type = $mysqli->real_escape_string($_POST['type']);
     $comment = $mysqli->real_escape_string($_POST['comment']);
     $calloff = isset($_POST['calloff']) ? $_POST['calloff'] : 'NO';
-    
+    $subtype = $mysqli->real_escape_string($_POST['subtype']);
     $auditid = strtoupper($_SESSION['userName']);
-    
-    /*if ($type == 'PR' && !($hours == 8 || $hours == 12) ) {
-        exit ("Error: Personal time can only be used for an entire shift of 8 or 12 hours.");
-    }*/
-        
-    
+
     //query to insert the record. loops until number of days is reached
     for($i=0; $i <= $daysOff; $i++){
-    $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
-            VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', 
+    $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
+            VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
                     '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
     //echo $myq; //DEBUG
     $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
@@ -100,13 +87,25 @@ $mysqli = connectToSQL();
         $typeDescr = $result->fetch_assoc();
         
         if (!empty($type)) { //$_GET['type'] is set
-            //hidden
+            //hidden field with type set
             echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
             echo "<input type='hidden' name='type' value='".$type."'>";
+            //subtype choice
+            $myq = "SELECT NAME FROM SUBTYPE";
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+            ?> <select name="subtype"> <?php
+            while($row = $result->fetch_assoc()) {
+                if ($row['NAME'] == 'NONE') 
+                    echo '<option value="NONE" selected="selected">NONE</option>';
+                else
+                    echo '<option value="' . $row["NAME"] . '">'. $row["NAME"] . '</option>';
+            }
+            echo "</select>"; 
    
-            if ( $_SESSION['admin'] == 0)
+            if ( $_SESSION['admin'] == 0) //if normal user, allow only their own user name
                 echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userName']."'></p>";
-            else {
+            else { //allow any user to be picked for a calloff entry
                 echo "User: ";
                 dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $_SESSION['userName'], 'ID');
             }
@@ -115,7 +114,6 @@ $mysqli = connectToSQL();
                  Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
             <p>Start time: <input type="text" name="beg">
             <?php 
-            //if (isset($_GET['type'])) popUpMessage ("GET is set"); //DEBUG
 
             if($type == 'PR') {
                     echo "<input type='radio' name='shift' value='8'>8 hour shift";
@@ -141,7 +139,7 @@ $mysqli = connectToSQL();
     <?php
         }
         else {
-             
+             //intitial choice of type
             //not hidden
             echo "<p><h3>Type of Request: </h3>";
             dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type');
@@ -207,14 +205,14 @@ if (isset($_GET['cust'])) {
     if ( isset($_POST['start']) && isset($_POST['end']) ) {
         $startDate =  new DateTime( $_POST['start'] );
         $endDate =  new DateTime( $_POST['end'] );
-        ?> <h3><center>Gain/Use Requests for <?php echo $startDate->format('Y-m-d'); ?> through <?php echo $endDate->format('Y-m-d'); ?>.</center></h3> <?php
+        ?> <h3><center>Gain/Use Requests for <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3> <?php
     }
 }
 else {
 ?>
 <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
    <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
-<h3><center>Gain/Use Requests for pay period <?php echo $startDate->format('Y-m-d'); ?> through <?php echo $endDate->format('Y-m-d'); ?>.</center></h3>
+<h3><center>Gain/Use Requests for pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
 <?php 
 } ?>
 
@@ -225,8 +223,9 @@ else {
     switch($admin) { //switch to show different users different reports
         case 0: //normal user, list only user's own reqs
 
-        $myq = "SELECT REFER 'RefNo', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
-                        ENDTIME 'End', HOURS 'Hrs',
+        $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T
@@ -238,8 +237,9 @@ else {
             break;
 
         case 25: //supervisor, list by division
-            $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
-                        ENDTIME 'End', HOURS 'Hrs',
+            $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
@@ -253,8 +253,8 @@ else {
             break;
         case 50: //HR
             $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', BEGTIME 'Start',
-                        ENDTIME 'End', HOURS 'Hrs',
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T
@@ -279,6 +279,7 @@ if (!$result)
     
 //build table
 resultTable($mysqli, $result);
+//show a print button. printed look defined by print.css
 echo '<a href="javascript:window.print()">Print</a>';
 } //end displaySubmittedRequests()
 ?>
@@ -367,10 +368,18 @@ function displayLeaveApproval(){
  */
 function displayRequestLookup($config) {
    
-    if( isValidUser() && isset($_POST['lname']) ) {
-        $lname = strtoupper( $_POST['lname'] );
-        $startDate = new DateTime ($_POST['start']);
-        $endDate = new DateTime ($_POST['end']);
+    if( isValidUser() && (isset($_POST['lname']) || isset($_POST['editBtn'])) ) {
+        if(isset($_POST['lname'])) {
+        $lname = $_SESSION['lname'] = strtoupper( $_POST['lname'] );
+        $startDate = $_SESSION['start'] = new DateTime ($_POST['start']);
+        $endDate = $_SESSION['end'] = new DateTime ($_POST['end']);
+        }
+        else {
+            $lname = $_SESSION['lname'];
+            $startDate = $_SESSION['start'];
+            $endDate = $_SESSION['end'];
+        }
+            
         $mysqli = $config->mysqli;
         $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
