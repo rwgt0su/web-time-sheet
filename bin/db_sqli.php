@@ -22,7 +22,7 @@ function resultTable($mysqli, $result){
     
     $numOfCols = $mysqli->field_count; //get number of columns
     $isEditBtn = isset($_POST['editBtn']);
-    echo '<table border="1" width="900"><tr>';
+    echo '<table border="1" ><tr>';
     //fetch and write field names
     $i = 0;
     $fieldNameArray = array(); //to store original column names as in SQL
@@ -34,6 +34,7 @@ function resultTable($mysqli, $result){
         $fieldNameArray[$i] = $finfo->orgname;
         $fieldNameAliasArray[$i] = $finfo->name;
         $tableNameArray[$i] = $finfo->orgtable; 
+        $fieldTypeArray[$i] = $finfo->type;
         $i++;
     }
 
@@ -50,10 +51,10 @@ function resultTable($mysqli, $result){
         {
             if ($isEditBtn) {
                 if(!dropDownMenu($mysqli, $fieldNameArray[$fieldCounter], $tableNameArray[$fieldCounter], $row["$fieldNameAliasArray[$fieldCounter]"],$fieldNameAliasArray[$fieldCounter]))
-                echo "<td><input type='text' name='$fieldNameAliasArray[$fieldCounter]' value='${row["$fieldNameAliasArray[$fieldCounter]"]}'></td>";
+                    echo "<td><input type='text' name='$fieldNameAliasArray[$fieldCounter]' value='${row["$fieldNameAliasArray[$fieldCounter]"]}'></td>";
             }
-            else {
-                echo "<td>${row["$fieldNameAliasArray[$fieldCounter]"]}</td>";
+            else { //one cell of data
+                echo "<td style='white-space: nowrap'>${row["$fieldNameAliasArray[$fieldCounter]"]}</td>";
                 //echo "<td><a href='".$_SERVER['REQUEST_URI']."&editRecord=true'>${row["$fieldNameAliasArray[$fieldCounter]"]}</a></td>";
             }
         } //loop through fields
@@ -80,7 +81,6 @@ function resultTable($mysqli, $result){
         
         //construct assoc array of user provided values in a format useful for SQL
         $values = array();
-        $joinOn = NULL;
         //print_r($fieldNameArray); //DEBUG
        for($i=0; $i < $numOfCols; $i++) {
            //fields that are not allowed to be edited
@@ -88,51 +88,30 @@ function resultTable($mysqli, $result){
             if($fieldNameArray[$i] == 'DESCR')
                 //append ID to the table name to get correct fieldname (this requires a DB naming convention to be followed
                 $values["$fieldNameArray[$i]"] = $tableNameArray[$i] . "ID="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
+            else if (/*type is date*/)
+                //assign it as a datetime obj
             else
                 $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] ."="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
-          }
-            /*if ( strcmp($tableNameArray[0], $tableNameArray[$i]) && !empty($tableNameArray[$i]) ) {
-                    //echo $tableNameArray[$i];
-                    $joinOn = $tableNameArray[$i];  //store dimension table if they don't match
-                    //echo '(IN LOOP) JOIN ON = '.$joinOn; //DEBUG
-            }*/
+          }            
         }
-        //print_r($tableNameArray); //DEBUG
-        //echo 'JOIN ON = '.$joinOn; //DEBUG
-        //turn the array into comma seperated values
-        $csvValues = implode(',' , $values);
-       //put the update query together
-        //Primary key must be the first field for this to work!
-        //PROBLEM: Update on join. test tablename != tablename[0]?
-       /* switch($joinOn) {
-            case 'TIMETYPE':
-                $updateQuery="UPDATE REQUEST R, TIMETYPE T
-                    SET R.TIMETYPEID = T.TIMETYPEID,  ${values['USEDATE']}, ${values['HOURS']},
-                    ${values['NOTE']}, AUDITID='${_SESSION['userName']}', IP=INET_ATON('${_SERVER['REMOTE_ADDR']}')
-                    WHERE ${values['REFER']}
-                    AND T.${values['DESCR']}"; //this is sending the code, not descr
-                break;
-            default:
-                $updateQuery = "UPDATE ".$tableNameArray[0]." SET ".$csvValues." 
-                    WHERE " . $values["$fieldNameArray[0]"];
         
-        }*/
+        $csvValues = implode(',' , $values);
+     
         $updateQuery = "UPDATE ".$tableNameArray[0]." SET ".$csvValues." 
                     WHERE " . $values["$fieldNameArray[0]"];
         echo "<br>" . $updateQuery;  //DEBUG
         //send the update
         $updateResult = $mysqli->query($updateQuery);
-
-        if (!$updateResult) 
-            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        } 
+        SQLerrorCatch($mysqli, $updateResult);
+        
+    } 
 }
 
 /*  
  * This functionwill insert a drop down menu where needed
  * after the edit button is pressed.
  * Each foreign key field will need its own query.
- * The query must return 2 columns.
+ * The query must return at least 2 columns.
  *  The first is the value of the select 
  *  and the second gets displayed
  */
@@ -143,8 +122,7 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
         $result = $mysqli->query($myq);
 
         //show SQL error msg if query failed
-        if (!$result) 
-            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        SQLerrorCatch($mysqli, $result);
     
     //build a drop-down from query result
     ?>
@@ -157,16 +135,12 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
         $result = $mysqli->query($myq);
 
         //show SQL error msg if query failed
-        try {
-            if (!$result) 
-            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        }
-        catch (Exception $e) {
-            echo $e->getMessage();
-            return false;
-        }
+        SQLerrorCatch($mysqli, $result);
+        
         echo "<td> <select name=".$formName.">";
     }
+    else 
+        return false;
     
     //store the original column name, and an alias if it was used
     $fieldNameArray = array();
