@@ -91,6 +91,7 @@ $mysqli = connectToSQL();
             echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
             echo "<input type='hidden' name='type' value='".$type."'>";
             //subtype choice
+            echo "Subtype: ";
             $myq = "SELECT NAME FROM SUBTYPE";
             $result = $mysqli->query($myq);
             SQLerrorCatch($mysqli, $result);
@@ -101,7 +102,7 @@ $mysqli = connectToSQL();
                 else
                     echo '<option value="' . $row["NAME"] . '">'. $row["NAME"] . '</option>';
             }
-            echo "</select>"; 
+            echo "</select> </br>"; 
    
             if ( $_SESSION['admin'] == 0) //if normal user, allow only their own user name
                 echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userName']."'></p>";
@@ -295,10 +296,11 @@ function displayLeaveApproval(){
 
         $mysqli = connectToSQL();
         
-        $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
-                        ENDTIME 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status', 
-                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
+        $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', R.ID 'Employee', 
+                        DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status'                         
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
                     WHERE R.TIMETYPEID=T.TIMETYPEID
                     AND   R.ID=E.ID
@@ -308,11 +310,10 @@ function displayLeaveApproval(){
                         FROM EMPLOYEE
                         WHERE ID='" . $_SESSION['userName'] . "')
                     ORDER BY RADIO DESC, REFER";
-        echo $myq; //DEBUG
+        //echo $myq; //DEBUG
 
         $result = $mysqli->query($myq);
-        if (!$result) 
-            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+        SQLerrorCatch($mysqli, $result);
        
         //build table
         resultTable($mysqli, $result);
@@ -321,16 +322,30 @@ function displayLeaveApproval(){
         <hr>
         <table>
             <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn">
-            <tr><th>Ref #</th><th>Approve?</th><th>Reason</th></tr>
+            <!-- <tr><th>Ref #</th><th>Approve?</th><th>Reason</th></tr> -->
             <?php
             $refs = array();
             $result->data_seek(0);
-            for ($i = 0; $assoc = $result->fetch_assoc(); $i++) {
+            /*for ($i = 0; $assoc = $result->fetch_assoc(); $i++) {
                 $refs[$i] = $assoc['RefNo'];
                 echo "<tr><td>$refs[$i]</td>
                     <td><input type='radio' name='approve$i' value='APPROVED' /> Approved 
                         <input type='radio' name='approve$i' value='DENIED'> Denied</td>
                         <td><input type='text' name='reason$i' size='50'/></td>";
+            }*/
+            //new & improved
+            $rowCount = 0;
+            while ($row = $result->fetch_array(MYSQLI_NUM)) {
+                echo "<tr>";
+                $refs[$rowCount] = $row[0]; //save ref # in an array
+                for ($i = 0; $i < $mysqli->field_count; $i++) {
+                    echo "<td style='white-space: nowrap'>$row[$i]</td>";                                      
+                }
+                echo "</tr>";
+                echo "<td style='white-space: nowrap'></td><td><input type='radio' name='approve$rowCount' value='APPROVED' /> Approved</td> 
+                        <td style='white-space: nowrap'><input type='radio' name='approve$rowCount' value='DENIED'> Denied</td>
+                        <td style='white-space: nowrap' colspan='8'>Reason:<input type='text' name='reason$rowCount' size='50'/></td>";
+                $rowCount++;
             }
             ?>
            </table> <p><input type="submit" name="approveBtn" value="Approve"></p>
@@ -339,19 +354,18 @@ function displayLeaveApproval(){
 
         <?php 
         if (isset($_POST['approveBtn'])) {
-            for ($j=0; $i > $j; $j++) {
+            for ($j=0; $rowCount > $j; $j++) {
                 $approve = 'approve' . $j;
                 $reason = 'reason' . $j;
                 if (isset($_POST["$approve"])) {
                     $approveQuery="UPDATE REQUEST 
                                     SET STATUS='".$_POST["$approve"]."',
                                         REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
-                                        APPROVEDBY='".$_SESSION['userName']."' 
+                                        APPROVEDBY='".strtoupper($_SESSION['userName'])."' 
                                     WHERE REFER='$refs[$j]'";
                     echo $approveQuery; //DEBUG
                     $approveResult = $mysqli->query($approveQuery);
-                    if (!$approveResult) 
-                        throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+                    SQLerrorCatch($mysqli, $approveResult);
                 }
             }
         }
@@ -409,5 +423,84 @@ function displayRequestLookup($config) {
         </form>
         <?php
     }
+}
+/* This funciton will display a report summarizing all
+ * of the time used/gained for a pay period
+ * for entry into MUNIS.
+ */
+function displayTimeUseReport ($config) {
+    //what pay period are we currently in?
+    $mysqli = $config->mysqli;
+    
+    $payPeriodQuery = "SELECT * FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
+    $ppResult = $mysqli->query($payPeriodQuery);
+    $ppArray = $ppResult->fetch_assoc();
+
+    /* $ppOffset stands for the number of pay periods to adjust the query by 
+    * relative to the current period
+    */
+    $ppOffset = isset($_GET['ppOffset']) ? $_GET['ppOffset'] : '0';
+    //set the right URI for link
+    if(isset($ppOffset))
+        //strip off the old GET variable and its value
+        $uri =  preg_replace("/&ppOffset=.*/", "", $_SERVER['REQUEST_URI'])."&ppOffset=";
+    else
+        $uri = $_SERVER['REQUEST_URI']."&ppOffset="; //1st time set
+
+    $startDate = new DateTime("{$ppArray['PPBEG']}");
+    if($ppOffset < 0)
+        //backward in time by $ppOffset number of periods
+        $startDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+    else
+        //forward in time by $ppOffset number of periods
+        $startDate->add(new DateInterval("P".($ppOffset*14)."D"));
+
+    $endDate = new DateTime("{$ppArray['PPEND']}");
+    if($ppOffset < 0)
+        //backward in time by $ppOffset number of periods
+        $endDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+    else
+        //forward in time by $ppOffset number of periods
+        $endDate->add(new DateInterval("P".($ppOffset*14)."D"));
+
+    ?>
+    <p><a href="<?php echo $_SERVER['REQUEST_URI'].'&cust=true'; ?>">Use Custom Date Range</a></br>
+    <?php 
+    if (isset($_GET['cust'])) {
+        echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
+        echo "<p> Start";
+        displayDateSelect('start', 'date_1');   
+        echo "End";
+        displayDateSelect('end', 'date_2');
+        echo "<input type='submit' value='Go' /></p></form>";
+        //overwrite current period date variables with 
+        //those provided by user
+        if ( isset($_POST['start']) && isset($_POST['end']) ) {
+            $startDate =  new DateTime( $_POST['start'] );
+            $endDate =  new DateTime( $_POST['end'] );
+            ?> <h3><center>Time Gained/Used from <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3> <?php
+        }
+    }
+    else {
+    ?>
+    <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
+    <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
+    <h3><center>Time Gained/Used in pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
+    <?php
+   
+    $myq = "SELECT DIVISIONID 'Div', MUNIS, CONCAT_WS(', ',LNAME,FNAME) 'Name', R.ID, T.DESCR 'Type', CAST(SUM(HOURS) as DECIMAL(5,2)) 'Total (hrs)'
+            FROM REQUEST R, EMPLOYEE E, TIMETYPE T
+            WHERE R.ID=E.ID AND T.TIMETYPEID = R.TIMETYPEID
+            AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+            AND STATUS='APPROVED'
+            GROUP BY E.DIVISIONID, R.ID, R.TIMETYPEID
+            ORDER BY E.DIVISIONID, LNAME";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    resultTable($mysqli, $result);
+    }
+    //show a print button. printed look defined by print.css
+    echo '<a href="javascript:window.print()">Print</a>';
+    
 }
 ?>

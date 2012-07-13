@@ -246,18 +246,18 @@ function logoutUser($message){
 }
 function displayUpdateProfile($config){
     if($config->adminLvl >= 75){
-        
+     $mysqli = $config->mysqli;   
     }
     if(isset($_POST['updateBtn'])){
-        $fname = isset($_POST['fname']) ? $_POST['fname'] : false;
-        $lname = isset($_POST['lname']) ? $_POST['lname'] : false;
+        $fname = isset($_POST['fname']) ? $mysqli->real_escape_string( strtoupper($_POST['fname']) ) : false;
+        $lname = isset($_POST['lname']) ? $mysqli->real_escape_string( strtoupper($_POST['lname']) ) : false;
         $rankID = isset($_POST['rankID']) ? $_POST['rankID'] : '';
         $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
         $assignID = isset($_POST['assignID']) ? $_POST['assignID'] : false;
         $supvID = isset($_POST['supvID']) ? $_POST['supvID'] : false;
         $hireDate = isset($_POST['hireDate']) ? $_POST['hireDate'] : false;
-        $radioID = isset($_POST['radioID']) ? $_POST['radioID'] : false;
-        $munisID = isset($_POST['munisID']) ? $_POST['munisID'] : false;
+        $radioID = isset($_POST['radioID']) ? $mysqli->real_escape_string($_POST['radioID']) : false;
+        $munisID = isset($_POST['munisID']) ? $mysqli->real_escape_string($_POST['munisID']) : false;
         $userID = isset($_POST['userID']) ? $_POST['userID'] : false;
         
         $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
