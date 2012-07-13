@@ -31,13 +31,30 @@ function resultTable($mysqli, $result){
     $result->data_seek(0);
     while($finfo = mysqli_fetch_field($result)) {
         echo "<th>" . $finfo->name . "</th>"; 
-        $fieldNameArray[$i] = $finfo->orgname;
+        
+        // original names of formatted columns
+        switch($finfo->name) {
+            case 'Requested':
+                $fieldNameArray[$i] = 'REQDATE';
+                break;
+            case 'Used':
+                $fieldNameArray[$i] = 'USEDATE';
+                break;
+            case 'Start':
+                $fieldNameArray[$i] = 'BEGTIME';
+                break;
+            case 'End':
+                $fieldNameArray[$i] = 'ENDTIME';
+                break;
+            default:
+                $fieldNameArray[$i] = $finfo->orgname;
+        }
+                
         $fieldNameAliasArray[$i] = $finfo->name;
         $tableNameArray[$i] = $finfo->orgtable; 
-        $fieldTypeArray[$i] = $finfo->type;
         $i++;
     }
-
+    //print_r($fieldNameArray); //DEBUG
     echo '</tr>'; //end the table heading record
 
     $result->data_seek(0);  
@@ -88,13 +105,21 @@ function resultTable($mysqli, $result){
             if($fieldNameArray[$i] == 'DESCR')
                 //append ID to the table name to get correct fieldname (this requires a DB naming convention to be followed
                 $values["$fieldNameArray[$i]"] = $tableNameArray[$i] . "ID="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
-            else if (/*type is date*/)
-                //assign it as a datetime obj
+            else if ( !(strpos($fieldNameArray[$i],'DATE') === false) ) {
+                //assign it as a datetime obj for formatting if it's a date            
+                $tempDate = new DateTime($mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"]));
+                $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] . "="."'".$tempDate->format('Y-m-d')."'";
+            }
+            else if ( !(strpos($fieldNameArray[$i],'TIME') === false) ) {
+                //assign it as a datetime obj for formatting if it's a date
+                $tempDate = new DateTime($mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"]));
+                $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] . "="."'".$tempDate->format('H:i')."'";
+            }
             else
                 $values["$fieldNameArray[$i]"] = $fieldNameArray[$i] ."="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
           }            
         }
-        
+        //print_r($fieldNameArray); //DEBUG
         $csvValues = implode(',' , $values);
      
         $updateQuery = "UPDATE ".$tableNameArray[0]." SET ".$csvValues." 
@@ -117,31 +142,27 @@ function resultTable($mysqli, $result){
  */
 function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     if (!strcmp($fieldName, 'DESCR') && !strcmp($tableName, 'TIMETYPE')) {
-        $myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE";
-        
-        $result = $mysqli->query($myq);
-
-        //show SQL error msg if query failed
-        SQLerrorCatch($mysqli, $result);
-    
-    //build a drop-down from query result
+        $myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE";  
     ?>
      <td> <select name="<?php echo $formName; ?>" onchange="window.location=window.location.href + '&type=' + this.value">
     <?php
     }
-    else if (!strcmp($fieldName, 'FULLNAME') && !strcmp($tableName, 'EMPLOYEE')) {
-        
+    else if (!strcmp($fieldName, 'FULLNAME') && !strcmp($tableName, 'EMPLOYEE')) {        
         $myq = "SELECT ID, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
-        $result = $mysqli->query($myq);
-
-        //show SQL error msg if query failed
-        SQLerrorCatch($mysqli, $result);
-        
-        echo "<td> <select name=".$formName.">";
+         echo "<td> <select name=".$formName.">";  
+    }
+    else if (!strcmp($fieldName, 'GRADE') && !strcmp($tableName, 'EMPLOYEE')) {     
+        $myq = "SELECT ABBREV, DESCR FROM GRADE";   
+         echo "<td> <select name=".$formName.">";  
     }
     else 
         return false;
     
+    $result = $mysqli->query($myq);
+
+    //show SQL error msg if query failed
+    SQLerrorCatch($mysqli, $result);
+       
     //store the original column name, and an alias if it was used
     $fieldNameArray = array();
     for($i=0;$finfo = $result->fetch_field();$i++) {

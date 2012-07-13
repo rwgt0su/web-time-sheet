@@ -2,7 +2,6 @@
 Class wts_content {
     public $isWelcome;
     public $isLogout;
-    public $isDBTest;
     public $isLeaveForm;
     public $isSubmittedRequests;
     public $isLeaveApproval;
@@ -12,12 +11,12 @@ Class wts_content {
     public $isSearching;
     public $isUpdateProfile; 
     public $isLookup; 
+    public $isUseReport; 
     
     public function wts_content(){
         //get passed variables based on URL
         $this->isWelcome = isset($_GET['welcome']) ? $_GET['welcome'] : false;
         $this->isLogout = isset($_GET['logout']) ? $_GET['logout'] : false;
-        $this->isDBTest = isset($_GET['dbtest']) ? $_GET['dbtest'] : false;
         $this->isLeaveForm = isset($_GET['leave']) ? $_GET['leave'] : false;
         $this->isSubmittedRequests = isset($_GET['submittedRequests']) ? $_GET['submittedRequests'] : false;
         $this->isLeaveApproval = isset($_GET['approve']) ? $_GET['approve'] : false;
@@ -26,6 +25,7 @@ Class wts_content {
         $this->isSearching = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
         $this->isUpdateProfile = isset($_GET['updateProfile']) ? $_GET['updateProfile'] : false;
         $this->isLookup = isset($_GET['lookup']) ? $_GET['lookup'] : false;
+        $this->isUseReport = isset($_GET['usereport']) ? $_GET['usereport'] : false;
         
         if(empty($_GET)){
             $this->isHome = true;

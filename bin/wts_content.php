@@ -17,11 +17,6 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayAdminAnnounce($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
-    if($wts_content->isDBTest()){
-        ?>
-        <div class="post"><?php displayDBTest(); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
     if($wts_content->isLeaveForm){
         ?>
         <div class="post"><?php displayLeaveForm(); ?><div class="clear"></div></div><div class="divider"></div>
@@ -58,6 +53,11 @@ function displayContent($wts_content, $config){
     if($wts_content->isLookup){
         ?>
         <div class="post"><?php displayRequestLookup($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
+    if($wts_content->isUseReport){
+        ?>
+        <div class="post"><?php displayTimeUseReport($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
          
