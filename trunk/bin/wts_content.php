@@ -12,6 +12,11 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayWelcome($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
+    if($wts_content->isAbout){
+        ?>
+        <div class="post"><?php displayAbout($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
     if($wts_content->isAnounceAdmin){
         ?>
         <div class="post"><?php displayAdminAnnounce($config); ?><div class="clear"></div></div><div class="divider"></div>
@@ -68,6 +73,18 @@ function displayWelcome($config){
     <div class="thumbnail"><img src="/style/WellingtonBadge.gif" alt="" /></div>
     <h3><?php echo $config->getTitle(); ?></h3> 
     <p>Welcome to the Mahoning County Sheriff's Office Web Portal</p>
+    <?php
+}
+function displayAbout($config){
+    ?>
+    <div class="thumbnail"><img src="/style/WellingtonBadge.gif" alt="" /></div>
+    <h3><?php echo $config->getTitle(); ?></h3> 
+    <p>Welcome to the Mahoning County Sheriff's Office Web Portal</p><br />
+    <p>This website is developed and maintained by the Mahoning County Sheriff's Office</p><br /><br /><br />
+    <p>This is a Sheriff's Office Computer System and is the property of the Mahoning County Sheriff's Office / Mahoning County Board of Commissioners. 
+        It is for authorized use only. Users (authorized or unauthorized) have no explicit or implicit expectation of privacy. Any or all uses of this
+        system and all files on this system may be intercepted, monitored, recorded, copied, audited, inspected, and disclosed to authorized site and
+        law enforcement personnel, as well as authorized officials of other agencies.</p>
     <?php
 }
 ?>

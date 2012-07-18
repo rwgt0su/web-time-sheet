@@ -230,4 +230,19 @@ function showDynamicTable($tableName, $rowArray){
     
 }
 
+function showTimeSelector($inputName){
+
+    
+        echo '<select name="'.$inputName.'1" >';
+
+        for ($i = 00; $i <= 23; $i++) {
+            echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
+        }
+        echo '</select>';
+        echo '<select name="'.$inputName.'2" >';
+        for ($i = 00; $i <= 59; $i++) {
+            echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
+        }
+        echo '</select>';
+}
 ?>
