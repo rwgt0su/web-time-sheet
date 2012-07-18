@@ -30,7 +30,7 @@ require_once('bin/common.php');
 
                     <div class="search">
                         <form action="<?php echo $_SERVER['PHP_SELF']; ?>" name="Search_Form" method="POST" >
-                        <input type="text" name="searchInput" />
+                        <input type="text" name="searchInput" value="<?php if(isset($_POST['searchInput'])) echo $_POST['searchInput'] ?>" />
                         <input type="submit" name="searchBtn" value="Search" />
                         </form>
                     </div>
