@@ -564,19 +564,26 @@ function displayInsertUser(){
 }  
 function searchLDAP($config, $userToFind){
     $cnx = ldap_connect($config->ldap_server);
-    $user = "wts-user";
-    $pass = "Sheriff1";
+    $user = $config->ldapUser;
+    $pass = $config->ldapPass;
     $ldaprdn = $user . '@' . $config->domain;
     ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
     ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
-    if($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)){ 
-        $SearchFor=$userToFind;               //What string do you want to find?
-        $SearchField="samaccountname";   //In what Active Directory field do you want to search for the string?
-        $dn = "DC=sheriff,DC=mahoning,DC=local"; //Put your Base DN here
-        $LDAPFieldsToFind = array("uid");
+    if($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)){
+        //Split given domain into LDAP Base DN
+        $temp = explode(".", $config->domain);
+        $i = 0;
+        $dn = null;
+        foreach ($temp as $dc){ 
+            if(empty($dn))
+                $dn = "DC=".$dc;
+            else
+                $dn = $dn.",DC=".$dc;
+            $i++;
+        }
         error_reporting (E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
-        $filter="(|(samaccountname=*".$userToFind."*)(sn=*".$userToFind."*)(displayname=*".$userToFind."*)
-            (mail=*".$userToFind."*)(department=*".$userToFind."*)(title=*".$userToFind."*))";  //Search fields
+        $filter="(|(samaccountname=*".$userToFind."*)(sn=*".$userToFind."*)(mail=*".$userToFind."*)
+                (department=*".$userToFind."*)(title=*".$userToFind."*))";  //Search fields
         $res=ldap_search($cnx, $dn, $filter);
         
         echo "Number of entries returned is " . ldap_count_entries($cnx, $res) . "<br /><br /><hr />";

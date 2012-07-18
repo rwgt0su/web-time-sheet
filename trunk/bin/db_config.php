@@ -5,6 +5,8 @@ Class Config {
 	public $adminLvl;
 	public $mysqli;
         public $domain;
+        public $ldapUser;
+        public $ldapPass;
         public $ldap_server;
 
 	public function Config(){
@@ -25,6 +27,12 @@ Class Config {
 			}
                         if (strcmp($row['Variable'], "ldap_server") == 0){
 				$this->ldap_server = $row['Value'];
+			}
+                        if (strcmp($row['Variable'], "ldap_user") == 0){
+				$this->ldapUser = $row['Value'];
+			}
+                        if (strcmp($row['Variable'], "ldap_user_pass") == 0){
+				$this->ldapPass = $row['Value'];
 			}
 		}	
 	}
