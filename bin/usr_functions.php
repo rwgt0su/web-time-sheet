@@ -370,7 +370,6 @@ function displayRanks($selectName, $selected=false){
 
     echo '</select>';
 }
-
 function displayDivisionID($selectName, $selected=false){
     $mysqli = connectToSQL();
     $myq = "SELECT * FROM `DIVISION` WHERE 1";
@@ -413,7 +412,6 @@ function displayAssign($selectName, $selected = false){
     echo '</select>';
 
 }
-
 function displaySUPVDropDown($selectName, $selected = false){
     
     $mysqli = connectToSQL();
@@ -435,7 +433,6 @@ function displaySUPVDropDown($selectName, $selected = false){
 
     echo '</select>';
 }
-
 function displayDateSelect($inputName, $id, $selected = false, $required = false){
     ?>
     <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
@@ -452,7 +449,6 @@ function displayDateSelect($inputName, $id, $selected = false, $required = false
     <input name="<?php echo $inputName ?>" type="text" class="datepicker" id="<?php echo $id; ?>" <?php if(!$selected){ if($required) showInputBoxError (); } else echo 'value="'.$selected.'"'; ?> />
     <?php
 }
-
 function delUser($user){
 	$errorText = '';
         
@@ -468,7 +464,6 @@ function delUser($user){
 
    return $errorText;
 }
-
 function displayLogout(){
         $user = $_SESSION['userName'];
     	echo '<div id="result" align="right">Logged in as: <font size="3">';
@@ -480,7 +475,6 @@ function displayLogout(){
 		echo '<br /><a href="?logout=true">Log Out </a><br /><br />';
         echo "</div>";
 }
-
 function displayLogin($config){
     if (!isValidUser()){
         $error = '0';
@@ -540,9 +534,6 @@ function displayLogin($config){
         displayLogout();
     }
 }
-?>
-
-                <?php
 function displayInsertUser(){
 
     if (isset($_POST['submit'])) {
@@ -570,5 +561,40 @@ function displayInsertUser(){
 </form>
         
 <?php        
-}      
+}  
+function searchLDAP($config, $userToFind){
+    $cnx = ldap_connect($config->ldap_server);
+    $user = "wts-user";
+    $pass = "Sheriff1";
+    $ldaprdn = $user . '@' . $config->domain;
+    ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
+    ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
+    if($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)){ 
+        $SearchFor=$userToFind;               //What string do you want to find?
+        $SearchField="samaccountname";   //In what Active Directory field do you want to search for the string?
+        $dn = "DC=sheriff,DC=mahoning,DC=local"; //Put your Base DN here
+        $LDAPFieldsToFind = array("uid");
+        error_reporting (E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
+        $filter="(|(samaccountname=*".$userToFind."*)(sn=*".$userToFind."*)(displayname=*".$userToFind."*)
+            (mail=*".$userToFind."*)(department=*".$userToFind."*)(title=*".$userToFind."*))";  //Search fields
+        $res=ldap_search($cnx, $dn, $filter);
+        
+        echo "Number of entries returned is " . ldap_count_entries($cnx, $res) . "<br /><br /><hr />";
+        $info = ldap_get_entries($cnx, $res);
+        for ($i=0; $i<$info["count"]; $i++) {
+            //echo "dn is: " . $info[$i]["dn"] . "<br />";
+            echo "Display Name: " . $info[$i]["displayname"][0] . "<br />";
+            echo "First name: " . $info[$i]["givenname"][0] . "<br />";
+            echo "Last Name: " . $info[$i]["sn"][0] . "<br />";
+            echo "Username: " . $info[$i]["samaccountname"][0] . "<br />";
+            echo "Title: " . $info[$i]["title"][0] . "<br />";
+            echo "Department: " . $info[$i]["department"][0] . "<br />";
+            echo "Email: " . $info[$i]["mail"][0] . "<br />";
+            echo "<br /><hr />";
+        }
+       
+    }
+    else
+        $result = "Could Not Bind to LDAP to perform search";
+}
 ?>
