@@ -13,6 +13,8 @@ Class wts_content {
     public $isLookup; 
     public $isUseReport;
     public $isAbout;
+    public $isPhpMyEdit;
+    public $isMUNIS;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -28,6 +30,8 @@ Class wts_content {
         $this->isLookup = isset($_GET['lookup']) ? $_GET['lookup'] : false;
         $this->isUseReport = isset($_GET['usereport']) ? $_GET['usereport'] : false;
         $this->isAbout = isset($_GET['about']) ? $_GET['about'] : false;
+        $this->isPhpMyEdit = isset($_GET['phpMyEdit']) ? $_GET['phpMyEdit'] : false;
+        $this->isMUNIS = isset($_GET['munis']) ? $_GET['munis'] : false;
         
         if(empty($_GET)){
             $this->isHome = true;

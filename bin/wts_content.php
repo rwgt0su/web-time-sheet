@@ -65,6 +65,16 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayTimeUseReport($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
+    if($wts_content->isPhpMyEdit){
+        ?>
+        <div class="post"><?php displayPhpMyEditMenu(); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
+    if($wts_content->isMUNIS){
+        ?>
+        <div class="post"><?php MUNISreport($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
          
 }
 

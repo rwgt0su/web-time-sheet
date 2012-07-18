@@ -67,7 +67,7 @@ function loginUser($user,$pass){
         //user lookup
         $mysqli = connectToSQL();
         $user = strtoupper($mysqli->real_escape_string($user));
-        $myq="SELECT ID, PASSWD, ADMINLVL FROM EMPLOYEE WHERE ID='". $user . "'";
+        $myq="SELECT IDNUM, ID, PASSWD, ADMINLVL FROM EMPLOYEE WHERE ID='". $user . "'";
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
@@ -89,6 +89,7 @@ function loginUser($user,$pass){
             if (strcmp(trim($resultAssoc['PASSWD']), trim(saltyHash($pass))) == 0)
             {
 				$errorText .= " and Valid password ";
+                $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
                 $_SESSION['userName'] = $user;
                 $_SESSION['admin'] = $admin;
                 $_SESSION['validUser'] = true;
@@ -156,6 +157,7 @@ function loginLDAPUser($user,$pass,$config){
                         if (!$result) {
                             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
                         }
+                        $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
                         $_SESSION['userName'] = $user;
                         $_SESSION['admin'] = $admin;
                         $_SESSION['validUser'] = true;
@@ -183,6 +185,7 @@ function loginLDAPUser($user,$pass,$config){
                         throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
                     }
                     $errorText .= " and Valid password ";
+                    $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
                     $_SESSION['validUser'] = true;
@@ -204,8 +207,14 @@ function loginLDAPUser($user,$pass,$config){
                     //Authorization success
                     $admin = "0";
                     $_SESSION['lastLogin'] = "Never";
-                    registerUser($user, $pass, $pass, $admin, "1");                    
+                    registerUser($user, $pass, $pass, $admin, "1");
+                    //query to get the new auto_incremented IDNUM
+                    $myq = "SELECT IDNUM FROM EMPLOYEE WHERE ID='".$user."'";
+                    $resultAssoc = $mysqli->query($myq);
+                    SQLerrorCatch($mysqli, $result);
+                    
                     $errorText .= " and Valid password ";
+                    $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
                     $_SESSION['validUser'] = true;
@@ -309,9 +318,21 @@ function displayUpdateProfile($config){
     ?>
         <form name="update" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
         </div><div align="center" class="login">
+            <table>
+            <?php if ($_SESSION['admin'] >= 50) { 
+                  echo "<tr><td>User: </td>";
+                  $myq = "SELECT IDNUM, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
+                  ?> "<td> <select name="userID" onchange="window.location=window.location.href + '&userID=' + this.value>" <?php
+                  while ($row = $result->fetch_assoc()) {
+                      echo '<option value="' . $row["$name[0]"] . '"';
+                  }
+                 echo "</tr>";
+                 }
+                  else  {  ?>                         
             <h3>Username: <?php echo $username; ?></h3>
             <input type="hidden" name="userID" value="<?php echo $username; ?>" />
-                <table>
+            <?php } ?>
+                
                     <tr><td>First Name: </td><td><input name="fname" type="text" <?php if(!$fname) showInputBoxError(); else echo 'value="'.$fname.'"'; ?> /></td></tr>
                     <tr><td>Last Name: </td><td><input name="lname" type="text" <?php if(!$lname) showInputBoxError(); else echo 'value="'.$lname.'"'; ?> /></td></tr>
                     <?php 
@@ -564,26 +585,19 @@ function displayInsertUser(){
 }  
 function searchLDAP($config, $userToFind){
     $cnx = ldap_connect($config->ldap_server);
-    $user = $config->ldapUser;
-    $pass = $config->ldapPass;
+    $user = "wts-user";
+    $pass = "Sheriff1";
     $ldaprdn = $user . '@' . $config->domain;
     ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
     ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
-    if($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)){
-        //Split given domain into LDAP Base DN
-        $temp = explode(".", $config->domain);
-        $i = 0;
-        $dn = null;
-        foreach ($temp as $dc){ 
-            if(empty($dn))
-                $dn = "DC=".$dc;
-            else
-                $dn = $dn.",DC=".$dc;
-            $i++;
-        }
+    if($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)){ 
+        $SearchFor=$userToFind;               //What string do you want to find?
+        $SearchField="samaccountname";   //In what Active Directory field do you want to search for the string?
+        $dn = "DC=sheriff,DC=mahoning,DC=local"; //Put your Base DN here
+        $LDAPFieldsToFind = array("uid");
         error_reporting (E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
-        $filter="(|(samaccountname=*".$userToFind."*)(sn=*".$userToFind."*)(mail=*".$userToFind."*)
-                (department=*".$userToFind."*)(title=*".$userToFind."*))";  //Search fields
+        $filter="(|(samaccountname=*".$userToFind."*)(sn=*".$userToFind."*)(displayname=*".$userToFind."*)
+            (mail=*".$userToFind."*)(department=*".$userToFind."*)(title=*".$userToFind."*))";  //Search fields
         $res=ldap_search($cnx, $dn, $filter);
         
         echo "Number of entries returned is " . ldap_count_entries($cnx, $res) . "<br /><br /><hr />";

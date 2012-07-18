@@ -11,6 +11,11 @@
 	td.pme-message { text-align: center; }
 	td.pme-stats   { text-align: right;  }
 </style><?php
+session_save_path('/var/www/sessions');
+session_start();
+        
+if ($_SESSION['admin'] <= 50){
+	header('Location: /');}
 
 /*
  * IMPORTANT NOTE: This generated file contains only a subset of huge amount
@@ -148,6 +153,10 @@ $opts['fdd']['TIMETYPEID'] = array(
   'maxlen'   => 2,
   'sort'     => true
 );
+$opts['fdd']['TIMETYPEID']['values']['table'] = 'TIMETYPE'; //table to pull value from
+$opts['fdd']['TIMETYPEID']['values']['column'] = 'TIMETYPEID'; //column to use as value
+$opts['fdd']['TIMETYPEID']['values']['description'] = 'DESCR'; // description from another column
+
 $opts['fdd']['REQDATE'] = array(
   'name'     => 'REQDATE',
   'select'   => 'T',
