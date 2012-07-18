@@ -47,7 +47,7 @@ function displayContent($wts_content, $config){
     }
     if($wts_content->isSearching){
         ?>
-        <div class="post"><?php searchPage(); ?><div class="clear"></div></div><div class="divider"></div>
+        <div class="post"><?php searchPage($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
     if($wts_content->isUpdateProfile){
