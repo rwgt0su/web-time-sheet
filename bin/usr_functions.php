@@ -245,9 +245,7 @@ function logoutUser($message){
         echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
 }
 function displayUpdateProfile($config){
-    if($config->adminLvl >= 75){
-     $mysqli = $config->mysqli;   
-    }
+    $mysqli = $config->mysqli;   
     if(isset($_POST['updateBtn'])){
         $fname = isset($_POST['fname']) ? $mysqli->real_escape_string( strtoupper($_POST['fname']) ) : false;
         $lname = isset($_POST['lname']) ? $mysqli->real_escape_string( strtoupper($_POST['lname']) ) : false;
@@ -273,7 +271,6 @@ function displayUpdateProfile($config){
             `ADMINLVL` = '".$config->adminLvl."' 
             WHERE CONVERT( `EMPLOYEE`.`ID` USING utf8 ) = '".$userID."' LIMIT 1 ;";
         //Perform SQL Query
-        $mysqli = connectToSQL();
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
@@ -285,7 +282,6 @@ function displayUpdateProfile($config){
     }
     else{
         //Get stored information (first view)
-        $mysqli = connectToSQL();
         $sql_user = strtoupper($mysqli->real_escape_string($_SESSION['userName']));
         $myq = "SELECT * FROM EMPLOYEE WHERE ID='". $sql_user . "'";
         $result = $mysqli->query($myq);

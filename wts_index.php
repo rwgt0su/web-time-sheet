@@ -87,10 +87,11 @@ require_once('bin/common.php');
         <div class="container_12">
             <div class="grid_4">© Mahoning County Sheriff's Office 2012</div>
             <div class="grid_8">
+                <a href="?about=true">Terms and Conditions</a>
                 <a href="https://www.facebook.com/pages/Mahoning-County-Sheriffs-Office/211950208818335" target="_blank"><img src="templetes/DarkTemp/images/facebook_icon.jpg" alt="" /></a>
             </div>
         </div>
     </div>
 </body>
 </html>
-<?php $_SESSION['timeout'] = time(); ?>
+<?php $_SESSION['timeout'] = time(); //myAlerts($config); ?>

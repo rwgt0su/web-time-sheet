@@ -26,12 +26,12 @@ if (isset($_POST['submit'])) {
     
     $shiftLength = isset($_POST['shift']) ? $_POST['shift'] : '';
     
-    $beg = new DateTime($mysqli->real_escape_string($_POST['beg']));
+    $beg = new DateTime($mysqli->real_escape_string($_POST['beg1'].$_POST['beg2']));
     //setting end to beginning so I can add a shift to it if need be
-    $end = new DateTime($mysqli->real_escape_string($_POST['beg']));
+    $end = new DateTime($mysqli->real_escape_string($_POST['beg1'].$_POST['beg2']));
     
     if(empty($shiftLength)) //not using a shift length so take the entered time
-        $end = new DateTime($mysqli->real_escape_string($_POST['end']));
+        $end = new DateTime($mysqli->real_escape_string($_POST['end1'].$_POST['end2']));
     else //add a shift to the start time
         $end->add(new DateInterval('PT'.$shiftLength.'H'));    
     
@@ -113,7 +113,7 @@ $mysqli = connectToSQL();
             ?>
             <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1'); ?>
                  Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
-            <p>Start time: <input type="text" name="beg">
+            <p>Start time: <?php showTimeSelector("beg"); ?>
             <?php 
 
             if($type == 'PR') {
@@ -122,7 +122,7 @@ $mysqli = connectToSQL();
                     echo "</br>(Personal time must be used for an entire shift.)";
             }
             else {
-                ?> End time: <input type="text" name="end"></p> <?php
+                ?> End time: <?php showTimeSelector("end"); ?></p> <?php
             }
 
             ?> 
