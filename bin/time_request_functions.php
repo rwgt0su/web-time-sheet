@@ -6,32 +6,61 @@
 ?>
 
 <?php
-function displayLeaveForm(){
+function displayLeaveForm($config){
   
-   
+$mysqli = $config->mysqli;
+$postUseDate = isset($_POST['usedate']) ? $_POST['usedate'] : false;
+    If(!$postUseDate)
+        $isDateUse = false;
+    Else
+        $isDateUse = true;
 if (isset($_POST['submit'])) {
-    $mysqli = connectToSQL();
-
-    $ID = $mysqli->real_escape_string(strtoupper($_POST['ID']));
-    $usedate = new DateTime($mysqli->real_escape_string($_POST['usedate']));
+    //Get all passed variables
+    $postID = isset($_POST['ID']) ? $_POST['ID'] : false;
     
-    if(isset($_POST['thrudate'])) {
-        $thrudate = new DateTime($mysqli->real_escape_string($_POST['thrudate']));
+    $postThruDate = isset($_POST['thrudate']) ? $_POST['thrudate'] : false;
+    $shiftLength = isset($_POST['shift']) ? $_POST['shift'] : '';
+    
+    $postBeg1 = isset($_POST['beg1']) ? $_POST['beg1'] : false;
+    $postBeg2 = isset($_POST['beg2']) ? $_POST['beg2'] : false;
+    if(!empty($postBeg1) && !empty($postBeg2))
+        $postBegin = $postBeg1.$postBeg2;
+    else
+        $postBegin = false;
+    
+    $postEnd1 = isset($_POST['end1']) ? $_POST['end1'] : false;
+    $postEnd2 = isset($_POST['end2']) ? $_POST['end2'] : false;
+    if(!empty($postEnd1) && !empty($postEnd2))
+        $postEnding = $postEnd1.$postEnd2;
+    else
+        $postEnding = false;
+    
+    $type = isset($_POST['type']) ? $mysqli->real_escape_string($_POST['type']) : false;
+    $comment = isset($_POST['comment']) ? $mysqli->real_escape_string($_POST['comment']) : false;
+    $calloff = isset($_POST['calloff']) ? $_POST['calloff'] : 'NO';
+    $subtype = isset($_POST['subtype']) ? $mysqli->real_escape_string($_POST['subtype']) : false;
+    $auditid = isset($_POST['userName']) ? strtoupper($_SESSION['userName']) : false;
+
+    $ID = $mysqli->real_escape_string(strtoupper($postID));
+    $usedate = new DateTime($mysqli->real_escape_string($postUseDate));
+    
+    if(!$postThruDate) {
+        $daysOff = 0;  
+    }
+    else{
+        $thrudate = new DateTime($mysqli->real_escape_string($postThruDate));
 
         $daysOffInterval = $usedate->diff($thrudate); //number days in given range
         $daysOff = $daysOffInterval->format("%d");
     }
-    else
-        $daysOff = 0;    
-    
-    $shiftLength = isset($_POST['shift']) ? $_POST['shift'] : '';
-    
-    $beg = new DateTime($mysqli->real_escape_string($_POST['beg1'].$_POST['beg2']));
+            
+
+    $beg = new DateTime($mysqli->real_escape_string($postBegin));
     //setting end to beginning so I can add a shift to it if need be
-    $end = new DateTime($mysqli->real_escape_string($_POST['beg1'].$_POST['beg2']));
+    $end = new DateTime($mysqli->real_escape_string($postBegin));
     
     if(empty($shiftLength)) //not using a shift length so take the entered time
-        $end = new DateTime($mysqli->real_escape_string($_POST['end1'].$_POST['end2']));
+        $end = new DateTime($mysqli->real_escape_string($postEnding));
     else //add a shift to the start time
         $end->add(new DateInterval('PT'.$shiftLength.'H'));    
     
@@ -47,36 +76,38 @@ if (isset($_POST['submit'])) {
     //SQL TIME format
     $beg = $beg->format("H:i:s");  
     $end = $end->format("H:i:s");
-    
-    $type = $mysqli->real_escape_string($_POST['type']);
-    $comment = $mysqli->real_escape_string($_POST['comment']);
-    $calloff = isset($_POST['calloff']) ? $_POST['calloff'] : 'NO';
-    $subtype = $mysqli->real_escape_string($_POST['subtype']);
-    $auditid = strtoupper($_SESSION['userName']);
 
-    //query to insert the record. loops until number of days is reached
-    for($i=0; $i <= $daysOff; $i++){
-    $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
-            VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
-                    '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
-    //echo $myq; //DEBUG
-    $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
-    $result = $mysqli->query($myq);
-    
-    //show SQL error msg if query failed
-    if (SQLerrorCatch($mysqli, $result)) {
-    echo 'Request not accepted.';
-    }
-    else {
-        echo '<h3>Request accepted. The reference number for this request is <b>' 
-            . $mysqli->insert_id . '</b></h3>.';
-            }
+    if($isDateUse){
+        if(!empty($postEnding) || !empty($postBegin)){
+            //query to insert the record. loops until number of days is reached
+            for($i=0; $i <= $daysOff; $i++){
+                $myq="INSERT INTO REQUEST (ID, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
+                        VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
+                                '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
+                //echo $myq; //DEBUG
+                $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
+                $result = $mysqli->query($myq);
+
+                //show SQL error msg if query failed
+                if (SQLerrorCatch($mysqli, $result)) {
+                    echo 'Request not accepted.';
+                }
+                else {
+                    echo '<h3>Request accepted. The reference number for this request is <b>' 
+                        . $mysqli->insert_id . '</b></h3>.';
+                }
+            }//end for loop
+        }//end blank start or end time
+        else
+            echo '<font color="red" >Must provide a valid Start and End time!</font><br /><br />';
+    }//end blank use date submission verification
+    else{
+        echo '<font color="red" >Must provide a valid Date!</font><br /><br />';
     }
 } //end of 'is submit pressed?'
 
-$mysqli = connectToSQL();
 ?>
-        <h2>Employee Request</h2>
+<h2>Employee Request</h2>
       
  <form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
      <?php  
@@ -111,7 +142,7 @@ $mysqli = connectToSQL();
                 dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $_SESSION['userName'], 'ID');
             }
             ?>
-            <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1'); ?>
+            <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , !$isDateUse); ?>
                  Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
             <p>Start time: <?php showTimeSelector("beg"); ?>
             <?php 
