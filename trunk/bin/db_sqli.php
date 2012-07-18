@@ -148,7 +148,7 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     <?php
     }
     else if (!strcmp($fieldName, 'FULLNAME') && !strcmp($tableName, 'EMPLOYEE')) {        
-        $myq = "SELECT ID, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
+        $myq = "SELECT IDNUM, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
          echo "<td> <select name=".$formName.">";  
     }
     else if (!strcmp($fieldName, 'GRADE') && !strcmp($tableName, 'EMPLOYEE')) {     
