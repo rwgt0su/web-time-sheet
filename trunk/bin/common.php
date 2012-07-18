@@ -123,7 +123,6 @@ function saltyHash($plain){
 	$cipher = md5($salt.$plain);
         return $cipher;		
 }
-
 function showDynamicTable($tableName, $rowArray){
     ?>
     <script language="JavaScript" type="text/javascript">
@@ -229,17 +228,21 @@ function showDynamicTable($tableName, $rowArray){
     <?php
     
 }
-
 function showTimeSelector($inputName){
 
-    
-        echo '<select name="'.$inputName.'1" >';
+        echo '<select name="'.$inputName.'1" ';
+        showInputBoxError();
+        echo '>';
+        echo '<option value=""></option>';
 
         for ($i = 00; $i <= 23; $i++) {
             echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
         }
-        echo '</select>';
-        echo '<select name="'.$inputName.'2" >';
+        echo '</select> : ';
+        echo '<select name="'.$inputName.'2" ';
+        showInputBoxError();
+        echo '>';
+        echo '<option value=""></option>';
         for ($i = 00; $i <= 59; $i++) {
             echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
         }
