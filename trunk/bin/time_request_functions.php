@@ -9,37 +9,37 @@
 function displayLeaveForm($config){
   
 $mysqli = $config->mysqli;
-$postUseDate = isset($_POST['usedate']) ? $_POST['usedate'] : false;
-    If(!$postUseDate)
-        $isDateUse = false;
-    Else
-        $isDateUse = true;
-if (isset($_POST['submit'])) {
-    //Get all passed variables
-    $postID = isset($_POST['ID']) ? $_POST['ID'] : false;
-    
+
+//Get all passed variables
+    $postID = isset($_POST['ID']) ? $_POST['ID'] : $_SESSION['userIDnum'];
     $postThruDate = isset($_POST['thrudate']) ? $_POST['thrudate'] : false;
     $shiftLength = isset($_POST['shift']) ? $_POST['shift'] : '';
-    
-    $postBeg1 = isset($_POST['beg1']) ? $_POST['beg1'] : false;
-    $postBeg2 = isset($_POST['beg2']) ? $_POST['beg2'] : false;
+    $postBeg1 = isset($_POST['beg1']) ? $_POST['beg1'] : null;
+    $postBeg2 = isset($_POST['beg2']) ? $_POST['beg2'] : null;
     if(!empty($postBeg1) && !empty($postBeg2))
         $postBegin = $postBeg1.$postBeg2;
     else
         $postBegin = false;
-    
-    $postEnd1 = isset($_POST['end1']) ? $_POST['end1'] : false;
-    $postEnd2 = isset($_POST['end2']) ? $_POST['end2'] : false;
+    $postEnd1 = isset($_POST['end1']) ? $_POST['end1'] : null;
+    $postEnd2 = isset($_POST['end2']) ? $_POST['end2'] : null;
     if(!empty($postEnd1) && !empty($postEnd2))
         $postEnding = $postEnd1.$postEnd2;
     else
         $postEnding = false;
-    
     $type = isset($_POST['type']) ? $mysqli->real_escape_string($_POST['type']) : false;
     $comment = isset($_POST['comment']) ? $mysqli->real_escape_string($_POST['comment']) : false;
     $calloff = isset($_POST['calloff']) ? $_POST['calloff'] : 'NO';
-    $subtype = isset($_POST['subtype']) ? $mysqli->real_escape_string($_POST['subtype']) : false;
-    $auditid = isset($_POST['userName']) ? strtoupper($_SESSION['userName']) : false;
+    $auditid = isset($_POST['userName']) ? strtoupper($_SESSION['userIDnum']) : false;
+    $postUseDate = isset($_POST['usedate']) ? $_POST['usedate'] : false;
+        If(!$postUseDate)
+            $isDateUse = false;
+        Else
+            $isDateUse = true;
+    $subtype = isset($_POST['subtype']) ? $mysqli->real_escape_string($_POST['subtype']) : 'NONE';
+
+//Submit Button Pressed.  Updated the database
+if (isset($_POST['submit'])) {
+    
 
     $ID = $mysqli->real_escape_string(strtoupper($postID));
     $usedate = new DateTime($mysqli->real_escape_string($postUseDate));
@@ -121,54 +121,70 @@ if (isset($_POST['submit'])) {
             //hidden field with type set
             echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
             echo "<input type='hidden' name='type' value='".$type."'>";
-            //subtype choice
-            echo "Subtype: ";
-            $myq = "SELECT NAME FROM SUBTYPE";
-            $result = $mysqli->query($myq);
-            SQLerrorCatch($mysqli, $result);
-            ?> <select name="subtype"> <?php
-            while($row = $result->fetch_assoc()) {
-                if ($row['NAME'] == 'NONE') 
-                    echo '<option value="NONE" selected="selected">NONE</option>';
-                else
-                    echo '<option value="' . $row["NAME"] . '">'. $row["NAME"] . '</option>';
+            
+            //Lookup Users button pressed
+            if(isset($_POST['searchBtn'])){
+                //Save any inputed values
+                echo '<input type="hidden" name="subtype" value="'.$subtype.'" />';
+                echo '<input type="hidden" name="ID" value="'.$postID .'" />';
+                echo '<input type="hidden" name="usedate" value="'.$postUseDate.'" />';
+                echo '<input type="hidden" name="thrudate" value="'.$postThruDate.'" />';
+                echo '<input type="hidden" name="beg1" value="'.$postBeg1.'" />';
+                echo '<input type="hidden" name="beg2" value="'.$postBeg2.'" />';
+                echo '<input type="hidden" name="end1" value="'.$postEnd1.'" />';
+                echo '<input type="hidden" name="end2" value="'.$postEnd2.'" />';
+                echo '<input type="hidden" name="comment" value="'.$comment.'" />';
             }
-            echo "</select> </br>"; 
-   
-            if ( $_SESSION['admin'] == 0) //if normal user, allow only their own user name
-                echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userIDnum']."'></p>";
-            else { //allow any user to be picked for a calloff entry
-                echo "User: ";
-                dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $_SESSION['userName'], 'ID');
+            Else{
+                //subtype choice
+                echo "Subtype: ";
+                $myq = "SELECT NAME FROM SUBTYPE";
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result);
+                ?> <select name="subtype"> <?php
+                while($row = $result->fetch_assoc()) {
+                    if (strcmp($row['NAME'],$subtype) == 0) 
+                        echo '<option value="' . $row["NAME"] . '" SELECTED >'. $row["NAME"] . '</option>';
+                    else
+                        echo '<option value="' . $row["NAME"] . '">'. $row["NAME"] . '</option>';
+                }
+                echo "</select> </br>"; 
+
+                if ( $_SESSION['admin'] == 0) //if normal user, allow only their own user name
+                    echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userIDnum']."'></p>";
+                else { //allow any user to be picked for a calloff entry
+                    echo "User: ";
+                    dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
+                }
+                ?><input type="submit" name="searchBtn" value="Lookup Users" />
+                <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , !$isDateUse); ?>
+                    Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
+                <p>Start time: <?php showTimeSelector("beg", $postBeg1, $postBeg2); ?>
+                <?php 
+
+                if($type == 'PR') {
+                        echo "<input type='radio' name='shift' value='8'>8 hour shift";
+                        echo "<input type='radio' name='shift' value='12'>12 hour shift";
+                        echo "</br>(Personal time must be used for an entire shift.)";
+                }
+                else {
+                    ?> End time: <?php showTimeSelector("end", $postEnd1, $postEnd2); ?></p> <?php
+                }
+
+                ?> 
+
+
+                </br>
+                <p>Comment: <input type="text" name="comment" value="<?php echo $comment; ?>"></p>
+                <p><input type="checkbox" name='calloff' value="YES">Check if calling in sick.</p>
+
+                <p><input type="submit" name="submit" value="Submit"></p>  
+
+        </form> 
+
+
+        <?php
             }
-            ?>
-            <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , !$isDateUse); ?>
-                 Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
-            <p>Start time: <?php showTimeSelector("beg"); ?>
-            <?php 
-
-            if($type == 'PR') {
-                    echo "<input type='radio' name='shift' value='8'>8 hour shift";
-                    echo "<input type='radio' name='shift' value='12'>12 hour shift";
-                    echo "</br>(Personal time must be used for an entire shift.)";
-            }
-            else {
-                ?> End time: <?php showTimeSelector("end"); ?></p> <?php
-            }
-
-            ?> 
-
-
-            </br>
-            <p>Comment: <input type="text" name="comment"></p>
-            <p><input type="checkbox" name='calloff' value="YES">Check if calling in sick.</p>
-
-            <p><input type="submit" name="submit" value="Submit"></p>  
-
-    </form> 
-
-
-    <?php
         }
         else {
              //intitial choice of type
@@ -258,36 +274,36 @@ else {
         $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
-                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.IDNUM='" . $_SESSION['userIDnum'] .
-                    "' AND R.TIMETYPEID=T.TIMETYPEID AND R.IDNUM=E.IDNUM 
+                    FROM REQUEST R, TIMETYPE T
+                    WHERE ID='" . $_SESSION['userName'] .
+                    "' AND R.TIMETYPEID=T.TIMETYPEID
                     AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     ORDER BY REFER";
             
             break;
 
         case 25: //supervisor, list by division
-            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',LNAME,FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+            $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.TIMETYPEID=T.TIMETYPEID AND R.IDNUM=E.IDNUM               
+                    WHERE R.TIMETYPEID=T.TIMETYPEID                   
                     AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     AND E.DIVISIONID IN
                         (SELECT DIVISIONID 
-                        FROM EMPLOYEE E
-                        WHERE E.IDNUM='" . $_SESSION['userIDnum'] . "')
+                        FROM EMPLOYEE
+                        WHERE ID='" . $_SESSION['userName'] . "')
                     ORDER BY REFER";
             break;
         case 50: //HR
             $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T
                     WHERE R.TIMETYPEID=T.TIMETYPEID
@@ -306,7 +322,8 @@ else {
 } //end switch
     
 $result = $mysqli->query($myq);
-SQLerrorCatch($mysqli, $result);
+if (!$result) 
+    throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
     
 //build table
 resultTable($mysqli, $result);
@@ -326,19 +343,19 @@ function displayLeaveApproval(){
 
         $mysqli = connectToSQL();
         
-        $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
+        $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', R.ID 'Employee', 
                         DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', NOTE 'Comment', STATUS 'Status'                         
+                        T.DESCR 'Type', NOTE 'Comment', STATUS 'Status'                         
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
                     WHERE R.TIMETYPEID=T.TIMETYPEID
-                    AND   R.IDNUM=E.IDNUM
+                    AND   R.ID=E.ID
                     AND STATUS='PENDING'
                     AND E.DIVISIONID IN
                         (SELECT DIVISIONID 
                         FROM EMPLOYEE
-                        WHERE IDNUM='" . $_SESSION['userIDnum'] . "')
+                        WHERE ID='" . $_SESSION['userName'] . "')
                     ORDER BY RADIO DESC, REFER";
         //echo $myq; //DEBUG
 
@@ -346,20 +363,13 @@ function displayLeaveApproval(){
         SQLerrorCatch($mysqli, $result);
        
         //build table
-        //resultTable($mysqli, $result);
+        resultTable($mysqli, $result);
         ?>
         
         <hr>
         <table>
             <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn">
             <!-- <tr><th>Ref #</th><th>Approve?</th><th>Reason</th></tr> -->
-            <tr>
-            <?php    
-            $result->data_seek(0);
-            while($finfo = $result->fetch_field()){
-                echo "<th>".$finfo->name."</th>";
-                } ?>
-            </tr>
             <?php
             $refs = array();
             $result->data_seek(0);
@@ -385,7 +395,7 @@ function displayLeaveApproval(){
                 $rowCount++;
             }
             ?>
-           </table> <p><input type="submit" name="approveBtn" value="Save"></p>
+           </table> <p><input type="submit" name="approveBtn" value="Approve"></p>
             </form>
         
 
@@ -398,7 +408,7 @@ function displayLeaveApproval(){
                     $approveQuery="UPDATE REQUEST 
                                     SET STATUS='".$_POST["$approve"]."',
                                         REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
-                                        APPROVEDBY='".$_SESSION['userIDnum']."' 
+                                        APPROVEDBY='".strtoupper($_SESSION['userName'])."' 
                                     WHERE REFER='$refs[$j]'";
                     echo $approveQuery; //DEBUG
                     $approveResult = $mysqli->query($approveQuery);
@@ -434,11 +444,11 @@ function displayRequestLookup($config) {
         $mysqli = $config->mysqli;
         $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        T.DESCR 'Type', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
                     FROM REQUEST R, TIMETYPE T, EMPLOYEE E
                     WHERE R.TIMETYPEID=T.TIMETYPEID 
-                    AND E.IDNUM=R.IDNUM
+                    AND E.ID=R.ID
                     AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     AND LNAME LIKE '%".$lname."%'";
         //popUpMessage($myq); //DEBUG
@@ -527,7 +537,7 @@ function displayTimeUseReport ($config) {
    
     $myq = "SELECT DIVISIONID 'Div', MUNIS, CONCAT_WS(', ',LNAME,FNAME) 'Name', R.ID, T.DESCR 'Type', CAST(SUM(HOURS) as DECIMAL(5,2)) 'Total (hrs)'
             FROM REQUEST R, EMPLOYEE E, TIMETYPE T
-            WHERE R.IDNUM=E.IDNUM AND T.TIMETYPEID = R.TIMETYPEID
+            WHERE R.ID=E.ID AND T.TIMETYPEID = R.TIMETYPEID
             AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
             AND STATUS='APPROVED'
             GROUP BY E.DIVISIONID, R.ID, R.TIMETYPEID
@@ -539,72 +549,5 @@ function displayTimeUseReport ($config) {
     //show a print button. printed look defined by print.css
     echo '<a href="javascript:window.print()">Print</a>';
     
-}
-
-function MUNISreport($config) {
-    //a table looking similar to MUNIS entry for ease of use
-    if(isset($_POST['ppselect'])) {
-        $mysqli = $config->mysqli;
-        $myq = "SELECT * FROM PAYPERIOD WHERE ID='".$_POST['ppselect']."'";
-        $result = $mysqli->query($myq);
-        SQLerrorCatch($mysqli, $result);
-        $selectedPP = $result->fetch_assoc();
-        $day = new DateTime($selectedPP['PPBEG']);
-        
-        echo "<table><tr>";
-        for($i=0;$i<14; $i++){
-            if($i!=0)
-                $day->add(new DateInterval("P1D"));
-            
-            echo "<th>".$day->format('D m/d')."</th>";
-            $queryDate[$i] = $day->format('Y-m-d'); //store each day in SQL format
-        }
-        echo "</tr>";
-        echo "<tr>";
-        foreach($queryDate as $date) {
-            $myq = "SELECT LNAME, FNAME, TIMETYPEID, HOURS
-                    FROM EMPLOYEE E, REQUEST R
-                    WHERE E.IDNUM=R.IDNUM
-                    AND USEDATE='".$date."'"
-                    ."AND LNAME='CHACHKO'";
-            $result = $mysqli->query($myq);
-            SQLerrorCatch($mysqli, $result);
-            echo "<td>";
-            while($row = $result->fetch_assoc()){
-                echo $row['TIMETYPEID'].":".$row['HOURS'];
-            }
-            echo "</td>";
-        }
-        echo "</tr>";
-        echo "</table>";
-    }
-    else{
-    echo "Choose a payperiod: ";
-    $mysqli = $config->mysqli;
-    $myq = "SELECT ID FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
-    $result = $mysqli->query($myq);
-    SQLerrorCatch($mysqli, $result);
-    $currentPP = $result->fetch_assoc();
-    
-    $myq = "SELECT * FROM PAYPERIOD";
-    $result = $mysqli->query($myq);
-    SQLerrorCatch($mysqli, $result);
-    ?><form method="post">
-        <select name="ppselect">
-            <?php while($row = $result->fetch_assoc()){
-                    echo "<option value= '".$row['ID']."' ";
-                    if($row['ID']===$currentPP['ID'])
-                        echo "selected='selected' >";
-                    else
-                        echo ">";
-                    
-                        echo $row['ID']." </option>";
-                  } ?>
-        </select>
-        <input type="submit" name="Submit" value="Go">
-    </form>
-    
-<?php
-    }
 }
 ?>

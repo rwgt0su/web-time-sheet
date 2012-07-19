@@ -228,7 +228,7 @@ function showDynamicTable($tableName, $rowArray){
     <?php
     
 }
-function showTimeSelector($inputName){
+function showTimeSelector($inputName, $input1, $input2){
 
         echo '<select name="'.$inputName.'1" ';
         showInputBoxError();
@@ -236,7 +236,10 @@ function showTimeSelector($inputName){
         echo '<option value=""></option>';
 
         for ($i = 00; $i <= 23; $i++) {
-            echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
+            if($i == $input1 && !empty($input1))
+                echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'" SELECTED >'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
+            else
+                echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
         }
         echo '</select> : ';
         echo '<select name="'.$inputName.'2" ';
@@ -244,7 +247,10 @@ function showTimeSelector($inputName){
         echo '>';
         echo '<option value=""></option>';
         for ($i = 00; $i <= 59; $i++) {
-            echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
+             if($i == $input2 && !empty($input2))
+                echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'" SELECTED >'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
+            else
+                echo '<option value="'.str_pad($i,2,"0",STR_PAD_LEFT).'">'.str_pad($i,2,"0",STR_PAD_LEFT).'</option>';
         }
         echo '</select>';
 }
