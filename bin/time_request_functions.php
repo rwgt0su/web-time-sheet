@@ -105,9 +105,15 @@ if (isset($_POST['submit'])) {
         echo '<font color="red" >Must provide a valid Date!</font><br /><br />';
     }
 } //end of 'is submit pressed?'
-
+if(!isset($_POST['searchBtn'])){
+    ?>
+    <h2>Employee Request</h2>
+    <?php 
+}
+else{
+    echo '<h3>Lookup User</h3>';
+}
 ?>
-<h2>Employee Request</h2>
       
  <form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
      <?php  
@@ -119,11 +125,10 @@ if (isset($_POST['submit'])) {
         
         if (!empty($type)) { //$_GET['type'] is set
             //hidden field with type set
-            echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
             echo "<input type='hidden' name='type' value='".$type."'>";
             
             //Lookup Users button pressed
-            if(isset($_POST['searchBtn'])){
+            if(isset($_POST['searchBtn']) || isset($_POST['findBtn'])){
                 //Save any inputed values
                 echo '<input type="hidden" name="subtype" value="'.$subtype.'" />';
                 echo '<input type="hidden" name="ID" value="'.$postID .'" />';
@@ -134,14 +139,39 @@ if (isset($_POST['submit'])) {
                 echo '<input type="hidden" name="end1" value="'.$postEnd1.'" />';
                 echo '<input type="hidden" name="end2" value="'.$postEnd2.'" />';
                 echo '<input type="hidden" name="comment" value="'.$comment.'" />';
+                
+                //Get additional inputs
+                $searchUser = isset($_POST['searchUser']) ? $_POST['searchUser'] : '';
+                $isFullTime = isset($_POST['fullTime']) ? true : false;
+                $isReserve = isset($_POST['reserve']) ? true : false;
+                
+                echo '<input type="checkbox" name="fullTime" ';
+                if($isFullTime)
+                    echo 'CHECKED';
+                echo ' />Full Time Employee&nbsp;&nbsp;  ';
+                echo '<input type="checkbox" name="reserve" ';
+                if($isReserve)
+                    echo 'CHECKED';
+                echo ' />Reserves<br />';
+                
+                echo '<input type="text" name="searchUser" value="'.$searchUser.'" /><input type="submit" name="findBtn" value="Search" /><br /><br />';
+                
+                if( isset($_POST['findBtn'])){
+                    if(!empty($searchUser) && $isFullTime)
+                        selectUserSearch($config, $searchUser);
+                    if($isReserve){
+                        //Search reserve Database Tables.
+                    }
+                }
             }
             Else{
+                echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
                 //subtype choice
                 echo "Subtype: ";
                 $myq = "SELECT NAME FROM SUBTYPE";
                 $result = $mysqli->query($myq);
                 SQLerrorCatch($mysqli, $result);
-                ?> <select name="subtype"> <?php
+                ?>  <select name="subtype"> <?php
                 while($row = $result->fetch_assoc()) {
                     if (strcmp($row['NAME'],$subtype) == 0) 
                         echo '<option value="' . $row["NAME"] . '" SELECTED >'. $row["NAME"] . '</option>';
@@ -155,8 +185,9 @@ if (isset($_POST['submit'])) {
                 else { //allow any user to be picked for a calloff entry
                     echo "User: ";
                     dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
+                    echo '<input type="submit" name="searchBtn" value="Lookup Users" />';
                 }
-                ?><input type="submit" name="searchBtn" value="Lookup Users" />
+                ?>
                 <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , !$isDateUse); ?>
                     Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
                 <p>Start time: <?php showTimeSelector("beg", $postBeg1, $postBeg2); ?>
