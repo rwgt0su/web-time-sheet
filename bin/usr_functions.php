@@ -266,6 +266,10 @@ function displayUpdateProfile($config){
         $radioID = isset($_POST['radioID']) ? $mysqli->real_escape_string($_POST['radioID']) : false;
         $munisID = isset($_POST['munisID']) ? $mysqli->real_escape_string($_POST['munisID']) : false;
         $userID = isset($_POST['userID']) ? $_POST['userID'] : false;
+        $address = isset($_POST['address']) ? $_POST['address'] : false;
+        $phone = isset($_POST['phone']) ? $_POST['phone'] : false;
+        $dob = isset($_POST['dob']) ? $_POST['dob'] : false;
+        $emergency = isset($_POST['emergency']) ? $_POST['emergency'] : false;
         
         $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
             `MUNIS` = '".$munisID."',
@@ -277,22 +281,30 @@ function displayUpdateProfile($config){
             `ASSIGN` = '".$assignID."',
             `TIS` = '".Date('Y-m-d', strtotime($hireDate))."',    
             `RADIO` = '".$radioID."',
-            `ADMINLVL` = '".$config->adminLvl."' 
-            WHERE CONVERT( `EMPLOYEE`.`ID` USING utf8 ) = '".$userID."' LIMIT 1 ;";
+             ADDRESS = '".$address."',
+             PHONE = '".$phone."',
+             DOB = '".Date('Y-m-d', strtotime($dob))."',
+             EMERGCON = '".$emergency."',
+            ADMINLVL = ".$config->adminLvl." 
+            WHERE ID = '".$userID."'";
+            echo $myq; //DEBUG
         //Perform SQL Query
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
-        if (!$result) {
-            throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        }
-        else
+        if (!SQLerrorCatch($mysqli, $result)) 
             $result = "Successfully Updated Profile";
-    }
+    }   
     else{
         //Get stored information (first view)
         $sql_user = strtoupper($mysqli->real_escape_string($_SESSION['userName']));
-        $myq = "SELECT * FROM EMPLOYEE WHERE ID='". $sql_user . "'";
+        if(isset($_GET['userIDnum'])){
+            $myq = "SELECT * FROM EMPLOYEE WHERE IDNUM=".$_GET['userIDnum'];
+            
+        }
+        else
+            $myq = "SELECT * FROM EMPLOYEE WHERE ID='". $sql_user . "'";
+        
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
@@ -312,21 +324,41 @@ function displayUpdateProfile($config){
         $hireDate = $resultAssoc['TIS'];
         $radioID = $resultAssoc['RADIO'];
         $munisID = $resultAssoc['MUNIS'];
+        $address = $resultAssoc['ADDRESS'];
+        $phone = $resultAssoc['PHONE'];
+        $dob = $resultAssoc['DOB'];
+        $emergency = $resultAssoc['EMERGCON'];
         
     }
-    $username = $_SESSION['userName']
+    $username = strtoupper($_SESSION['userName']);
     ?>
         <form name="update" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
         </div><div align="center" class="login">
             <table>
             <?php if ($_SESSION['admin'] >= 50) { 
                   echo "<tr><td>User: </td>";
-                  $myq = "SELECT IDNUM, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
-                  ?> "<td> <select name="userID" onchange="window.location=window.location.href + '&userID=' + this.value>" <?php
+                  $myq = "SELECT IDNUM, ID, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
+                  $result = $mysqli->query($myq);
+                  SQLerrorCatch($mysqli, $result);
+                  
+                  $uri =  preg_replace("/&userIDnum=.*/", "", $_SERVER['REQUEST_URI']);
+                  ?> <td> <select name="userIDnum" onchange="window.location=<?php echo "'".$uri."'"; ?> + '&userIDnum=' + this.value"> <?php
                   while ($row = $result->fetch_assoc()) {
-                      echo '<option value="' . $row["$name[0]"] . '"';
+                      echo '<option value="' . $row["IDNUM"] . '"';
+                      if(isset($_GET['userIDnum'])) {
+                          if($row['IDNUM']==$_GET['userIDnum']){
+                              echo "selected";
+                              $chosenUserID = $row['ID'];
+                          }
+                      }
+                      else {
+                      if($row['ID']==$username)
+                          echo "selected";
+                      }
+                      echo ">".$row['FULLNAME']."</option>";
                   }
-                 echo "</tr>";
+                 echo "</select></tr>";
+                 echo '<input type="hidden" name="userID" value="'.$chosenUserID.'" />';
                  }
                   else  {  ?>                         
             <h3>Username: <?php echo $username; ?></h3>
@@ -358,11 +390,20 @@ function displayUpdateProfile($config){
                     ?>
                     <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", "date_1", $hireDate, $required=true); ?></td></tr>
                     <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
+                    <tr><td>Address: </td><td><input name="address" type="text" <?php if(!$address) showInputBoxError(); else echo 'value="'.$address.'"'; ?> /></td></tr>
+                    <tr><td>Phone: </td><td><input name="phone" type="text" <?php if(!$phone) showInputBoxError(); else echo 'value="'.$phone.'"'; ?> /></td></tr>
+                    <tr><td>Date of Birth: </td><td><?php displayDateSelect("dob", "date_2", $dob, $required=true); ?></td></tr>
+                    <script type="text/javascript">
+                    $('.datepicker').datepicker( "option", "yearRange", "2000:2010" );
+                    </script>
+                    <tr><td>Emergency Contact: </td><td><input name="emergency" type="text" <?php if(!$emergency) showInputBoxError(); else echo 'value="'.$emergency.'"'; ?> /></td></tr>
+                    
                     <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
                     <?php 
+                    /* this makes no sense, what is this supposed to do??
                     if(isset($_POST['updateBtn'])){
                       echo '<tr><td></td><td>'. $result .'</td></tr>';  
-                    }
+                    }*/
                     ?>
                 </table>
             </div><div class="clear"></div>
@@ -463,7 +504,9 @@ function displayDateSelect($inputName, $id, $selected = false, $required = false
         $(function() {
             // Datepicker
             $('.datepicker').datepicker({
-                    inline: true
+                    inline: true,
+                    changeYear: true,
+                    yearRange: "-100:+100"
             });
         });
     </script>
