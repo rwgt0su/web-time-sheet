@@ -101,7 +101,7 @@ function resultTable($mysqli, $result){
         //print_r($fieldNameArray); //DEBUG
        for($i=0; $i < $numOfCols; $i++) {
            //fields that are not allowed to be edited
-          if( !($fieldNameArray[$i] == 'AUDITID' || $fieldNameArray[$i] == 'IP' || $fieldNameArray[$i] == 'STATUS' || $fieldNameArray[$i] == 'APPROVEDBY' || $fieldNameArray[$i] == 'REQDATE' || $fieldNameArray[$i] == 'TSTAMP') ) {
+          if( !($fieldNameArray[$i] == 'AUDITID' || $fieldNameArray[$i] == 'IP' || $fieldNameArray[$i] == 'STATUS' || $fieldNameArray[$i] == 'APPROVEDBY' || $fieldNameArray[$i] == 'REQDATE' || $fieldNameArray[$i] == 'TSTAMP' || $fieldNameArray[$i] == 'Employee' || ($tableNameArray[0]=='REQUEST' && $fieldNameArray[$i]=='LNAME') ) ) {
             if($fieldNameArray[$i] == 'DESCR')
                 //append ID to the table name to get correct fieldname (this requires a DB naming convention to be followed
                 $values["$fieldNameArray[$i]"] = $tableNameArray[$i] . "ID="."'". $mysqli->real_escape_string($_POST["$fieldNameAliasArray[$i]"])."'";
@@ -128,6 +128,9 @@ function resultTable($mysqli, $result){
         //send the update
         $updateResult = $mysqli->query($updateQuery);
         SQLerrorCatch($mysqli, $updateResult);
+        //update the AUDITID
+        $auditQuery = "UPDATE ".$tableNameArray[0]." SET AUDITID=".$_SESSION['userIDnum']; 
+        $auditResult = $mysqli->query($auditQuery);
         
     } 
 }
