@@ -115,7 +115,7 @@ else{
 }
 ?>
       
- <form name="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
+ <form name="leave" id="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
      <?php  
         $type  = isset($_GET['type']) ? $_GET['type'] : ''; 
         $myq = "SELECT DESCR FROM TIMETYPE WHERE TIMETYPEID='".$type."'";
@@ -139,8 +139,9 @@ else{
                 echo '<input type="hidden" name="end1" value="'.$postEnd1.'" />';
                 echo '<input type="hidden" name="end2" value="'.$postEnd2.'" />';
                 echo '<input type="hidden" name="comment" value="'.$comment.'" />';
+                echo '<input type="hidden" name="calloff" value="'.$_POST['calloff'].'" />';
                 
-                //Get additional inputs
+                //Get additional search inputs
                 $searchUser = isset($_POST['searchUser']) ? $_POST['searchUser'] : '';
                 $isFullTime = isset($_POST['fullTime']) ? true : false;
                 $isReserve = isset($_POST['reserve']) ? true : false;
@@ -157,13 +158,20 @@ else{
                 echo '<input type="text" name="searchUser" value="'.$searchUser.'" /><input type="submit" name="findBtn" value="Search" /><br /><br />';
                 
                 if( isset($_POST['findBtn'])){
+                    $rowCount = 0;
                     if(!empty($searchUser) && $isFullTime)
-                        selectUserSearch($config, $searchUser);
+                        
+                        $rowCount = selectUserSearch($config, $searchUser, true);
                     if($isReserve){
                         //Search reserve Database Tables.
+                        //$mysqli = connectToSQL(true);
                     }
-                }
-            }
+                    $rowCount2 = searchDatabase($config, $searchUser, $rowCount);
+                    $totalRowsFound = $rowCount + $rowCount2;
+                    
+                    echo '<input type="hidden" name="totalRows" value="'.$rowCount.'" />';
+                }//end lookup button pressed
+            }//end search or lookup button pressed
             Else{
                 echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
                 //subtype choice
@@ -184,8 +192,36 @@ else{
                     echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userIDnum']."'></p>";
                 else { //allow any user to be picked for a calloff entry
                     echo "User: ";
-                    dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
-                    echo '<input type="submit" name="searchBtn" value="Lookup Users" />';
+                    if(isset($_POST['totalRows'])){
+                        for ($i=0;$i < $_POST['totalRows']; $i++){
+                            if(isset($_POST['foundUser'.$i]))
+                                    echo '<input type="hidden" name="ID" value="'.$_POST['foundUserID'.$i].'" />'.$_POST['foundUserName'.$i];
+                        }
+                    }
+                    else{
+                        dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
+                    }
+                    ?>
+                    <script language="JavaScript" type="text/javascript">   
+                    function addLookupButton(formName) {
+                        var _form = document.getElementById(formName);
+                        var _calloff = document.getElementById('calloff');
+
+                        var _search = document.createElement('input');
+                        _search.type = "submit";
+                        _search.name = "searchBtn";
+                        _search.value = "Lookup User";
+                        //_form.appendChild(_search);
+                        _form.insertBefore(_search, _calloff);
+                    }
+                    </script>
+                    <?php
+                    $isCallOff = "";
+                    if(isset($_POST['calloff'])){
+                        $isCallOff = "CHECKED ";
+                        echo '<input type="submit" name="searchBtn" value="Lookup Users" />';
+                    }
+                    echo '<input type="checkbox" id="calloff" name="calloff" value="YES" '.$isCallOff.'onclick=\'addLookupButton("leave");\' />Check if calling in sick.';    
                 }
                 ?>
                 <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , !$isDateUse); ?>
@@ -207,7 +243,6 @@ else{
 
                 </br>
                 <p>Comment: <input type="text" name="comment" value="<?php echo $comment; ?>"></p>
-                <p><input type="checkbox" name='calloff' value="YES">Check if calling in sick.</p>
 
                 <p><input type="submit" name="submit" value="Submit"></p>  
 
