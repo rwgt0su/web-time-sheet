@@ -12,13 +12,23 @@ function searchPage($config){
 }
 function searchLDAP($config, $userToFind){
     $cnx = ldap_connect($config->ldap_server);
-    $user = "wts-user";
-    $pass = "Sheriff1";
+    $user = $config->ldapuser;
+    $pass = $config->ldappass;
     $ldaprdn = $user . '@' . $config->domain;
     ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
     ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
     if($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)){ 
-        $dn = "DC=sheriff,DC=mahoning,DC=local"; //Put your Base DN here
+         //Split given domain into LDAP Base DN
+        $temp = explode(".", $config->domain);
+        $i = 0;
+        $dn = null;
+        foreach ($temp as $dc){ 
+            if(empty($dn))
+                $dn = "DC=".$dc;
+            else
+                $dn = $dn.",DC=".$dc;
+            $i++;
+        }
         error_reporting (E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
         $filter="(|(samaccountname=*".$userToFind."*)(sn=*".$userToFind."*)(displayname=*".$userToFind."*)";
         $filter.="(mail=*".$userToFind."*)(department=*".$userToFind."*)(title=*".$userToFind."*))";  //Search fields
@@ -45,13 +55,23 @@ function searchLDAP($config, $userToFind){
 function selectUserSearch($config, $userToFind){
     //LDAP Search
     $cnx = ldap_connect($config->ldap_server);
-    $user = "wts-user";
-    $pass = "Sheriff1";
+    $user = $config->ldapuser;
+    $pass = $config->ldappass;
     $ldaprdn = $user . '@' . $config->domain;
     ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
     ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
     if($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)){ 
-        $dn = "DC=sheriff,DC=mahoning,DC=local"; //Put your Base DN here
+        //Split given domain into LDAP Base DN
+        $temp = explode(".", $config->domain);
+        $i = 0;
+        $dn = null;
+        foreach ($temp as $dc){ 
+            if(empty($dn))
+                $dn = "DC=".$dc;
+            else
+                $dn = $dn.",DC=".$dc;
+            $i++;
+        }
         error_reporting (E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
         $filter="(|(samaccountname=*".$userToFind."*)(sn=*".$userToFind."*)(displayname=*".$userToFind."*)";
         $filter.="(mail=*".$userToFind."*)(department=*".$userToFind."*)(title=*".$userToFind."*))";  //Search fields
