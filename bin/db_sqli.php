@@ -1,11 +1,16 @@
 <?php
-function connectToSQL(){
+function connectToSQL($useReserve = false){
     //establish connetcion to 'PAYROLL' DB and return resource
-    $mysqli = new mysqli("localhost", "web", "10paper", "PAYROLL");
+    if(!$useReserve){
+        $mysqli = new mysqli("localhost", "web", "10paper", "PAYROLL");
+    }
+    else
+        $mysqli = new mysqli("localhost", "web_reserve", "Q4A5PK!loYcPh@P3pkPoAg9Pn", "RESERVE");
     if ($mysqli->connect_errno) {
         $error = "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
         echo $error;
     }
+        
 
 
     return $mysqli;
