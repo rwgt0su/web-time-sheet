@@ -29,7 +29,7 @@ $mysqli = $config->mysqli;
     $type = isset($_POST['type']) ? $mysqli->real_escape_string($_POST['type']) : false;
     $comment = isset($_POST['comment']) ? $mysqli->real_escape_string($_POST['comment']) : false;
     $calloff = isset($_POST['calloff']) ? $_POST['calloff'] : 'NO';
-    $auditid = isset($_POST['userName']) ? strtoupper($_SESSION['userIDnum']) : false;
+    $auditid = $_SESSION['userIDnum'];
     $postUseDate = isset($_POST['usedate']) ? $_POST['usedate'] : false;
         If(!$postUseDate)
             $isDateUse = false;
@@ -304,39 +304,44 @@ else {
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
-                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.IDNUM='" . $_SESSION['userIDnum'] .
-                    "' AND R.TIMETYPEID=T.TIMETYPEID AND R.IDNUM=E.IDNUM 
-                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST
+                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
+                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
+                    WHERE REQUEST.IDNUM=" . $_SESSION['userIDnum'] . 
+                    " AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     ORDER BY REFER";
             
             break;
 
         case 25: //supervisor, list by division
-            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',LNAME,FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
-                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.TIMETYPEID=T.TIMETYPEID AND R.IDNUM=E.IDNUM               
-                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
-                    AND E.DIVISIONID IN
+                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R
+                    INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    AND REQ.DIVISIONID IN
                         (SELECT DIVISIONID 
                         FROM EMPLOYEE E
                         WHERE E.IDNUM='" . $_SESSION['userIDnum'] . "')
                     ORDER BY REFER";
             break;
         case 50: //HR
-            $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+            $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
-                    FROM REQUEST R, TIMETYPE T
-                    WHERE R.TIMETYPEID=T.TIMETYPEID
-                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R
+                    INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                    INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     ORDER BY REFER";
             break;
         case 99: //Sheriff
@@ -368,6 +373,7 @@ function displayLeaveApproval(){
     */
     $admin = $_SESSION['admin'];
     if($admin >= 25) { 
+        
 
         $mysqli = connectToSQL();
         
@@ -389,6 +395,27 @@ function displayLeaveApproval(){
 
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
+        
+        if (isset($_POST['approveBtn'])) {
+            for ($j=0; $result->num_rows > $j; $j++) {
+                $row = $result->fetch_row();
+                $refs[$j] = $row[0]; //save ref # in an array
+                $approve = 'approve' . $j;
+                $reason = 'reason' . $j;
+                if (isset($_POST["$approve"])) {
+                    $approveQuery="UPDATE REQUEST 
+                                    SET STATUS='".$_POST["$approve"]."',
+                                        REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
+                                        APPROVEDBY='".$_SESSION['userIDnum']."' 
+                                    WHERE REFER='$refs[$j]'";
+                    //echo $approveQuery; //DEBUG
+                    $approveResult = $mysqli->query($approveQuery);
+                    if(!SQLerrorCatch($mysqli, $approveResult))
+                            echo "<h3>Change Saved.</h3>";
+                    
+                }
+            }
+        }
        
         //build table
         //resultTable($mysqli, $result);
@@ -406,8 +433,8 @@ function displayLeaveApproval(){
                 } ?>
             </tr>
             <?php
-            $refs = array();
-            $result->data_seek(0);
+            //$refs = array();
+            
             /*for ($i = 0; $assoc = $result->fetch_assoc(); $i++) {
                 $refs[$i] = $assoc['RefNo'];
                 echo "<tr><td>$refs[$i]</td>
@@ -416,10 +443,13 @@ function displayLeaveApproval(){
                         <td><input type='text' name='reason$i' size='50'/></td>";
             }*/
             //new & improved
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+            $result->data_seek(0);
             $rowCount = 0;
             while ($row = $result->fetch_array(MYSQLI_NUM)) {
                 echo "<tr>";
-                $refs[$rowCount] = $row[0]; //save ref # in an array
+                //$refs[$rowCount] = $row[0]; //save ref # in an array
                 for ($i = 0; $i < $mysqli->field_count; $i++) {
                     echo "<td style='white-space: nowrap'>$row[$i]</td>";                                      
                 }
@@ -435,22 +465,7 @@ function displayLeaveApproval(){
         
 
         <?php 
-        if (isset($_POST['approveBtn'])) {
-            for ($j=0; $rowCount > $j; $j++) {
-                $approve = 'approve' . $j;
-                $reason = 'reason' . $j;
-                if (isset($_POST["$approve"])) {
-                    $approveQuery="UPDATE REQUEST 
-                                    SET STATUS='".$_POST["$approve"]."',
-                                        REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
-                                        APPROVEDBY='".$_SESSION['userIDnum']."' 
-                                    WHERE REFER='$refs[$j]'";
-                    echo $approveQuery; //DEBUG
-                    $approveResult = $mysqli->query($approveQuery);
-                    SQLerrorCatch($mysqli, $approveResult);
-                }
-            }
-        }
+        
 
     }
     else
@@ -570,12 +585,12 @@ function displayTimeUseReport ($config) {
     <h3><center>Time Gained/Used in pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
     <?php
    
-    $myq = "SELECT DIVISIONID 'Div', MUNIS, CONCAT_WS(', ',LNAME,FNAME) 'Name', R.ID, T.DESCR 'Type', CAST(SUM(HOURS) as DECIMAL(5,2)) 'Total (hrs)'
+    $myq = "SELECT DIVISIONID 'Div', MUNIS, CONCAT_WS(', ',LNAME,FNAME) 'Name', T.DESCR 'Type', CAST(SUM(HOURS) as DECIMAL(5,2)) 'Total (hrs)'
             FROM REQUEST R, EMPLOYEE E, TIMETYPE T
             WHERE R.IDNUM=E.IDNUM AND T.TIMETYPEID = R.TIMETYPEID
             AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
             AND STATUS='APPROVED'
-            GROUP BY E.DIVISIONID, R.ID, R.TIMETYPEID
+            GROUP BY E.DIVISIONID, R.IDNUM, R.TIMETYPEID
             ORDER BY E.DIVISIONID, LNAME";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
