@@ -12,8 +12,8 @@ function searchPage($config){
 }
 function searchLDAP($config, $userToFind){
     $cnx = ldap_connect($config->ldap_server);
-    $user = $config->ldapuser;
-    $pass = $config->ldappass;
+    $user = $config->ldapUser;
+    $pass = $config->ldapPass;
     $ldaprdn = $user . '@' . $config->domain;
     ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
     ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
@@ -55,8 +55,8 @@ function searchLDAP($config, $userToFind){
 function selectUserSearch($config, $userToFind){
     //LDAP Search
     $cnx = ldap_connect($config->ldap_server);
-    $user = $config->ldapuser;
-    $pass = $config->ldappass;
+    $user = $config->ldapUser;
+    $pass = $config->ldapPass;
     $ldaprdn = $user . '@' . $config->domain;
     ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
     ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
