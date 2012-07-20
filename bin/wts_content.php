@@ -75,6 +75,11 @@ function displayContent($wts_content, $config){
         <div class="post"><?php MUNISreport($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
+    if($wts_content->isSecLog){
+        ?>
+        <div class="post"><?php displaySecondaryLog($config); ?><div class="clear"></div></div><div class="divider"></div>
+        <?php
+    }
          
 }
 
