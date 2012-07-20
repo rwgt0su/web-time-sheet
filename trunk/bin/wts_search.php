@@ -61,6 +61,7 @@ function selectUserSearch($config, $userToFind, $select = false){
             if($result < 1){
                 //User not in database, so register the user
                 registerUser($info[$i]["samaccountname"][0], "temp01", "temp01", 0, 1);
+                //Get user's IDNUM
                 $mysqli = $config->mysqli;
                 $myq = "SELECT *
                     FROM `EMPLOYEE`
@@ -68,11 +69,13 @@ function selectUserSearch($config, $userToFind, $select = false){
                 $result = $mysqli->query($myq);
                 SQLerrorCatch($mysqli, $result);
                 $row = $result->fetch_assoc();
+                echo "Rank: " . $row['GRADE'] . "<br />";
+                echo "Department: " . $row['DESCR'] . "<br />";
                 //Update newly created user's information with their Active Directory Info
                 $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
                     `LNAME` = '".$info[$i]["sn"][0]."',
-                    `FNAME` = '".$info[$i]["givenname"][0]."',
-                    WHERE ID = '".$row['IDNUM']."'";
+                    `FNAME` = '".$info[$i]["givenname"][0]."'
+                    WHERE EMPLOYEE.IDNUM = '".$row['IDNUM']."'";
                 //Perform SQL Query
                 $result = $mysqli->query($myq);
 
@@ -88,23 +91,24 @@ function selectUserSearch($config, $userToFind, $select = false){
     }
     else
         popUpMessage ("Could Not Bind to LDAP to perform search");
+    
     return $totalRows;
 }
 function searchDatabase($config, $userToFind, $rowCount, $isSearching=true, $isSelect=true){
     
     $mysqli = $config->mysqli;
-    $myq = "SELECT * , DIVISION.DESCR
-        FROM `EMPLOYEE`
-        LEFT JOIN DIVISION ON EMPLOYEE.DIVISIONID = DIVISION.DIVISIONID
-        WHERE `ID` LIKE '%".strtoupper($userToFind)."%'";
+    if($isSearching)
+        $myq = "SELECT * FROM `EMPLOYEE` WHERE `ID` LIKE '%".strtoupper($userToFind)."%' AND `isLDAP` !=1";
+    else
+        $myq = "SELECT * FROM `EMPLOYEE` WHERE `ID` LIKE '%".strtoupper($userToFind)."%'";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $begin = $rowCount;
     $echo = "";
     
     while($row = $result->fetch_assoc()) {
+        $rowCount++;
         if(!$row['isLDAP'] || !isset($_POST['fullTime'])){
-            $rowCount++;
             if($isSearching){
                 $echo .= '<div align="center"><table width="400"><tr><td>';
                 if($isSelect)
@@ -121,9 +125,11 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching=true, $isS
         }//end is in LDAP
     }//end While Loop
     $rowsAdded = $rowCount - $begin;
-    if($isSearching)
-        echo "Number of entries already in the Full Time Employee database returned is " . $rowsAdded. "<br /><br /><hr />";
-    echo $echo;
+    if($rowsAdded > 0){
+        if($isSearching)
+            echo "Number of entries found in the Full Time Employee database is " . $rowsAdded. "<br /><br /><hr />";
+        echo $echo;
+    }
     
     return $rowsAdded;
 }
@@ -151,8 +157,10 @@ function searchReserves($config, $userToFind, $rowCount, $isSelect=true){
         $echo .= "</td></tr></table></div><br /><hr />";
     }//end While Loop
     $rowsAdded = $rowCount - $begin;
-    echo "Number of entries found in the reserve database is " . $rowsAdded. "<br /><br /><hr />";
-    echo $echo;
+    if($rowsAdded > 0){
+        echo "Number of entries found in the reserve database is " . $rowsAdded. "<br /><br /><hr />";
+        echo $echo;
+    }
     
     return $rowsAdded;
 }
