@@ -136,6 +136,12 @@ function displayDelUser($config){
                 $username  = isset($_POST['user_to_Delete']) ? $_POST['user_to_Delete'] : '';
                 $error = delUser($username);
         }
+        if (isset($_POST['disableBtn'])){
+                // Get user input
+                $username  = isset($_POST['user_to_Delete']) ? $_POST['user_to_Delete'] : '';
+                $userID = getUserID($config, $username);
+                $error = disableUser($config, $userID);
+        }
         if ((!isset($_POST['submitBtn'])) || ($error != '')) {?>
             <a href="<?php echo $_SERVER['PHP_SELF']; ?>?usermenu=true">Back</a>
             <form action="<?php echo $_SERVER['REQUEST_URI']; ?>?DelUserBtn=true" method="post" name="delform">
@@ -146,16 +152,20 @@ function displayDelUser($config){
                             echo '</select>';
                     ?>
                 </td></tr>
-                <tr><td colspan="2" align="center"><input class="text" type="submit" name="removeBtn" value="Delete User" /></td></tr>
+                <tr><td colspan="2" align="center"><input class="text" type="submit" name="removeBtn" value="Delete User" />
+                    <input class="text" type="submit" name="disableBtn" value="Disable User" /></td></tr>
                 </table>  
             </form>
 
         <?php 
     }   
-	if (isset($_POST['removeBtn'])){
+	if (isset($_POST['removeBtn']) || isset($_POST['disableBtn'])){
+            if(isset($_POST['disableBtn']))
+                echo '<h2>Disable Results</h2>';
+            else
+                echo '<h2>Deletion result:</h2>';
 
     ?>
-        <h2>Deletion result:</h2>
         <div id="icon2">&nbsp;</div>
         <div id="result">
             <table width="100%"><tr><td><br/>

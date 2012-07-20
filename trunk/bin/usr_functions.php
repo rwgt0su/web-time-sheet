@@ -632,14 +632,28 @@ function displayInsertUser(){
 <?php        
 }  
 function disableUser($config, $userID){
+    $results = "User was not disabled!";
     if($config->adminLvl >= 50){
         $mysqli = $config->mysqli;
-        $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
-            `ACTIVE` = '0',
+        $myq = "UPDATE `PAYROLL`.`EMPLOYEE` 
+            SET `ACTIVE` = '0'
             WHERE EMPLOYEE.IDNUM = '".$userID."'";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
+        $results = "User has been disabled!";
     }
+    return $results;
+}
+function getUserID($config, $userName){
+    $mysqli = $config->mysqli;
+    $myq = "SELECT *
+        FROM `EMPLOYEE`
+        WHERE `ID` =  '".strtoupper($userName)."'";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    $row = $result->fetch_assoc();
+    
+    return $row['IDNUM'];
 }
 
 ?>
