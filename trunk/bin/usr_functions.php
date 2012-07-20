@@ -17,17 +17,22 @@ function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
 		
 		//Insert new user record using $user, $pass1, $adminLvl
 		$mysqli = connectToSQL();
-		$myq = "INSERT INTO EMPLOYEE (ID,PASSWD,ADMINLVL,isLDAP) VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."','".$useAD."')";
-		$result = $mysqli->query($myq);
+                $myq = "SELECT *
+                    FROM `EMPLOYEE`
+                    WHERE `ID` =  '".strtoupper($user)."'";
+                $result = $mysqli->query($myq);
+                
+                SQLerrorCatch($mysqli, $result);
+                if($result->num_rows < 1){
+                    $myq = "INSERT INTO EMPLOYEE 
+                        (ID,PASSWD,ADMINLVL,isLDAP,ACTIVE) 
+                        VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."','".$useAD."', '1')";
+                    $result = $mysqli->query($myq);
+                    SQLerrorCatch($mysqli, $result);
+                }
+                else 
+                    $errorText = "User already in Database, did not update or add";
 		
-		//show SQL error msg if query failed
-		if (!$result) {
-			throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-		}		
-		else{
-			//User added to database with no error
-			$errorText = '';
-		}
 	}
 	return $errorText;
 } // end registerUser()
@@ -626,5 +631,15 @@ function displayInsertUser(){
         
 <?php        
 }  
+function disableUser($config, $userID){
+    if($config->adminLvl >= 50){
+        $mysqli = $config->mysqli;
+        $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+            `ACTIVE` = '0',
+            WHERE ID = '".$userID."'";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+    }
+}
 
 ?>
