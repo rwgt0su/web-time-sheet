@@ -160,16 +160,15 @@ else{
                 if( isset($_POST['findBtn'])){
                     $rowCount = 0;
                     if(!empty($searchUser) && $isFullTime)
-                        
                         $rowCount = selectUserSearch($config, $searchUser, true);
-                    if($isReserve){
-                        //Search reserve Database Tables.
-                        //$mysqli = connectToSQL(true);
-                    }
-                    $rowCount2 = searchDatabase($config, $searchUser, $rowCount);
-                    $totalRowsFound = $rowCount + $rowCount2;
+                    if($isReserve)
+                        $rowCount2 = searchReserves($config, $searchUser, $rowCount);
+                    else
+                        $rowCount2 = $rowCount;
+                    $rowCount3 = searchDatabase($config, $searchUser, $rowCount2);
+                    $totalRowsFound = $rowCount + $rowCount2 +$rowCount3;
                     
-                    echo '<input type="hidden" name="totalRows" value="'.$rowCount.'" />';
+                    echo '<input type="hidden" name="totalRows" value="'.$totalRowsFound.'" />';
                 }//end lookup button pressed
             }//end search or lookup button pressed
             Else{
@@ -188,7 +187,7 @@ else{
                 }
                 echo "</select> </br>"; 
 
-                if ( $_SESSION['admin'] == 0) //if normal user, allow only their own user name
+                if ( $_SESSION['admin'] < 25) //if normal user, allow only their own user name
                     echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userIDnum']."'></p>";
                 else { //allow any user to be picked for a calloff entry
                     echo "User: ";
@@ -221,7 +220,7 @@ else{
                         $isCallOff = "CHECKED ";
                         echo '<input type="submit" name="searchBtn" value="Lookup Users" />';
                     }
-                    echo '<input type="checkbox" id="calloff" name="calloff" value="YES" '.$isCallOff.'onclick=\'addLookupButton("leave");\' />Check if calling in sick.';    
+                    echo '<input type="checkbox" id="calloff" name="calloff" value="YES" '.$isCallOff.'onclick=\'addLookupButton("leave");\' />Check If filling out for another employee.';    
                 }
                 ?>
                 <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , !$isDateUse); ?>
