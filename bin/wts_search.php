@@ -61,16 +61,19 @@ function selectUserSearch($config, $userToFind, $select = false){
             if($result < 1){
                 //User not in database, so register the user
                 registerUser($info[$i]["samaccountname"][0], "temp01", "temp01", 0, 1);
-                //Get user's IDNUM
-                $mysqli = $config->mysqli;
-                $myq = "SELECT *
-                    FROM `EMPLOYEE`
-                    WHERE `ID` =  '".strtoupper($info[$i]["samaccountname"][0])."'";
-                $result = $mysqli->query($myq);
-                SQLerrorCatch($mysqli, $result);
-                $row = $result->fetch_assoc();
-                echo "Rank: " . $row['GRADE'] . "<br />";
-                echo "Department: " . $row['DESCR'] . "<br />";
+            }
+            //Get user's IDNUM
+            $mysqli = $config->mysqli;
+            $myq = "SELECT *
+                FROM `EMPLOYEE`
+                WHERE `ID` =  '".strtoupper($info[$i]["samaccountname"][0])."'";
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+            $row = $result->fetch_assoc();
+            echo "Rank: " . $row['GRADE'] . "<br />";
+            echo "Department: " . $row['DESCR'] . "<br />";
+            
+            if($result < 1){    
                 //Update newly created user's information with their Active Directory Info
                 $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
                     `LNAME` = '".$info[$i]["sn"][0]."',
@@ -86,6 +89,7 @@ function selectUserSearch($config, $userToFind, $select = false){
             echo "Title: " . $info[$i]["title"][0] . "<br />";
             echo "Department: " . $info[$i]["department"][0] . "<br />";
             echo "Email: " . $info[$i]["mail"][0] . "<br />";
+            echo '<input type="hidden" name="foundUserID'.$i.'" value="'.$row['IDNUM'].'" />';
             echo "</td></tr></table></div><br /><hr />";
         } 
     }
