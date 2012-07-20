@@ -636,7 +636,7 @@ function disableUser($config, $userID){
         $mysqli = $config->mysqli;
         $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
             `ACTIVE` = '0',
-            WHERE ID = '".$userID."'";
+            WHERE EMPLOYEE.IDNUM = '".$userID."'";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
     }
