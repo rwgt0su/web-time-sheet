@@ -34,7 +34,10 @@ Class wts_content {
         $this->isMUNIS = isset($_GET['munis']) ? $_GET['munis'] : false;
         
         if(empty($_GET)){
-            $this->isHome = true;
+            if(empty($this->isSearching))
+                $this->isHome = true;
+            else
+                $this->isHome = false;
         }
         else
             $this->isHome = false;

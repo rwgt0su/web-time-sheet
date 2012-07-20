@@ -4,7 +4,12 @@ function searchPage($config){
     $searchInput = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
     if($searchInput){
         echo '<h3>Results for: '.$searchInput.'</h3>';
-        selectUserSearch($config, $searchInput);
+        $rowCount1 = selectUserSearch($config, $searchInput);
+        $rowCount2 = searchDatabase($config, $searchInput, $rowCount1,true,false);
+        $rowCount3 = $rowCount1 + $rowCount2;
+        $rowCount3 = searchReserves($config, $searchInput, $rowCount3, false);
+        $rowCount3 = $rowCount1 + $rowCount2 + $rowCount3;
+        echo "Total Number of entries found is " . $rowCount3 . "<br /><br /><hr />";
     }
     else {
         echo 'No information provided';
@@ -51,19 +56,30 @@ function selectUserSearch($config, $userToFind, $select = false){
             echo "First name: " . $info[$i]["givenname"][0] . "<br />";
             echo "Last Name: " . $info[$i]["sn"][0] . "<br />";
             echo '<input type="hidden" name="foundUserName'.$i.'" value="'.$info[$i]["samaccountname"][0].'" /> Username: ' . $info[$i]["samaccountname"][0] . '<br />';
-            //get User's IDNUM from the database
-            $result = searchDatabase($config, $info[$i]["samaccountname"][0], 0);
+            //Check user in Employee Database and output IDNUM if found
+            $result = searchDatabase($config, $info[$i]["samaccountname"][0], $i, false);
             if($result < 1){
+                //User not in database, so register the user
                 registerUser($info[$i]["samaccountname"][0], "temp01", "temp01", 0, 1);
+                $mysqli = $config->mysqli;
+                $myq = "SELECT *
+                    FROM `EMPLOYEE`
+                    WHERE `ID` =  '".strtoupper($info[$i]["samaccountname"][0])."'";
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result);
+                $row = $result->fetch_assoc();
+                //Update newly created user's information with their Active Directory Info
+                $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+                    `LNAME` = '".$info[$i]["sn"][0]."',
+                    `FNAME` = '".$info[$i]["givenname"][0]."',
+                    WHERE ID = '".$row['IDNUM']."'";
+                //Perform SQL Query
+                $result = $mysqli->query($myq);
+
+                //show SQL error msg if query failed
+                if (!SQLerrorCatch($mysqli, $result)) 
+                    $result = "Successfully Updated Profile";
             }
-            $mysqli = $config->mysqli;
-            $myq = "SELECT *
-                FROM `EMPLOYEE`
-                WHERE `ID` =  '".$info[$i]["samaccountname"][0]."'";
-            $result = $mysqli->query($myq);
-            SQLerrorCatch($mysqli, $result);
-            $row = $result->fetch_assoc();
-            echo '<input type="hidden" name="foundUserID" value="'.$row['IDNUM'].'" />';
             echo "Title: " . $info[$i]["title"][0] . "<br />";
             echo "Department: " . $info[$i]["department"][0] . "<br />";
             echo "Email: " . $info[$i]["mail"][0] . "<br />";
@@ -74,7 +90,7 @@ function selectUserSearch($config, $userToFind, $select = false){
         popUpMessage ("Could Not Bind to LDAP to perform search");
     return $totalRows;
 }
-function searchDatabase($config, $userToFind, $rowCount){
+function searchDatabase($config, $userToFind, $rowCount, $isSearching=true, $isSelect=true){
     
     $mysqli = $config->mysqli;
     $myq = "SELECT * , DIVISION.DESCR
@@ -89,20 +105,55 @@ function searchDatabase($config, $userToFind, $rowCount){
     while($row = $result->fetch_assoc()) {
         if(!$row['isLDAP'] || !isset($_POST['fullTime'])){
             $rowCount++;
-            $echo .= '<div align="center"><table><tr><td><input name="foundUser'.$rowCount.'" type="radio" onclick="this.form.submit();" />Select</td><td>';
-            $echo .= "First name: " . $row['FNAME'] . "<br />";
-            $echo .= "Last Name: " . $row['LNAME'] . "<br />";
-            $echo .= '<input type="hidden" name="foundUserID'.$rowCount.'" value="'.$row['IDNUM'].'" /> Username: ' . $row['ID'] . '<br />';
-            $echo .= '<input type="hidden" name="foundUserName'.$rowCount.'" value="'.$row['ID'].'" />';
+            if($isSearching){
+                $echo .= '<div align="center"><table width="400"><tr><td>';
+                if($isSelect)
+                    $echo .= '<input name="foundUser'.$rowCount.'" type="radio" onclick="this.form.submit();" />Select</td><td>';
+                $echo .= '<input type="hidden" name="foundUserFNAME'.$rowCount.'" value="'.$row['FNAME'].'" /> First name: ' . $row['FNAME'] . "<br />";
+                $echo .= '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$row['LNAME'].'" /> Last Name: ' . $row['LNAME'] . "<br />";
+                $echo .= '<input type="hidden" name="foundUserName'.$rowCount.'" value="'.$row['ID'].'" /> Username: ' . $row['ID'] . '<br />';
+            }
+            $echo .= '<input type="hidden" name="foundUserID'.$rowCount.'" value="'.$row['IDNUM'].'" />';
             $echo .= "Rank: " . $row['GRADE'] . "<br />";
             $echo .= "Department: " . $row['DESCR'] . "<br />";
-            $echo .= "</td></tr></table></div><br /><hr />";
+            if($isSearching)
+                $echo .= "</td></tr></table></div><br /><hr />";
         }//end is in LDAP
     }//end While Loop
     $rowsAdded = $rowCount - $begin;
-    echo "Number of entries already in the database returned is " . $rowsAdded. "<br /><br /><hr />";
+    if($isSearching)
+        echo "Number of entries already in the Full Time Employee database returned is " . $rowsAdded. "<br /><br /><hr />";
     echo $echo;
     
-    return $result->num_rows;
+    return $rowsAdded;
+}
+function searchReserves($config, $userToFind, $rowCount, $isSelect=true){
+    $mysqli = connectToSQL($reserveDB = TRUE);
+    if($config->adminLvl < 75)
+        $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5 AND `LNAME` LIKE CONVERT(_utf8 '%".$userToFind."%' USING latin1) COLLATE latin1_swedish_ci ";
+    else
+        $myq = "SELECT *  FROM `RESERVE` WHERE `LNAME` LIKE CONVERT(_utf8 '%".$userToFind."%' USING latin1) COLLATE latin1_swedish_ci ";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    $begin = $rowCount;
+    $echo = "";
+    
+    while($row = $result->fetch_assoc()) {
+        $rowCount++;
+        $echo .= '<div align="center"><table width="400"><tr><td>';
+        if($isSelect)
+            $echo .= '<input name="foundUser'.$rowCount.'" type="radio" onclick="this.form.submit();" />Select</td><td>';
+        $echo .= '<input type="hidden" name="foundUserFNAME'.$rowCount.'" value="'.$row['FNAME'].'" /> First name: ' . $row['FNAME'] . "<br />";
+        $echo .= '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$row['LNAME'].'" /> Last Name: ' . $row['LNAME'] . "<br />";
+        $echo .= '<input type="hidden" name="foundUserID'.$rowCount.'" value="'.$row['IDNUM'].'" /> Username: ' . $row['FNAME'].".".$row['LNAME'] . '<br />';
+        $echo .= '<input type="hidden" name="foundUserName'.$rowCount.'" value="'.$row['FNAME'].".".$row['LNAME'].'" />';
+        $echo .= "Rank: Reserve Group " . $row['GRP'] . "<br />";
+        $echo .= "</td></tr></table></div><br /><hr />";
+    }//end While Loop
+    $rowsAdded = $rowCount - $begin;
+    echo "Number of entries found in the reserve database is " . $rowsAdded. "<br /><br /><hr />";
+    echo $echo;
+    
+    return $rowsAdded;
 }
 ?>
