@@ -37,7 +37,7 @@ function displaySecondaryLog($config){
             }
         }
         if($addBtn){
-            showSecLogDetails($config, $secLogID, false, $addBtn);
+            showSecLogDetails($config, $secLogID, false);
         }
         if($editBtn){
             if($config->adminLvl < 25){
@@ -56,7 +56,7 @@ function displaySecondaryLog($config){
     <?php
     
 }
-function showSecLog($config, $dateSelect, $isSup){
+function showSecLog($config, $dateSelect, $secLogID){
     $mysqli = $config->mysqli;
     $myq = "SELECT *
         FROM `SECLOG`
@@ -64,7 +64,7 @@ function showSecLog($config, $dateSelect, $isSup){
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $echo = '<table>';
-    if($isSup){
+    if($config->adminLvl >= 25){
         $i=0;
         $echo = '<table><tr><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
             <td>City/Twp</td><td>Shift Start</td><td>Shift End</td><td>Dress</td><td>Log Off</td><td>C/Deputy</td>
@@ -115,36 +115,135 @@ function showSecLog($config, $dateSelect, $isSup){
     
 }
 function showSecLogDetails($config, $secLogID, $isSup, $isEditing=false){
-    $mysqli = $config->mysqli;
-    $myq = "SELECT *
-        FROM `SECLOG`
-        WHERE `IDNUM` = '".$secLogID."'";
-    $result = $mysqli->query($myq);
-    SQLerrorCatch($mysqli, $result);
-    $row = $result->fetch_assoc();
-    $echo = "";
-    $echo .= 'Deputy: <br/>';
-    $echo .= 'Radio#: <br/>';
-    $echo .= 'Login Time: <br/>';
-    $echo .= 'Site Name or Address: <br/>';
-    $echo .= 'City/Twp: <br/>';
-    $echo .= 'Contact#: <br/>';
-    $echo .= 'Shift Start Time: <br/>';
-    $echo .= 'Shift End Time: <br/>';
-    $echo .= 'Dress: <select name="dress">
-        <option value=""></option>
-        <option value="U">Uniform</option>
-        <option value="PC">Plain Clothes</option>
-        </select><br/>
-        <input type="submit" name="addSecLog" value="Add" />
-        <input type="submit" name="goBtn" value="Cancel" />';
+    $addSecLog = isset($_POST['addSecLog']) ? true : false;
+    $logoutSecLog = isset($_POST['logoutSecLog']) ? true : false;
     
-        if($isSup){
-
+    if($addSecLog){
+        //get passed values
+        $deputy = isset($_POST['deputy']) ? $_POST['deputy'] : '';
+        $radioNum = isset($_POST['radioNum']) ? $_POST['radioNum'] : '';
+        $address = isset($_POST['address']) ? $_POST['address'] : '';
+        $city = isset($_POST['city']) ? $_POST['city'] : '';
+        $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
+        $shiftStart1 = isset($_POST['shiftStart1']) ? $_POST['shiftStart1'] : '';
+        $shiftStart2 = isset($_POST['shiftStart2']) ? $_POST['shiftStart2'] : '';
+        $shiftStart = $shiftStart1.$shiftStart2."00";
+        $shiftEnd1 = isset($_POST['shiftEnd1']) ? $_POST['shiftEnd1'] : '';
+        $shiftEnd2 = isset($_POST['shiftEnd2']) ? $_POST['shiftEnd2'] : '';
+        $shiftEnd = $shiftEnd1.$shiftEnd2."00";
+        $dress = isset($_POST['dress']) ? $_POST['dress'] : '';
+        
+        //add to database
+        $mysqli = $config->mysqli;
+        $myq = "INSERT INTO `PAYROLL`.`SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
+            `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
+            `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
+            `SUP_TIME` ,`SUP_IP`) VALUES (
+            NULL , '".$deputy."', '".$radioNum."', 'NOW()', '".$_SESSION['userIDnum']."', 'NOW()', 'IP_Address', 
+                '".$address."', '".$city."', '".$phone."', '".Date('Y-m-d', strtotime($_POST['dateSelect']))."', 
+                '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', ''
+            );";
+        $result = $mysqli->query($myq);
+        If(!SQLerrorCatch($mysqli, $result))
+                echo '<h2>Results</h2>Successfully Added Secondary Employment Log, Reference Number: '.$mysqli->insert_id.'<br /><br />';
+        else
+            echo '<h2>Results</h2>Failed to add Secondary Employment Log, try again.<br /><Br />';
+        
+        
+        //display results and get secLogID just added
+        $isEditing = true;
+        $secLogID = $mysqli->insert_id;
+        
+    }
+    if($logoutSecLog){
+        $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] : '';
+        
+        
+        
+    }
+    if($isEditing){
+        $mysqli = $config->mysqli;
+        $myq = "SELECT *
+            FROM `SECLOG`
+            WHERE `IDNUM` = '".$secLogID."'";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $row = $result->fetch_assoc();
+        if($config->adminLvl >= 25){
+            echo '<input type="hidden" name="secLogID" value="'.$secLogID.' />
+                Deputy: <input type="text" name="deputy" value="'.$row['DEPUTYID'].'" /><br/>
+                Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" /><br/>
+                Site Name or Address: <input type="text" name="address" value="'.$row['LOCATION'].'" /><br/>
+                City/Twp: <input type="text" name="city" value="'.$row['CITY'].'" /><br/>
+                Contact#: <input type="text" name="phone" value="'.$row['PHONE'].'" /><br/>
+                Shift Start Time: ';
+                $temp = explode(":", $row['SHIFTSTART']);
+            showTimeSelector("shiftStart", $temp[0], $temp[1], false);
+            echo ' <br/>
+                Shift End Time: ';
+            $temp = explode(":", $row['SHIFTEND']);
+            showTimeSelector("shiftEnd", $temp[0], $temp[1], false);
+            echo '<br/>
+                Dress: <select name="dress">
+                    <option value=""></option>
+                    <option value="U"';
+            if(strcmp($row['DRESS'], "U") ==0)
+                    echo ' SELECT ';
+            echo '>Uniform</option>
+                    <option value="PC"';
+            if(strcmp($row['DRESS'], "PC") ==0)
+                    echo ' SELECT ';
+            echo '>Plain Clothes</option>
+                </select><br/><br />
+                <input type="submit" name="logoutSecLog" value="LogOut" />
+                <input type="submit" name="updateSecLog" value="Update" />
+                <input type="submit" name="goBtn" value="Cancel" />';
         }
         else{
-
+            echo '<input type="hidden" name="secLogID" value="'.$secLogID.' />
+                Deputy: '.$row['DEPUTYID'].'<br/>
+                Radio#: '.$row['RADIO'].'<br/>
+                Site Name or Address: '.$row['LOCATION'].'<br/>
+                City/Twp: '.$row['CITY'].'<br/>
+                Contact#: '.$row['PHONE'].'<br/>
+                Shift Start Time: ';
+                $temp = explode(":", $row['SHIFTSTART']);
+            echo $temp[0].' : '.$temp[1];
+            echo ' <br/>
+                Shift End Time: ';
+            $temp = explode(":", $row['SHIFTEND']);
+            echo $temp[0].' : '.$temp[1];
+            echo '<br/>
+                Dress:';
+            if(strcmp($row['DRESS'], "U") ==0)
+                    echo ' Uniform ';
+            if(strcmp($row['DRESS'], "PC") ==0)
+                    echo ' Plain Clothes ';
+            echo '<br/><br />
+                <input type="submit" name="logoutSecLog" value="LogOut" />
+                <input type="submit" name="goBtn" value="Back" />';
         }
-    echo $echo;
+    }
+    if(!$isEditing && !isset($_POST['goBtn'])){
+        echo 'Deputy: <input type="text" name="deputy" value="" /><br/>
+            Radio#: <input type="text" name="radioNum" value="" /><br/>
+            Site Name or Address: <input type="text" name="address" value="" /><br/>
+            City/Twp: <input type="text" name="city" value="" /><br/>
+            Contact#: <input type="text" name="phone" value="" /><br/>
+            Shift Start Time: ';
+        showTimeSelector("shiftStart", "", "", false);
+        echo ' <br/>
+            Shift End Time: ';
+        showTimeSelector("shiftEnd", "", "", false);
+        echo '<br/>
+            Dress: <select name="dress">
+                <option value=""></option>
+                <option value="U">Uniform</option>
+                <option value="PC">Plain Clothes</option>
+            </select><br/><br />
+            <input type="hidden" name="addBtn" value="true" />
+            <input type="submit" name="addSecLog" value="Add" />
+            <input type="submit" name="goBtn" value="Cancel" />';
+    }
 }
 ?>
