@@ -231,10 +231,11 @@ function showDynamicTable($tableName, $rowArray){
     <?php
     
 }
-function showTimeSelector($inputName, $input1, $input2){
+function showTimeSelector($inputName, $input1, $input2, $required=true){
 
         echo '<select name="'.$inputName.'1" ';
-        showInputBoxError();
+        if($required)
+            showInputBoxError();
         echo '>';
         echo '<option value=""></option>';
 
@@ -246,7 +247,8 @@ function showTimeSelector($inputName, $input1, $input2){
         }
         echo '</select> : ';
         echo '<select name="'.$inputName.'2" ';
-        showInputBoxError();
+        if($required)
+            showInputBoxError();
         echo '>';
         echo '<option value=""></option>';
         for ($i = 00; $i <= 59; $i++) {
