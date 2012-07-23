@@ -17,68 +17,77 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayAbout($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
-    if($wts_content->isAnounceAdmin){
-        ?>
-        <div class="post"><?php displayAdminAnnounce($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
+    if(isValidUser()){
+        if($wts_content->isAnounceAdmin){
+            ?>
+            <div class="post"><?php displayAdminAnnounce($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isLeaveForm){
+            ?>
+            <div class="post"><?php displayLeaveForm($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isSubmittedRequests){
+            ?>
+            <div class="post"><?php displaySubmittedRequests(); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isLeaveApproval){
+            ?>
+            <div class="post"><?php displayLeaveApproval(); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isUserMenu){
+            ?>
+            <div class="post"><?php displayUserMenu($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isLogout()){
+            logoutUser("You have logged out");
+        }
+        if($wts_content->isSearching){
+            ?>
+            <div class="post"><?php searchPage($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isUpdateProfile){
+            ?>
+            <div class="post"><?php displayUpdateProfile($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isLookup){
+            ?>
+            <div class="post"><?php displayRequestLookup($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isUseReport){
+            ?>
+            <div class="post"><?php displayTimeUseReport($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isPhpMyEdit){
+            ?>
+            <div class="post"><?php displayPhpMyEditMenu(); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isMUNIS){
+            ?>
+            <div class="post"><?php MUNISreport($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isSecLog){
+            ?>
+            <div class="post"><?php displaySecondaryLog($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
     }
-    if($wts_content->isLeaveForm){
-        ?>
-        <div class="post"><?php displayLeaveForm($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isSubmittedRequests){
-        ?>
-        <div class="post"><?php displaySubmittedRequests(); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isLeaveApproval){
-        ?>
-        <div class="post"><?php displayLeaveApproval(); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isUserMenu){
-        ?>
-        <div class="post"><?php displayUserMenu($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isLogout()){
-        logoutUser("You have logged out");
-    }
-    if($wts_content->isSearching){
-        ?>
-        <div class="post"><?php searchPage($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isUpdateProfile){
-        ?>
-        <div class="post"><?php displayUpdateProfile($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isLookup){
-        ?>
-        <div class="post"><?php displayRequestLookup($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isUseReport){
-        ?>
-        <div class="post"><?php displayTimeUseReport($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isPhpMyEdit){
-        ?>
-        <div class="post"><?php displayPhpMyEditMenu(); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isMUNIS){
-        ?>
-        <div class="post"><?php MUNISreport($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
-    }
-    if($wts_content->isSecLog){
-        ?>
-        <div class="post"><?php displaySecondaryLog($config); ?><div class="clear"></div></div><div class="divider"></div>
-        <?php
+    else{
+        if($wts_content->isSearching){
+            ?>
+            <div class="post"><h3>Search Results</h3>Must Login First<div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
     }
          
 }
