@@ -103,7 +103,7 @@ if (isset($_POST['submit'])) {
     }//end blank use date submission verification
     else{
         echo '<font color="red" >Must provide a valid Date!</font><br /><br />';
-    }
+    } 
 } //end of 'is submit pressed?'
 if(!isset($_POST['searchBtn'])){
     ?>
