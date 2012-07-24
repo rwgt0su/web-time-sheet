@@ -12,19 +12,37 @@ function displaySecondaryLog($config){
         <?php
         //Get variables
         $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : false;
+        $changeDateBtn = isset($_POST['changeDate']) ? True : false;
+        $editSelect = isset($_POST['editRows']) ? $_POST['editRows'] : false;
         $addBtn = isset($_POST['addBtn']) ? True : false;
         $editBtn = isset($_POST['editBtn']) ? True : false;
         $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] : false;
         $rowNum = isset($_POST['rowNum ']) ? $_POST['rowNum '] : false;
         
+        if($changeDateBtn){
+            $dateSelect = false;
+            $editSelect = false;
+        }
         if(!$dateSelect){
             echo 'Select Date: ';
             displayDateSelect("dateSelect", "dateSel",false,false,true);
-            echo '<input type=submit name="goBtn" value="Go" />'; 
+            echo '<input type=submit name="goBtn" value="Go" /><br />'; 
+            
         }
         else{
-            echo '<h3>Date: '.$dateSelect.'</h3>';
-            echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
+            echo '<h3>Date: '.$dateSelect.'';
+            echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />
+                <input type="submit" name="changeDate" value="Change Date" /></h3>';
+        }
+        if(isset($_POST['editRows'])){
+            for ($i=0; $i <= $editSelect; $i++){
+                if(isset($_POST['secLogID'.$i]))
+                    $secLogID = $_POST['secLogID'.$i];
+            }
+            if(!empty($secLogID))
+                showSecLogDetails($config, $secLogID, true);
+            else
+                echo 'Error getting Reference Number';
         }
         if(isset($_POST['goBtn'])){
             if($config->adminLvl < 25){
@@ -64,14 +82,16 @@ function showSecLog($config, $dateSelect, $secLogID){
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $echo = '<table>';
-    if($config->adminLvl >= 25){
+    if($config->adminLvl <= 25){
         $i=0;
-        $echo = '<table><tr><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
+        $echo = '<table><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
             <td>City/Twp</td><td>Shift Start</td><td>Shift End</td><td>Dress</td><td>Log Off</td><td>C/Deputy</td>
             <td>Supervisor</td><td>Sign Off</td></tr>';
 
         while($row = $result->fetch_assoc()) {
-            $echo .= '<tr><td>'.$row['DEPUTYID'].'</td>
+            $echo .= '<tr><td><input type="hidden" name="editRows" value="'.$i.'" />
+                <input type="radio" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" onclick="this.form.submit();" /></td>
+                <td>'.$row['DEPUTYID'].'</td>
                 <td>'.$row['RADIO'].'</td>
                 <td>'.$row['TIMEIN'].'</td>
                 <td>'.$row['AUDIT_IN_ID'].'</td>
@@ -89,7 +109,7 @@ function showSecLog($config, $dateSelect, $secLogID){
         }
     }
     else{
-       $echo = '<tr><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
+       $echo = '<table><tr><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
             <td>City/Twp</td><td>Contact#</td><td>Shift Start</td><td>Shift End</td></tr>';
        $i=0;
        
@@ -110,11 +130,11 @@ function showSecLog($config, $dateSelect, $secLogID){
     }
     $echo .= '<input type="hidden" name="rowNum" value="'.$i.'" /></table>';
     $echo .= '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
-    $echo .= '<input type="submit" name="addBtn" value="New Log In" />';
+    $echo .= '<input type="submit" name="addBtn" value="New Log In" /></table>';
     echo $echo;
     
 }
-function showSecLogDetails($config, $secLogID, $isSup, $isEditing=false){
+function showSecLogDetails($config, $secLogID, $isEditing=false){
     $addSecLog = isset($_POST['addSecLog']) ? true : false;
     $logoutSecLog = isset($_POST['logoutSecLog']) ? true : false;
     
@@ -158,8 +178,14 @@ function showSecLogDetails($config, $secLogID, $isSup, $isEditing=false){
     if($logoutSecLog){
         $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] : '';
         
-        
-        
+        $myq = "UPDATE `PAYROLL`.`SECLOG` SET `TIMEOUT` = NOW( ) ,
+            `AUDIT_OUT_ID` = '".$_SESSION['userIDnum']."', `AUDIT_OUT_TIME` = NOW( ) ,
+            `AUDIT_OUT_IP` = '"."' WHERE `SECLOG`.`IDNUM` = ".$secLogID." LIMIT 1 ;";
+        $result = $mysqli->query($myq);
+        If(!SQLerrorCatch($mysqli, $result))
+                echo '<h2>Results</h2>Successfully Logged Out Reference Number: '.$secLogID.'<br /><br />';
+        else
+            echo '<h2>Results</h2>Failed to logout Secondary Employment Log, try again.<br /><Br />';   
     }
     if($isEditing){
         $mysqli = $config->mysqli;
@@ -170,7 +196,7 @@ function showSecLogDetails($config, $secLogID, $isSup, $isEditing=false){
         SQLerrorCatch($mysqli, $result);
         $row = $result->fetch_assoc();
         if($config->adminLvl >= 25){
-            echo '<input type="hidden" name="secLogID" value="'.$secLogID.' />
+            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
                 Deputy: <input type="text" name="deputy" value="'.$row['DEPUTYID'].'" /><br/>
                 Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" /><br/>
                 Site Name or Address: <input type="text" name="address" value="'.$row['LOCATION'].'" /><br/>
@@ -200,7 +226,7 @@ function showSecLogDetails($config, $secLogID, $isSup, $isEditing=false){
                 <input type="submit" name="goBtn" value="Cancel" />';
         }
         else{
-            echo '<input type="hidden" name="secLogID" value="'.$secLogID.' />
+            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.' />
                 Deputy: '.$row['DEPUTYID'].'<br/>
                 Radio#: '.$row['RADIO'].'<br/>
                 Site Name or Address: '.$row['LOCATION'].'<br/>

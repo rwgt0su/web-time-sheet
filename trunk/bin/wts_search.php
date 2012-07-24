@@ -135,7 +135,7 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching=true, $isS
         echo $echo;
     }
     
-    return $rowsAdded;
+    return $rowsAdded; 
 }
 function searchReserves($config, $userToFind, $rowCount, $isSelect=true){
     $mysqli = connectToSQL($reserveDB = TRUE);
