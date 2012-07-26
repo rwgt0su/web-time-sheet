@@ -82,7 +82,7 @@ function showSecLog($config, $dateSelect, $secLogID){
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $echo = '<table>';
-    if($config->adminLvl <= 25){
+    if($config->adminLvl >= 25){
         $i=0;
         $echo = '<table><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
             <td>City/Twp</td><td>Shift Start</td><td>Shift End</td><td>Dress</td><td>Log Off</td><td>C/Deputy</td>
@@ -226,7 +226,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                 <input type="submit" name="goBtn" value="Cancel" />';
         }
         else{
-            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.' />
+            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" />
                 Deputy: '.$row['DEPUTYID'].'<br/>
                 Radio#: '.$row['RADIO'].'<br/>
                 Site Name or Address: '.$row['LOCATION'].'<br/>
