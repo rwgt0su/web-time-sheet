@@ -20,7 +20,7 @@ function connectToSQL($useReserve = false){
  * Pass the link indentifier and the result
  */
 //build an HTML table of results, or a form if edit button is pressed
-function resultTable($mysqli, $result){
+function resultTable($mysqli, $result, $isEditable = true){
 
     //get the current page name to use as form action
     $action = $_SERVER['REQUEST_URI'];
@@ -94,7 +94,7 @@ function resultTable($mysqli, $result){
     <form action="<?php echo $action; ?>" method="post" name="editBtn">
     <?php 
     //only let supervisors or higher edit requests
-    if ($_SESSION['admin'] > 0)
+    if ($_SESSION['admin'] > 0 && $isEditable)
         echo "<p><input type='submit' name='editBtn' value='Edit'></p></form>";
     
     //write any updates to DB when Save is pressed
