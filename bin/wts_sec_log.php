@@ -76,13 +76,46 @@ function displaySecondaryLog($config){
 }
 function showSecLog($config, $dateSelect, $secLogID){
     $mysqli = $config->mysqli;
-    $myq = "SELECT *
+    /*$myq = "SELECT *
         FROM `SECLOG`
-        WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."'";
+        WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."'";*/
+    /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
+      depending on the value of SECLOG.IS_RESERVE*/
+  $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIMEIN,
+                CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
+                SHIFTSTART, SHIFTEND, DRESS, TIMEOUT, 
+                CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID', 
+                CONCAT_WS(', ',SUP.LNAME,SUP.FNAME) 'SUP_ID', SUP_TIME,
+                PHONE, S.IDNUM
+            FROM SECLOG S
+            INNER JOIN EMPLOYEE AS SEC ON S.DEPUTYID=SEC.IDNUM
+            LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
+            LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
+            LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
+            WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
+            AND S.IS_RESERVE=0
+
+            UNION
+
+            SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIMEIN,
+                CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
+                SHIFTSTART, SHIFTEND, DRESS, TIMEOUT, 
+                CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID', 
+                CONCAT_WS(', ',SUP.LNAME,SUP.FNAME) 'SUP_ID', SUP_TIME,
+                PHONE, S.IDNUM
+            FROM SECLOG S
+            INNER JOIN RESERVE AS SEC ON S.DEPUTYID=SEC.IDNUM
+            LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
+            LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
+            LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
+            WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
+            AND S.IS_RESERVE=1";
+
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $echo = '<table>';
     if($config->adminLvl >= 25){
+        //resultTable($mysqli, $result, 'false');
         $i=0;
         $echo = '<table><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
             <td>City/Twp</td><td>Shift Start</td><td>Shift End</td><td>Dress</td><td>Log Off</td><td>C/Deputy</td>
@@ -114,21 +147,21 @@ function showSecLog($config, $dateSelect, $secLogID){
        $i=0;
        
         while($row = $result->fetch_assoc()) {
-            $echo .= '<tr><td>'.$row['DEPUTYID'].'</td>
-                <td>'.$row['RADIO'].'</td>
-                <td>'.$row['TIMEIN'].'</td>
-                <td>'.$row['AUDIT_IN_ID'].'</td>
-                <td>'.$row['LOCATION'].'</td>
-                <td>'.$row['CITY'].'</td>
-                <td>'.$row['PHONE'].'</td>
-                <td>'.$row['SHIFTSTART'].'</td>
-                <td>'.$row['SHIFTEND'].'</td>
-                <input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].' />
-                </tr>';
+            $echo .= '<tr>  <td>'.$row['DEPUTYID'].'</td>
+                            <td>'.$row['RADIO'].'</td>
+                            <td>'.$row['TIMEIN'].'</td>
+                            <td>'.$row['AUDIT_IN_ID'].'</td>
+                            <td>'.$row['LOCATION'].'</td>
+                            <td>'.$row['CITY'].'</td>
+                            <td>'.$row['PHONE'].'</td>
+                            <td>'.$row['SHIFTSTART'].'</td>
+                            <td>'.$row['SHIFTEND'].'</td>
+                            <input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].' />
+                            </tr>';
             $i++;
         } 
     }
-    $echo .= '<input type="hidden" name="rowNum" value="'.$i.'" /></table>';
+    //$echo .= '<input type="hidden" name="rowNum" value="'.$i.'" /></table>';
     $echo .= '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
     $echo .= '<input type="submit" name="addBtn" value="New Log In" /></table>';
     echo $echo;
@@ -164,15 +197,17 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                 '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', ''
             );";
         $result = $mysqli->query($myq);
-        If(!SQLerrorCatch($mysqli, $result))
-                echo '<h2>Results</h2>Successfully Added Secondary Employment Log, Reference Number: '.$mysqli->insert_id.'<br /><br />';
+        if(!SQLerrorCatch($mysqli, $result)) {
+            $secLogID = $mysqli->insert_id;      
+            echo '<h2>Results</h2>Successfully Added Secondary Employment Log, Reference Number: '.$secLogID.'<br /><br />';
+        }
         else
             echo '<h2>Results</h2>Failed to add Secondary Employment Log, try again.<br /><Br />';
         
         
         //display results and get secLogID just added
         $isEditing = true;
-        $secLogID = $mysqli->insert_id;
+        
         
     }
     if($logoutSecLog){
@@ -187,6 +222,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         else
             echo '<h2>Results</h2>Failed to logout Secondary Employment Log, try again.<br /><Br />';   
     }
+    
     if($isEditing){
         $mysqli = $config->mysqli;
         $myq = "SELECT *
