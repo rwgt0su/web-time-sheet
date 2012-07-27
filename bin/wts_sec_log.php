@@ -94,6 +94,7 @@ function showSecLog($config, $dateSelect, $secLogID){
             LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
             WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
             AND S.IS_RESERVE=0
+            
 
             UNION
 
@@ -109,7 +110,8 @@ function showSecLog($config, $dateSelect, $secLogID){
             LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
             LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
             WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
-            AND S.IS_RESERVE=1";
+            AND S.IS_RESERVE=1
+            ORDER BY IDNUM";
 
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
@@ -156,7 +158,7 @@ function showSecLog($config, $dateSelect, $secLogID){
                             <td>'.$row['PHONE'].'</td>
                             <td>'.$row['SHIFTSTART'].'</td>
                             <td>'.$row['SHIFTEND'].'</td>
-                            <input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].' />
+                            <input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />
                             </tr>';
             $i++;
         } 
@@ -192,7 +194,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
             `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
             `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
             `SUP_TIME` ,`SUP_IP`) VALUES (
-            NULL , '".$deputy."', '".$radioNum."', 'NOW()', '".$_SESSION['userIDnum']."', 'NOW()', 'IP_Address', 
+            NULL , '".$deputy."', '".$radioNum."', 'NOW()', '".$_SESSION['userIDnum']."', 'NOW()', INET_ATON('".$_SERVER['REMOTE_ADDR']."'), 
                 '".$address."', '".$city."', '".$phone."', '".Date('Y-m-d', strtotime($_POST['dateSelect']))."', 
                 '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', ''
             );";
@@ -215,7 +217,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         
         $myq = "UPDATE `PAYROLL`.`SECLOG` SET `TIMEOUT` = NOW( ) ,
             `AUDIT_OUT_ID` = '".$_SESSION['userIDnum']."', `AUDIT_OUT_TIME` = NOW( ) ,
-            `AUDIT_OUT_IP` = '"."' WHERE `SECLOG`.`IDNUM` = ".$secLogID." LIMIT 1 ;";
+            `AUDIT_OUT_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE `SECLOG`.`IDNUM` = ".$secLogID." LIMIT 1 ;";
         $result = $mysqli->query($myq);
         If(!SQLerrorCatch($mysqli, $result))
                 echo '<h2>Results</h2>Successfully Logged Out Reference Number: '.$secLogID.'<br /><br />';
@@ -225,9 +227,18 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     
     if($isEditing){
         $mysqli = $config->mysqli;
-        $myq = "SELECT *
-            FROM `SECLOG`
-            WHERE `IDNUM` = '".$secLogID."'";
+        $myq = "SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYID', S.RADIO, LOCATION, S.CITY, PHONE,
+                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM
+                FROM SECLOG S
+                JOIN EMPLOYEE AS SEC ON SEC.IDNUM=S.DEPUTYID
+                WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=0
+                UNION
+                SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYID', S.RADIO, LOCATION, S.CITY, PHONE,
+                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM
+                FROM SECLOG S
+                JOIN RESERVE AS SEC ON SEC.IDNUM=S.DEPUTYID
+                WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=1
+                ORDER BY IDNUM";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
         $row = $result->fetch_assoc();
