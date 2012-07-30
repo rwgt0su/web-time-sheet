@@ -9,6 +9,7 @@ function displaySecondaryLog($config){
     ?>
     <h2>Secondary Employment Daily Logs</h2>
     <form name="secLogOpt" action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="POST">
+        
         <?php
         //Get variables
         $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : false;
@@ -243,7 +244,8 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         SQLerrorCatch($mysqli, $result);
         $row = $result->fetch_assoc();
         if($config->adminLvl >= 25){
-            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
+            echo '<input type="hidden" name="formName" value="secLogOpt" /> 
+                Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
                 Deputy: <input type="text" name="deputy" value="'.$row['DEPUTYID'].'" /><br/>
                 Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" /><br/>
                 Site Name or Address: <input type="text" name="address" value="'.$row['LOCATION'].'" /><br/>
@@ -274,8 +276,10 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         }
         else{
             echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" />
-                Deputy: '.$row['DEPUTYID'].'<br/>
-                Radio#: '.$row['RADIO'].'<br/>
+                Deputy: '.$row['DEPUTYID'];
+                lookupButton($config, 'secLogOpt');
+                echo '<br/>';
+                echo 'Radio#: '.$row['RADIO'].'<br/>
                 Site Name or Address: '.$row['LOCATION'].'<br/>
                 City/Twp: '.$row['CITY'].'<br/>
                 Contact#: '.$row['PHONE'].'<br/>
@@ -298,8 +302,11 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         }
     }
     if(!$isEditing && !isset($_POST['goBtn'])){
-        echo 'Deputy: <input type="text" name="deputy" value="" /><br/>
-            Radio#: <input type="text" name="radioNum" value="" /><br/>
+        echo '<input type="hidden" name="formName" value="secLogOpt" />
+            Deputy: <input type="text" name="deputy" value="" />';
+        displayUserLookup($config);
+        echo '<br/>';
+            echo 'Radio#: <input type="text" name="radioNum" value="" /><br/>
             Site Name or Address: <input type="text" name="address" value="" /><br/>
             City/Twp: <input type="text" name="city" value="" /><br/>
             Contact#: <input type="text" name="phone" value="" /><br/>

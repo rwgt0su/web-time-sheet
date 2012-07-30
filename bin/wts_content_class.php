@@ -16,6 +16,7 @@ Class wts_content {
     public $isPhpMyEdit;
     public $isMUNIS;
     public $isSecLog;
+    public $isUserLookup;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -34,6 +35,7 @@ Class wts_content {
         $this->isPhpMyEdit = isset($_GET['phpMyEdit']) ? $_GET['phpMyEdit'] : false;
         $this->isMUNIS = isset($_GET['munis']) ? $_GET['munis'] : false;
         $this->isSecLog = isset($_GET['secLog']) ? $_GET['secLog'] : false;
+        $this->isUserLookup = isset($_GET['userLookup']) ? $_GET['userLookup'] : false;
         
         if(empty($_GET)){
             if(empty($this->isSearching))

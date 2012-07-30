@@ -168,4 +168,80 @@ function searchReserves($config, $userToFind, $rowCount, $isSelect=true){
     
     return $rowsAdded;
 }
+
+function displayUserLookup($config) {
+    //echo '<input type="submit" name="searchBtn" value="Lookup Users">';
+    echo '<button type="button"  name="searchBtn" value="Lookup Users" onClick="this.form.action='."'?userLookup=true'".';this.form.submit()" >Lookup User</button>';
+    //echo '<input type="hidden" name="searchBtn" value="true"/>';
+    var_dump($_POST); //debug
+    //Lookup Users button pressed
+    //if(isset($_POST['searchBtn']) || isset($_POST['findBtn'])){
+    if( isset($_GET['userLookup']) ){
+        //from hidden value in calling form. this is where we want to return to
+        $formName=$_POST['formName'];
+        echo $formName;
+        //Save any inputed values
+        if($formName=='leave') {
+            echo '<input type="hidden" name="subtype" value="'.$subtype.'" />';
+            echo '<input type="hidden" name="ID" value="'.$postID .'" />';
+            echo '<input type="hidden" name="usedate" value="'.$postUseDate.'" />';
+            echo '<input type="hidden" name="thrudate" value="'.$postThruDate.'" />';
+            echo '<input type="hidden" name="beg1" value="'.$postBeg1.'" />';
+            echo '<input type="hidden" name="beg2" value="'.$postBeg2.'" />';
+            echo '<input type="hidden" name="end1" value="'.$postEnd1.'" />';
+            echo '<input type="hidden" name="end2" value="'.$postEnd2.'" />';
+            echo '<input type="hidden" name="comment" value="'.$comment.'" />';
+            echo '<input type="hidden" name="calloff" value="'.$_POST['calloff'].'" />';
+        }
+        else if($formName=='secLogOpt' && $config->adminLvl >= 25){
+            echo '<form name="userLookup" action="?secLog=true" method="POST">';
+            //echo '<input type="hidden" name="secLogID" value="'.$_POST['secLogID'].'" />';
+            echo '<input type="hidden" name="deputy" value="'.$_POST['deputy'].'" />';
+            echo '<input type="hidden" name="radioNum" value="'.$_POST['radioNum'].'" />';
+            echo '<input type="hidden" name="address" value="'.$_POST['address'].'" />';
+            echo '<input type="hidden" name="city" value="'.$_POST['city'].'" />';
+            echo '<input type="hidden" name="phone" value="'.$_POST['phone'].'" />';
+            echo '<input type="hidden" name="shiftStart1" value="'.$_POST['shiftStart1'].'" />';
+            echo '<input type="hidden" name="shiftStart2" value="'.$_POST['shiftStart2'].'" />';
+            echo '<input type="hidden" name="shiftEnd1" value="'.$_POST['shiftEnd1'].'" />';
+            echo '<input type="hidden" name="shiftEnd2" value="'.$_POST['shiftEnd2'].'" />';
+            echo '<input type="hidden" name="dress" value="'.$_POST['dress'].'" />';           
+        }
+        else if($formName=='secLogOpt' && $config->adminLvl < 25){
+            //user form save goes here
+        }
+
+        //Get additional search inputs
+        $searchUser = isset($_POST['searchUser']) ? $_POST['searchUser'] : '';
+        $isFullTime = isset($_POST['fullTime']) ? true : false;
+        $isReserve = isset($_POST['reserve']) ? true : false;
+
+        echo '<input type="checkbox" name="fullTime" ';
+        if($isFullTime)
+            echo 'CHECKED';
+        echo ' />Full Time Employee&nbsp;&nbsp;  ';
+        echo '<input type="checkbox" name="reserve" ';
+        if($isReserve)
+            echo 'CHECKED';
+        echo ' />Reserves<br />';
+
+        echo '<input type="text" name="searchUser" value="'.$searchUser.'" />
+            <input type="submit" name="findBtn" value="Search" /><br /><br />';
+        echo '</form>';
+
+        if( isset($_POST['findBtn'])){
+            $rowCount = 0;
+            if(!empty($searchUser) && $isFullTime)
+                $rowCount = selectUserSearch($config, $searchUser, true);
+            if(!$isFullTime)
+                $rowCount2 = searchReserves($config, $searchUser, $rowCount);
+            else
+                $rowCount2 = $rowCount;
+            $rowCount3 = searchDatabase($config, $searchUser, $rowCount2);
+            $totalRowsFound = $rowCount + $rowCount2 +$rowCount3;
+
+            echo '<input type="hidden" name="totalRows" value="'.$totalRowsFound.'" />';
+        }//end lookup button pressed
+    }//end search or lookup button pressed
+}
 ?>

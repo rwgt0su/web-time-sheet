@@ -191,6 +191,7 @@ else{
                     echo "<p>User ID: ".$_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userIDnum']."'></p>";
                 else { //allow any user to be picked for a calloff entry
                     echo "User: ";
+                    //user ID passed from search
                     if(isset($_POST['totalRows'])){
                         for ($i=0;$i < $_POST['totalRows']; $i++){
                             if(isset($_POST['foundUser'.$i]))
