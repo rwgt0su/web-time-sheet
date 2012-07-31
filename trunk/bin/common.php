@@ -63,6 +63,9 @@ require_once 'bin/time_request_functions.php';
 //Secondary Log Conent
 require_once 'bin/wts_sec_log.php';
 
+//reserve employee management
+require_once 'bin/wts_reserves.php';
+
 //Alert functions (not ready yet)
 //require_once 'bin/wts_alerts.php';
 
