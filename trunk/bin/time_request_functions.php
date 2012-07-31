@@ -116,6 +116,7 @@ else{
 ?>
       
  <form name="leave" id="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
+      <input type='hidden' name='formName' value='leave' />
      <?php  
         $type  = isset($_GET['type']) ? $_GET['type'] : ''; 
         $myq = "SELECT DESCR FROM TIMETYPE WHERE TIMETYPEID='".$type."'";
