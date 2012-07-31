@@ -244,7 +244,7 @@ else{
                 </br>
                 <p>Comment: <input type="text" name="comment" value="<?php echo $comment; ?>"></p>
 
-                <p><input type="submit" name="submit" value="Submit"></p>  
+                <p><input type="submit" name="submit" value="Submit for Approval"></p>  
 
         </form> 
 
