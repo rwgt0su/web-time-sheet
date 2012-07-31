@@ -86,6 +86,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displayUserLookup($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isResManage){
+            ?>
+            <div class="post"><?php displayReserves($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
     }
     else{
         if($wts_content->isSearching){
