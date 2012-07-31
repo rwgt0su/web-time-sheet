@@ -152,7 +152,7 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     if (!strcmp($fieldName, 'DESCR') && !strcmp($tableName, 'TIMETYPE')) {
         $myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE";  
     ?>
-     <td> <select name="<?php echo $formName; ?>" onchange="window.location=window.location.href + '&type=' + this.value">
+     <td> <select name="<?php echo $formName; ?>" onchange="this.form.action='?leave=true';this.form.submit()">
     <?php
     }
     else if (!strcmp($fieldName, 'FULLNAME') && !strcmp($tableName, 'EMPLOYEE')) {        

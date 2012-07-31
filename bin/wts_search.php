@@ -23,18 +23,15 @@ function selectUserSearch($config, $userToFind, $select = false) {
     $ldaprdn = $user . '@' . $config->domain;
     ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
     ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
-    $i = 0;
     if ($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)) {
         //Split given domain into LDAP Base DN
         $temp = explode(".", $config->domain);
-        $i = 0;
         $dn = null;
         foreach ($temp as $dc) {
             if (empty($dn))
                 $dn = "DC=" . $dc;
             else
                 $dn = $dn . ",DC=" . $dc;
-            $i++;
         }
         error_reporting(E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
         $filter = "(&(objectCategory=person)(objectClass=user)";
@@ -44,16 +41,15 @@ function selectUserSearch($config, $userToFind, $select = false) {
 
         $totalRows = ldap_count_entries($cnx, $res);
         $info = ldap_get_entries($cnx, $res);
-        $i = 0;
         echo "Number of entries in Active Directory returned is " . $totalRows . "<br /><br /><hr />";
-        for ($i; $i < $info["count"]; $i++) {
+        for ($i=1; $i < $info["count"]; $i++) {
             //echo "dn is: " . $info[$i]["dn"] . "<br />";
             echo '<div align="center"><table width="400"><tr><td>';
             if ($select)
-                echo '<input name="foundUser' . $i . '" type="radio" onclick="this.form.submit();" />Select</td><td>';
+                echo '<input name="foundUser' . $i . '" type="radio" onClick="this.form.action=\'?' . $_POST['formName'] . "=true'" . ';this.form.submit()" />Select</td><td>';
             echo "Display Name: " . $info[$i]["displayname"][0] . "<br />";
-            echo "First name: " . $info[$i]["givenname"][0] . "<br />";
-            echo "Last Name: " . $info[$i]["sn"][0] . "<br />";
+            echo '<input type="hidden" name="foundUserFNAME'.$i.'" value="'.$info[$i]["givenname"][0].'" />First name: ' . $info[$i]["givenname"][0] . "<br />";
+            echo '<input type="hidden" name="foundUserLNAME'.$i.'" value="'.$info[$i]["sn"][0].'" /> Last Name: ' . $info[$i]["sn"][0] . "<br />";
             echo '<input type="hidden" name="foundUserName' . $i . '" value="' . $info[$i]["samaccountname"][0] . '" /> Username: ' . $info[$i]["samaccountname"][0] . '<br />';
             //Check user in Employee Database and output IDNUM if found
             $result = searchDatabase($config, $info[$i]["samaccountname"][0], $i, false);
@@ -166,7 +162,7 @@ function searchReserves($config, $userToFind, $rowCount, $isSelect = true) {
         $rowCount++;
         $echo .= '<div align="center"><table width="400"><tr><td>';
         if ($isSelect)
-            $echo .= '<input name="foundUser' . $rowCount . '" type="radio" onclick="this.form.submit();" />Select</td><td>';
+            $echo .= '<input name="foundUser' . $rowCount . '" type="radio" onClick="this.form.action=\'?' . $_POST['formName'] . "=true'" . ';this.form.submit()" />Select</td><td>';
         $echo .= '<input type="hidden" name="foundUserFNAME' . $rowCount . '" value="' . $row['FNAME'] . '" /> First name: ' . $row['FNAME'] . "<br />";
         $echo .= '<input type="hidden" name="foundUserLNAME' . $rowCount . '" value="' . $row['LNAME'] . '" /> Last Name: ' . $row['LNAME'] . "<br />";
         $echo .= '<input type="hidden" name="foundUserID' . $rowCount . '" value="' . $row['IDNUM'] . '" /> Username: ' . $row['FNAME'] . "." . $row['LNAME'] . '<br />';
@@ -185,7 +181,7 @@ function searchReserves($config, $userToFind, $rowCount, $isSelect = true) {
 }
 
 function displayUserLookup($config) {
-    var_dump($_POST); //DEBUG
+    //var_dump($_POST); //DEBUG
     //
     //Lookup Users button has been pressed
     if (isset($_GET['userLookup'])) {
@@ -197,7 +193,7 @@ function displayUserLookup($config) {
         echo '<input type="hidden" name="formName" value="' . $formName . '" />';
         //from hidden value in calling form. this is where we want to return to
 
-        echo $formName; //DEBUG
+        //echo $formName; //DEBUG
         //Save any inputted values
         if ($formName == 'leave') {
             echo '<input type="hidden" name="subtype" value="' . $subtype . '" />';
@@ -210,6 +206,7 @@ function displayUserLookup($config) {
             echo '<input type="hidden" name="end2" value="' . $postEnd2 . '" />';
             echo '<input type="hidden" name="comment" value="' . $comment . '" />';
             echo '<input type="hidden" name="calloff" value="' . $_POST['calloff'] . '" />';
+            echo '<input type="hidden" name="type" value="' . $_POST['type'] . '" />';
         } else if ($formName == 'secLog') {
             $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] :'' ;
             $deputy = isset($_POST['deputy']) ? $_POST['deputy']:'';
@@ -244,17 +241,27 @@ function displayUserLookup($config) {
         $searchUser = isset($_POST['searchUser']) ? $mysqli->real_escape_string($_POST['searchUser']) : '';
         $isFullTime = isset($_POST['fullTime']) ? true : false;
         $isReserve = isset($_POST['reserve']) ? true : false;
+        $searchFullTime = isset($_POST['searchFullTime']) ? $_POST['searchFullTime'] : true;
+        $searchReserves = isset($_POST['searchReserves']) ? $_POST['searchReserves'] : true;
+        if(strcmp($searchReserves,"false")== 0 )
+            $searchReserves = false;
+        if(strcmp($searchFullTime,"false") == 0)
+            $searchFullTime = false;
 
-        echo '<input type="checkbox" name="fullTime" ';
-        if ($isFullTime)
-            echo 'CHECKED';
-        echo ' />Full Time Employee&nbsp;&nbsp;  ';
-        echo '<input type="checkbox" name="reserve" ';
-        if ($isReserve)
-            echo 'CHECKED';
-        echo ' />Reserves<br />';
+        if($searchFullTime){
+            echo '<input type="checkbox" name="fullTime" ';
+            if ($isFullTime)
+                echo 'CHECKED';
+            echo ' />Full Time Employee&nbsp;&nbsp;  ';
+        }
+        if($searchReserves){
+            echo '<input type="checkbox" name="reserve" ';
+            if ($isReserve)
+                echo 'CHECKED';
+            echo ' />Reserves';
+        }
 
-        echo '<input type="text" name="searchUser" value="' . $searchUser . '" />
+        echo '<br /><input type="text" name="searchUser" value="' . $searchUser . '" />
             <input type="submit" name="findBtn" value="Search" /><br /><br />';
         //echo '</form>';
 
