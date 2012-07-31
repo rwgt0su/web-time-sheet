@@ -59,14 +59,7 @@ function displaySecondaryLog($config){
             }
         }
         
-        if($addBtn){
-            showSecLogDetails($config, $secLogID, false);
-        }
-        
-        if($logoutSecLog){
-            showSecLogDetails($config, $secLogID, false);
-        }
-        if($updateSecLog){
+        if($addBtn || $logoutSecLog || $updateSecLog){
             showSecLogDetails($config, $secLogID, false);
         }
         
@@ -239,7 +232,8 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         if(!SQLerrorCatch($mysqli, $result))
                 echo '<h2>Results</h2>Successfully Logged Out Reference Number: '.$secLogID.'<br /><br />';
         else
-            echo '<h2>Results</h2>Failed to logout Secondary Employment Log, try again.<br /><Br />';   
+            echo '<h2>Results</h2>Failed to logout Secondary Employment Log, try again.<br /><Br />';  
+        $isEditing = true;
     }
     
     if($updateSecLog){
@@ -268,6 +262,8 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                 echo '<h2>Results</h2>Successfully Updated Log #'.$secLogID.'<br /><br />';
         else
             echo '<h2>Results</h2>Failed to update Secondary Employment Log, try again.<br /><Br />';
+        
+        $isEditing = true;
     }
     
     if($isEditing){
@@ -306,11 +302,11 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                     <option value=""></option>
                     <option value="U"';
             if(strcmp($row['DRESS'], "U") ==0)
-                    echo ' SELECT ';
+                    echo ' SELECTED ';
             echo '>Uniform</option>
                     <option value="PC"';
             if(strcmp($row['DRESS'], "PC") ==0)
-                    echo ' SELECT ';
+                    echo ' SELECTED ';
             echo '>Plain Clothes</option>
                 </select><br/><br />
                 <input type="submit" name="logoutSecLog" value="LogOut" />
@@ -361,7 +357,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $foundUserLNAME = '';
         $foundUserName = '';
         $foundUserID = '' ;
-        if(!empty($totalRows)) {         
+        if($totalRows > 0) {         
             //get post info providied from search results
             for($i=1;$i<=$totalRows;$i++){
                 if(isset($_POST['foundUser'.$i])) {
@@ -438,7 +434,7 @@ function approveSecLog($config) {
                 LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
                 WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
-                AND AUDIT_OUT_ID = ''
+                AND AUDIT_OUT_ID != ''
                 AND S.IS_RESERVE=0
 
                 UNION

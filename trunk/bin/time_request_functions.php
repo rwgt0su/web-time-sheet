@@ -118,7 +118,7 @@ else{
  <form name="leave" id="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
       <input type='hidden' name='formName' value='leave' />
      <?php  
-        $type  = isset($_GET['type']) ? $_GET['type'] : ''; 
+        $type  = isset($_POST['type']) ? $_POST['type'] : ''; 
         $myq = "SELECT DESCR FROM TIMETYPE WHERE TIMETYPEID='".$type."'";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
@@ -172,7 +172,27 @@ else{
                     echo '<input type="hidden" name="totalRows" value="'.$totalRowsFound.'" />';
                 }//end lookup button pressed
             }//end search or lookup button pressed
-            Else{
+            else{
+                $foundUserFNAME = '';
+                $foundUserLNAME = '';
+                $foundUserName = '';
+                $foundUserID = '' ;
+                $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : '';
+                if($totalRows > 0) {         
+                    //get post info providied from search results
+                    for($i=1;$i<=$totalRows;$i++){
+                        if(isset($_POST['foundUser'.$i])) {
+                            $foundUserFNAME = $_POST['foundUserFNAME'.$i];
+                            $foundUserLNAME = $_POST['foundUserLNAME'.$i];
+                            $foundUserName = $_POST['foundUserName'.$i];
+                            $foundUserID = $_POST['foundUserID'.$i];
+
+                            if(isset($_POST['isReserve'.$i]))
+                                    echo '<input type="hidden" name="isReserve" value="true" />';
+                            break;
+                        }//end if
+                    }//end for
+                }
                 echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
                 //subtype choice
                 echo "Subtype: ";
@@ -193,11 +213,8 @@ else{
                 else { //allow any user to be picked for a calloff entry
                     echo "User: ";
                     //user ID passed from search
-                    if(isset($_POST['totalRows'])){
-                        for ($i=0;$i < $_POST['totalRows']; $i++){
-                            if(isset($_POST['foundUser'.$i]))
-                                    echo '<input type="hidden" name="ID" value="'.$_POST['foundUserID'.$i].'" />'.$_POST['foundUserName'.$i];
-                        }
+                    if($totalRows > 0) { 
+                        echo '<input type="hidden" name="ID" value="'.$foundUserID.'" />'.$foundUserLNAME.', '.$foundUserFNAME;
                     }
                     else{
                         dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
@@ -515,6 +532,27 @@ function displayLeaveApproval(){
  */
 function displayRequestLookup($config) {
    
+    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : '';
+    $foundUserFNAME = '';
+    $foundUserLNAME = '';
+    $foundUserName = '';
+    $foundUserID = '' ;
+    if($totalRows > 0) {          
+        //get post info providied from search results
+        for($i=1;$i<=$totalRows;$i++){
+            if(isset($_POST['foundUser'.$i])) {
+                $foundUserFNAME = $_POST['foundUserFNAME'.$i];
+                $foundUserLNAME = $_POST['foundUserLNAME'.$i];
+                $foundUserName = $_POST['foundUserName'.$i];
+                $foundUserID = $_POST['foundUserID'.$i];
+
+                if(isset($_POST['isReserve'.$i]))
+                        echo '<input type="hidden" name="isReserve" value="true" />';
+                break;
+            }//end if
+        }//end for
+    }
+    
     if( isValidUser() && (isset($_POST['lname']) || isset($_POST['editBtn'])) ) {
         if(isset($_POST['lname'])) {
         $lname = $_SESSION['lname'] = strtoupper( $_POST['lname'] );
@@ -528,7 +566,7 @@ function displayRequestLookup($config) {
         }
             
         $mysqli = $config->mysqli;
-        $myq = "SELECT DISTINCT REFER 'RefNo', R.ID 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+        $myq = "SELECT DISTINCT REFER 'RefNo', R.IDNUM 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APPROVEDBY 'ApprovedBy', REASON 'Reason' 
@@ -542,13 +580,18 @@ function displayRequestLookup($config) {
         SQLerrorCatch($mysqli, $result);
         resultTable($mysqli, $result);
         
+        
     }
     else {
         ?>
         <form name="lookup" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
+            <input type="hidden" name="formName" value="lookup" />
+            <input type="hidden" name="searchReserves" value="false" />
         <h1>Lookup Requests by Employee</h1>
         
-        <p>Search by last name:<input type="text" name="lname"></p>
+        <p>Search by last name:
+            
+            <input type="text" name="lname" value="<?php echo $foundUserLNAME; ?>" /><?php displayUserLookup($config); ?></p>
         <p>Date range: From <?php   displayDateSelect('start','date_1'); ?>
             to <?php   displayDateSelect('end','date_2'); ?></p>
 
