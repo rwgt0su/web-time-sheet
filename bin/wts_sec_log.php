@@ -155,24 +155,27 @@ function showSecLog($config, $dateSelect, $secLogID){
        $i=0;
        
         while($row = $result->fetch_assoc()) {
-            $echo .= '<tr>  <td>'.$row['DEPUTYID'].'</td>
-                            <td>'.$row['RADIO'].'</td>
-                            <td>'.$row['TIMEIN'].'</td>
-                            <td>'.$row['AUDIT_IN_ID'].'</td>
-                            <td>'.$row['LOCATION'].'</td>
-                            <td>'.$row['CITY'].'</td>
-                            <td>'.$row['PHONE'].'</td>
-                            <td>'.$row['SHIFTSTART'].'</td>
-                            <td>'.$row['SHIFTEND'].'</td>
-                            <input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />
-                            </tr>';
+            $echo .= '<tr><td><input type="hidden" name="editRows" value="'.$i.'" />
+                <input type="radio" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" onclick="this.form.submit();" /></td>
+                    <td>'.$row['DEPUTYID'].'</td>
+                    <td>'.$row['RADIO'].'</td>
+                    <td>'.$row['TIMEIN'].'</td>
+                    <td>'.$row['AUDIT_IN_ID'].'</td>
+                    <td>'.$row['LOCATION'].'</td>
+                    <td>'.$row['CITY'].'</td>
+                    <td>'.$row['PHONE'].'</td>
+                    <td>'.$row['SHIFTSTART'].'</td>
+                    <td>'.$row['SHIFTEND'].'</td>
+                    <input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />
+                    </tr>';
             $i++;
         } 
     }
     //$echo .= '<input type="hidden" name="rowNum" value="'.$i.'" /></table>';
     $echo .= '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
-    $echo .= '<input type="submit" name="addBtn" value="New Log In" /></table>';
+    
     echo $echo;
+    echo '</table><input type="submit" name="addBtn" value="New Log In" />';
     
 }
 function showSecLogDetails($config, $secLogID, $isEditing=false){
@@ -269,13 +272,13 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     if($isEditing){
         $mysqli = $config->mysqli;
         $myq = "SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYID', S.RADIO, LOCATION, S.CITY, PHONE,
-                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM
+                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
                 FROM SECLOG S
                 JOIN EMPLOYEE AS SEC ON SEC.IDNUM=S.DEPUTYID
                 WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=0
                 UNION
                 SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYID', S.RADIO, LOCATION, S.CITY, PHONE,
-                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM
+                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
                 FROM SECLOG S
                 JOIN RESERVE AS SEC ON SEC.IDNUM=S.DEPUTYID
                 WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=1
@@ -308,36 +311,49 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
             if(strcmp($row['DRESS'], "PC") ==0)
                     echo ' SELECTED ';
             echo '>Plain Clothes</option>
-                </select><br/><br />
-                <input type="submit" name="logoutSecLog" value="LogOut" />
-                <input type="submit" name="updateSecLog" value="Update" />
+                </select><br/>';
+            echo 'Logged Off Time: ';
+            if(strcmp($row['TIMEOUT'],"00:00:00")==0){
+                echo "Not Logged Off Yet<br /><br />";
+                echo '<input type="submit" name="logoutSecLog" value="LogOut" />';
+            }
+            else{
+                echo $row['TIMEOUT'].'<br /><br />';
+            }
+            echo '<input type="submit" name="updateSecLog" value="Update" />
                 <input type="submit" name="goBtn" value="Cancel" />';
         }
         else{
-            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" />
-                Deputy: '.$row['DEPUTYID'];
-                lookupButton($config, 'secLogOpt');
-                echo '<br/>';
-                echo 'Radio#: '.$row['RADIO'].'<br/>
-                Site Name or Address: '.$row['LOCATION'].'<br/>
-                City/Twp: '.$row['CITY'].'<br/>
-                Contact#: '.$row['PHONE'].'<br/>
+            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
+                Deputy: <input type="hidden" name="deputy" value="'.$row['DEPUTYID'].'" />'.$row['DEPUTYID'].'<br/>
+                Radio#: <input type="hidden" name="radioNum" value="'.$row['RADIO'].'" />'.$row['RADIO'].'<br/>
+                Site Name or Address: <input type="hidden" name="address" value="'.$row['LOCATION'].'" />'.$row['LOCATION'].'<br/>
+                City/Twp: <input type="hidden" name="city" value="'.$row['CITY'].'" />'.$row['CITY'].'<br/>
+                Contact#: <input type="hidden" name="phone" value="'.$row['PHONE'].'" />'.$row['PHONE'].'<br/>
                 Shift Start Time: ';
                 $temp = explode(":", $row['SHIFTSTART']);
-            echo $temp[0].' : '.$temp[1];
+            echo $temp[0].':'.$temp[1];
             echo ' <br/>
                 Shift End Time: ';
             $temp = explode(":", $row['SHIFTEND']);
-            echo $temp[0].' : '.$temp[1];
+            echo $temp[0].':'.$temp[1];
             echo '<br/>
                 Dress:';
             if(strcmp($row['DRESS'], "U") ==0)
                     echo ' Uniform ';
             if(strcmp($row['DRESS'], "PC") ==0)
                     echo ' Plain Clothes ';
-            echo '<br/><br />
-                <input type="submit" name="logoutSecLog" value="LogOut" />
-                <input type="submit" name="goBtn" value="Back" />';
+            echo '<br/>';
+            echo 'Logged Off Time: ';
+            if(strcmp($row['TIMEOUT'],"00:00:00")==0){
+                echo "Not Logged Off Yet<br /><br />"; 
+                echo '<input type="submit" name="logoutSecLog" value="LogOut" />';
+            }
+            else{
+                $row['TIMEOUT'].'<br /><br />';
+            }
+            echo '<input type="submit" name="updateSecLog" value="Update" />
+                <input type="submit" name="goBtn" value="Cancel" />';
         }
     }
     if(!$isEditing && !isset($_POST['goBtn'])){
