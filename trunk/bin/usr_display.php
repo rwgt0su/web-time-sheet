@@ -30,6 +30,7 @@ function displayUserMenu($config){
 			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&EditUserBtn=true">Change User Password or Admin Level</a><br />
 			<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&DelUserBtn=true">Remove User</a><br />
                         <a href="<?php echo $_SERVER['REQUEST_URI']; ?>&DispUsers=true">Display/Edit All Users</a><br />
+                        <a href="?userVerify=true">Verify Users</a>
 		<?php 
 		}
                 echo '</div>';

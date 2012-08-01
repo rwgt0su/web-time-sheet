@@ -67,7 +67,7 @@ require_once 'bin/wts_sec_log.php';
 require_once 'bin/wts_reserves.php';
 
 //Alert functions (not ready yet)
-//require_once 'bin/wts_alerts.php';
+require_once 'bin/wts_alerts.php';
 
 function popUpMessage($message){
 	?>

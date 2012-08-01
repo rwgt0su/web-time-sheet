@@ -107,12 +107,14 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching = true, $i
                 FROM EMPLOYEE E
                 LEFT JOIN DIVISION AS D ON E.DIVISIONID=D.DIVISIONID
                 WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%' 
+                    OR `LNAME` LIKE '%" . strtoupper($userToFind) . "%'
                 AND `isLDAP` !=1";
         else
             $myq = "SELECT FNAME,LNAME,GRADE,E.ID,E.IDNUM, D.DESCR, isLDAP 
                 FROM EMPLOYEE E
                 LEFT JOIN DIVISION AS D ON E.DIVISIONID=D.DIVISIONID
-                WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%'" ;
+                WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%'
+                     OR `LNAME` LIKE '%" . strtoupper($userToFind) . "%'" ;
     }
     else
         $myq = "SELECT * FROM `EMPLOYEE` WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%'";
@@ -235,7 +237,6 @@ function displayUserLookup($config) {
             echo '<input type="hidden" name="shiftEnd2" value="' . $shiftEnd2 . '" />';
             echo '<input type="hidden" name="dress" value="' . $dress . '" />';
             echo '<input type="hidden" name="dateSelect" value="' . $dateSelect . '" />';
-            //echo '<input type="hidden" name="goBtn" value="true" />';
             echo '<input type="hidden" name="addBtn" value="true" />';
         } 
         $mysqli = $config->mysqli;

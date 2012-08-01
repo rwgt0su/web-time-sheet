@@ -96,6 +96,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displayReserves($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isUserVerify){
+            ?>
+            <div class="post"><?php displayUserVerify($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
     }
     else{
         if($wts_content->isSearching){
@@ -104,6 +109,7 @@ function displayContent($wts_content, $config){
             <?php
         }
     }
+    myAlerts($config, $wts_content); 
          
 }
 
