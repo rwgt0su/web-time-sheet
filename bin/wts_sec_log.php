@@ -22,7 +22,13 @@ function displaySecondaryLog($config){
         $rowNum = isset($_POST['rowNum ']) ? $_POST['rowNum '] : false;
         $logoutSecLog = isset($_POST['logoutSecLog']) ? true : false;
         $updateSecLog = isset($_POST['updateSecLog']) ? true : false;
+        $showAll = isset($_POST['showAll']) ? true : false;
+        $showNormal = isset($_POST['showNormal']) ?  true : false;
+        $goBtn = isset($_POST['goBtn']) ? true : false;
         
+        if($showAll || $showNormal){
+            $goBtn = true;
+        }
         if($changeDateBtn){
             $dateSelect = false;
             $editSelect = false;
@@ -40,15 +46,15 @@ function displaySecondaryLog($config){
         }
         if(isset($_POST['editRows'])){
             for ($i=0; $i <= $editSelect; $i++){
-                if(isset($_POST['secLogID'.$i]))
+                if(isset($_POST['secLogRadio'.$i]))
                     $secLogID = $_POST['secLogID'.$i];
             }
             if(!empty($secLogID))
                 showSecLogDetails($config, $secLogID, true);
-            else
-                echo 'Error getting Reference Number';
+            else if(!$addBtn && !$showAll && !$changeDateBtn)
+                echo 'Error getting Reference Number!<br />';
         }
-        if(isset($_POST['goBtn'])){
+        if($goBtn){
             if($config->adminLvl < 25){
                 //non supervisor logs
                 showSecLog($config, $dateSelect, false);
@@ -86,7 +92,7 @@ function showSecLog($config, $dateSelect, $secLogID){
    
     /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
       depending on the value of SECLOG.IS_RESERVE*/
-  $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+    $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                 CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                 TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                 DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -121,57 +127,65 @@ function showSecLog($config, $dateSelect, $secLogID){
 
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
-    $echo = '<table>';
+    $echo = '';
     if($config->adminLvl >= 25){
         //resultTable($mysqli, $result, 'false');
+        $showAll = isset($_POST['showAll']) ? true : false;
         $i=0;
-        $echo = '<table><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
+        if($showAll)
+            $echo .= '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
+        else
+            $echo .= '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
+        $echo .= '<table><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
             <td>City/Twp</td><td>Shift Start</td><td>Shift End</td><td>Dress</td><td>Log Off</td><td>C/Deputy</td>
             <td>Supervisor</td><td>Sign Off</td></tr>';
 
         while($row = $result->fetch_assoc()) {
-            $echo .= '<tr><td><input type="hidden" name="editRows" value="'.$i.'" />
-                <input type="radio" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" onclick="this.form.submit();" /></td>
-                <td>'.$row['DEPUTYID'].'</td>
-                <td>'.$row['RADIO'].'</td>
-                <td>'.$row['TIMEIN'].'</td>
-                <td>'.$row['AUDIT_IN_ID'].'</td>
-                <td>'.$row['LOCATION'].'</td>
-                <td>'.$row['CITY'].'</td>
-                <td>'.$row['SHIFTSTART'].'</td>
-                <td>'.$row['SHIFTEND'].'</td>
-                <td>'.$row['DRESS'].'</td>
-                <td>'.$row['TIMEOUT'].'</td>
-                <td>'.$row['AUDIT_OUT_ID'].'</td>
-                <td>'.$row['SUP_ID'].'</td>
-                <td>'.$row['SUP_TIME'].'</td>
-                </tr>';
-            $i++;
-        }
-    }
-    else{
-       $echo = '<table><tr><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
-            <td>City/Twp</td><td>Contact#</td><td>Shift Start</td><td>Shift End</td></tr>';
-       $i=0;
-       
-        while($row = $result->fetch_assoc()) {
-            $echo .= '<tr><td><input type="hidden" name="editRows" value="'.$i.'" />
-                <input type="radio" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" onclick="this.form.submit();" /></td>
-                    <td>'.$row['DEPUTYID'].'</td>
+            if(strcmp($row['TIMEOUT'], "00:00:00") == 0 || $showAll){
+                $echo .= '<tr><td>
+                    <input type="radio" name="secLogRadio'.$i.'" onclick="this.form.submit();" /></td>
+                    <td><input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />'.$row['DEPUTYID'].'</td>
                     <td>'.$row['RADIO'].'</td>
                     <td>'.$row['TIMEIN'].'</td>
                     <td>'.$row['AUDIT_IN_ID'].'</td>
                     <td>'.$row['LOCATION'].'</td>
                     <td>'.$row['CITY'].'</td>
-                    <td>'.$row['PHONE'].'</td>
                     <td>'.$row['SHIFTSTART'].'</td>
                     <td>'.$row['SHIFTEND'].'</td>
-                    <input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />
+                    <td>'.$row['DRESS'].'</td>
+                    <td>'.$row['TIMEOUT'].'</td>
+                    <td>'.$row['AUDIT_OUT_ID'].'</td>
+                    <td>'.$row['SUP_ID'].'</td>
+                    <td>'.$row['SUP_TIME'].'</td>
                     </tr>';
-            $i++;
+                $i++;
+            }
+        }
+    }
+    else{
+       $echo = '<table><tr><td></td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
+            <td>City/Twp</td><td>Contact#</td><td>Shift Start</td><td>Shift End</td></tr>';
+       $i=0;
+       
+        while($row = $result->fetch_assoc()) {
+            if(strcmp($row['TIMEOUT'], "00:00:00") != 0 ){
+                $echo .= '<tr><td>
+                    <input type="radio" name="secLogRadio'.$i.'" onclick="this.form.submit();" /></td>
+                    <td><input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />'.$row['DEPUTYID'].'</td>
+                        <td>'.$row['RADIO'].'</td>
+                        <td>'.$row['TIMEIN'].'</td>
+                        <td>'.$row['AUDIT_IN_ID'].'</td>
+                        <td>'.$row['LOCATION'].'</td>
+                        <td>'.$row['CITY'].'</td>
+                        <td>'.$row['PHONE'].'</td>
+                        <td>'.$row['SHIFTSTART'].'</td>
+                        <td>'.$row['SHIFTEND'].'</td>
+                        </tr>';
+                $i++;
+            }
         } 
     }
-    //$echo .= '<input type="hidden" name="rowNum" value="'.$i.'" /></table>';
+    $echo .= '<input type="hidden" name="editRows" value="'.$i.'" />';
     $echo .= '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
     
     echo $echo;
@@ -320,8 +334,8 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
             else{
                 echo $row['TIMEOUT'].'<br /><br />';
             }
-            echo '<input type="submit" name="updateSecLog" value="Update" />
-                <input type="submit" name="goBtn" value="Cancel" />';
+            echo '<input type="submit" name="updateSecLog" value="Update" />';
+            echo '<input type="submit" name="goBtn" value="Back To Logs" />';
         }
         else{
             echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
@@ -332,13 +346,13 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                 Contact#: <input type="hidden" name="phone" value="'.$row['PHONE'].'" />'.$row['PHONE'].'<br/>
                 Shift Start Time: ';
                 $temp = explode(":", $row['SHIFTSTART']);
-            echo $temp[0].':'.$temp[1];
+            echo '<input type="hidden" name="shiftStart1" value="'.$temp[0].'" />'.$temp[0].':'.'<input type="hidden" name="shiftStart2" value="'.$temp[1].'" />'.$temp[1];
             echo ' <br/>
                 Shift End Time: ';
             $temp = explode(":", $row['SHIFTEND']);
-            echo $temp[0].':'.$temp[1];
+            echo '<input type="hidden" name="shiftEnd1" value="'.$temp[0].'" />'.$temp[0].':'.'<input type="hidden" name="shiftEnd2" value="'.$temp[1].'" />'.$temp[1];
             echo '<br/>
-                Dress:';
+                Dress:<input type="hidden" name="dress" value="'.$row['DRESS'].'" />';
             if(strcmp($row['DRESS'], "U") ==0)
                     echo ' Uniform ';
             if(strcmp($row['DRESS'], "PC") ==0)
@@ -350,10 +364,10 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                 echo '<input type="submit" name="logoutSecLog" value="LogOut" />';
             }
             else{
-                $row['TIMEOUT'].'<br /><br />';
+                echo $row['TIMEOUT'].'<br /><br />';
             }
-            echo '<input type="submit" name="updateSecLog" value="Update" />
-                <input type="submit" name="goBtn" value="Cancel" />';
+            
+               echo '<input type="submit" name="goBtn" value="Back To Logs" />';
         }
     }
     if(!$isEditing && !isset($_POST['goBtn'])){
