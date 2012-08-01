@@ -42,15 +42,16 @@ function selectUserSearch($config, $userToFind, $select = false) {
         $totalRows = ldap_count_entries($cnx, $res);
         $info = ldap_get_entries($cnx, $res);
         echo "Number of entries in Active Directory returned is " . $totalRows . "<br /><br /><hr />";
-        for ($i=1; $i < $info["count"]; $i++) {
+        $rowCount = 1;
+        for ($i=0; $i < $info["count"]; $i++) {
             //echo "dn is: " . $info[$i]["dn"] . "<br />";
             echo '<div align="center"><table width="400"><tr><td>';
             if ($select)
-                echo '<input name="foundUser' . $i . '" type="radio" onClick="this.form.action=\'?' . $_POST['formName'] . "=true'" . ';this.form.submit()" />Select</td><td>';
+                echo '<input name="foundUser' . $rowCount . '" type="radio" onClick="this.form.action=\'?' . $_POST['formName'] . "=true'" . ';this.form.submit()" />Select</td><td>';
             echo "Display Name: " . $info[$i]["displayname"][0] . "<br />";
-            echo '<input type="hidden" name="foundUserFNAME'.$i.'" value="'.$info[$i]["givenname"][0].'" />First name: ' . $info[$i]["givenname"][0] . "<br />";
-            echo '<input type="hidden" name="foundUserLNAME'.$i.'" value="'.$info[$i]["sn"][0].'" /> Last Name: ' . $info[$i]["sn"][0] . "<br />";
-            echo '<input type="hidden" name="foundUserName' . $i . '" value="' . $info[$i]["samaccountname"][0] . '" /> Username: ' . $info[$i]["samaccountname"][0] . '<br />';
+            echo '<input type="hidden" name="foundUserFNAME'.$rowCount.'" value="'.$info[$i]["givenname"][0].'" />First name: ' . $info[$i]["givenname"][0] . "<br />";
+            echo '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$info[$i]["sn"][0].'" /> Last Name: ' . $info[$i]["sn"][0] . "<br />";
+            echo '<input type="hidden" name="foundUserName' . $rowCount . '" value="' . $info[$i]["samaccountname"][0] . '" /> Username: ' . $info[$i]["samaccountname"][0] . '<br />';
             //Check user in Employee Database and output IDNUM if found
             $result = searchDatabase($config, $info[$i]["samaccountname"][0], $i, false);
             if ($result < 1) {
@@ -84,8 +85,9 @@ function selectUserSearch($config, $userToFind, $select = false) {
             echo "Title: " . $info[$i]["title"][0] . "<br />";
             echo "Department: " . $info[$i]["department"][0] . "<br />";
             echo "Email: " . $info[$i]["mail"][0] . "<br />";
-            echo '<input type="hidden" name="foundUserID' . $i . '" value="' . $row['IDNUM'] . '" />';
+            echo '<input type="hidden" name="foundUserID' . $rowCount . '" value="' . $row['IDNUM'] . '" />';
             echo "</td></tr></table></div><br /><hr />";
+            $rowCount++;
         }
     }
     else
