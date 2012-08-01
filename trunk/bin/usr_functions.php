@@ -337,9 +337,12 @@ function displayUpdateProfile($config){
                 WORKPH = '".$wphone."',
                 DOB = '".Date('Y-m-d', strtotime($dob))."',
                 EMERGCON = '".$emergency."',
+                AUDITID = '".$_SESSION['userIDnum']."',
+                AUDIT_TIME = NOW(),
+                AUDIT_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."')
                 WHERE IDNUM = '".$userID."'";
         }
-            //popUpMessage($myq); //DEBUG
+            popUpMessage($myq); //DEBUG
         //Perform SQL Query
        
         $result = $mysqli->query($myq);
@@ -430,7 +433,7 @@ function displayUpdateProfile($config){
                 }
                   else  {  ?>                         
             <h3>Username: <?php echo $username; ?></h3>
-            <input type="hidden" name="userID" value="<?php echo $username; ?>" />
+            <input type="hidden" name="userID" value="<?php echo $_SESSION['userIDnum']; ?>" />
             <?php } ?>
                 
                     <tr><td>First Name: </td><td><input name="fname" type="text" <?php if(!$fname) showInputBoxError(); else echo 'value="'.$fname.'"'; ?> /></td></tr>
