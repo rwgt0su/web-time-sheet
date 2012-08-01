@@ -4,7 +4,7 @@ function searchPage($config) {
     $searchInput = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
     if ($searchInput) {
         echo '<h3>Results for: ' . $searchInput . '</h3>';
-        $rowCount1 = selectUserSearch($config, $searchInput);
+        $rowCount1 = selectUserSearch($config, $searchInput, 1);
         $rowCount2 = searchDatabase($config, $searchInput, $rowCount1, true, false);
         $rowCount3 = $rowCount1 + $rowCount2;
         $rowCount3 = searchReserves($config, $searchInput, $rowCount3, false);
@@ -15,7 +15,7 @@ function searchPage($config) {
     }
 }
 
-function selectUserSearch($config, $userToFind, $select = false) {
+function selectUserSearch($config, $userToFind, $rowCount, $select = false) {
     //LDAP Search
     $cnx = ldap_connect($config->ldap_server);
     $user = $config->ldapUser;
@@ -42,7 +42,7 @@ function selectUserSearch($config, $userToFind, $select = false) {
         $totalRows = ldap_count_entries($cnx, $res);
         $info = ldap_get_entries($cnx, $res);
         echo "Number of entries in Active Directory returned is " . $totalRows . "<br /><br /><hr />";
-        $rowCount = 1;
+        
         for ($i=0; $i < $info["count"]; $i++) {
             //echo "dn is: " . $info[$i]["dn"] . "<br />";
             echo '<div align="center"><table width="400"><tr><td>';
@@ -67,7 +67,7 @@ function selectUserSearch($config, $userToFind, $select = false) {
             SQLerrorCatch($mysqli, $result);
             $row = $result->fetch_assoc();
             echo "Rank: " . $row['GRADE'] . "<br />";
-            echo "Department: " . $row['DESCR'] . "<br />";
+            //echo "Department: " . $row['DESCR'] . "<br />";
 
             if ($result < 1) {
                 //Update newly created user's information with their Active Directory Info
@@ -124,8 +124,9 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching = true, $i
     $echo = "";
 
     while ($row = $result->fetch_assoc()) {
-        $rowCount++;
+        
         if (!$row['isLDAP'] || !isset($_POST['fullTime'])) {
+            $rowCount++;
             if ($isSearching) {
                 $echo .= '<div align="center"><table width="400"><tr><td>';
                 if ($isSelect)
@@ -246,11 +247,17 @@ function displayUserLookup($config) {
         $isReserve = isset($_POST['reserve']) ? true : false;
         $searchFullTime = isset($_POST['searchFullTime']) ? $_POST['searchFullTime'] : true;
         $searchReserves = isset($_POST['searchReserves']) ? $_POST['searchReserves'] : true;
-        if(strcmp($searchReserves,"false")== 0 )
+        //save the state of these values from the search results
+        if(strcmp($searchReserves,"false")== 0 ){
+            echo '<input type="hidden" name="searchReserves" value="false" />';   
             $searchReserves = false;
-        if(strcmp($searchFullTime,"false") == 0)
+        }
+        if(strcmp($searchFullTime,"false") == 0){
+            echo '<input type="hidden" name="searchFullTime" value="false" />';   
             $searchFullTime = false;
-
+        }
+        echo '<h3>Search for Employees by Last Name: </h3>';
+        //show check boxes and keep checked box checked after results return
         if($searchFullTime){
             echo '<input type="checkbox" name="fullTime" ';
             if ($isFullTime)
@@ -263,24 +270,22 @@ function displayUserLookup($config) {
                 echo 'CHECKED';
             echo ' />Reserves';
         }
-
+       
         echo '<br /><input type="text" name="searchUser" value="' . $searchUser . '" />
-            <input type="submit" name="findBtn" value="Search" /><br /><br />';
+            <input type="submit" name="findBtn" value="Search" /><br />';
+        echo '(Enter all or part of an employee\'s last name)</br></br>'; 
         //echo '</form>';
 
         if (isset($_POST['findBtn']) && !empty($searchUser)) {
             //echo '<form method="POST">';
             $rowCount = 0;
-            if (!empty($searchUser) && $isFullTime)
-                $rowCount = selectUserSearch($config, $searchUser, true);
-            if ($isReserve)
-                $rowCount2 = searchReserves($config, $searchUser, $rowCount);
-            else
-                $rowCount2 = $rowCount;
-            $rowCount3 = searchDatabase($config, $searchUser, $rowCount2);
-            $totalRowsFound = $rowCount + $rowCount2 + $rowCount3;
-
-            echo '<input type="hidden" name="totalRows" value="' . $totalRowsFound . '" />';
+            $rowCount = searchDatabase($config, $searchUser, $rowCount);
+            if (!empty($searchUser) && $isFullTime) 
+                $rowCount += selectUserSearch($config, $searchUser, $rowCount, true);
+             if ($isReserve)
+                $rowCount += searchReserves($config, $searchUser, $rowCount);
+            
+            echo '<input type="hidden" name="totalRows" value="' . $rowCount . '" />';
             echo '</form>';
         }//end lookup button pressed     
     }//end search or lookup button pressed

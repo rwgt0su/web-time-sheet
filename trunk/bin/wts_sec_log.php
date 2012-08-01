@@ -163,9 +163,13 @@ function showSecLog($config, $dateSelect, $secLogID){
         }
     }
     else{
+        $showAll = isset($_POST['showAll']) ? true : false;
        $echo = '<table><tr><td></td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
-            <td>City/Twp</td><td>Contact#</td><td>Shift Start</td><td>Shift End</td></tr>';
-       $showAll = isset($_POST['showAll']) ? true : false;
+            <td>City/Twp</td><td>Contact#</td><td>Shift Start</td><td>Shift End</td>';
+       if($showAll)
+           $echo .= '<td>Log Off</td>';
+       $echo .= '</tr>';
+       
         $i=0;
         if($showAll)
             $echo .= '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
@@ -183,8 +187,10 @@ function showSecLog($config, $dateSelect, $secLogID){
                         <td>'.$row['CITY'].'</td>
                         <td>'.$row['PHONE'].'</td>
                         <td>'.$row['SHIFTSTART'].'</td>
-                        <td>'.$row['SHIFTEND'].'</td>
-                        </tr>';
+                        <td>'.$row['SHIFTEND'].'</td>';
+                        if($showAll)
+                            $echo .= '<td>'.$row['TIMEOUT'].'</td>';
+                        $echo .= '</tr>';
                 $i++;
             }
         } 

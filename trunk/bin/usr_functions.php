@@ -277,6 +277,7 @@ function displayUpdateProfile($config){
         }//end for
     }//end If Nothing passed
     
+    
     $mysqli = $config->mysqli;   
     if(isset($_POST['updateBtn'])){
         $fname = isset($_POST['fname']) ? $mysqli->real_escape_string( strtoupper($_POST['fname']) ) : false;
@@ -328,21 +329,13 @@ function displayUpdateProfile($config){
                 `GRADE` = '".$rankID."',
                 `DIVISIONID` = '".$divisionID."',
                 `SUPV` = '".$supvID."',
-                `ASSIGN` = '".$assignID."',
-                `TIS` = '".Date('Y-m-d', strtotime($hireDate))."',    
-                `RADIO` = '".$radioID."',
-                ADDRESS = '".$address."',
-                HOMEPH = '".$hphone."',
-                CELLPH = '".$cphone."',
-                WORKPH = '".$wphone."',
-                DOB = '".Date('Y-m-d', strtotime($dob))."',
-                EMERGCON = '".$emergency."',
+                `ASSIGN` = '".$assignID."',                                                           
                 AUDITID = '".$_SESSION['userIDnum']."',
                 AUDIT_TIME = NOW(),
                 AUDIT_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."')
                 WHERE IDNUM = '".$userID."'";
         }
-            popUpMessage($myq); //DEBUG
+            //popUpMessage($myq); //DEBUG
         //Perform SQL Query
        
         $result = $mysqli->query($myq);
@@ -385,11 +378,17 @@ function displayUpdateProfile($config){
         $dob = $resultAssoc['DOB'];
         $emergency = $resultAssoc['EMERGCON'];
         
-    }
+    
     $username = strtoupper($_SESSION['userName']);
     ?>
         <form name="update" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
-            <input type="hidden" name="formName" value="updateProfile" />
+        <input type="hidden" name="formName" value="updateProfile" />
+        <?php 
+        //how does this double overloaded call work!!!!
+        $fromVerify = strcmp(isset($_POST['formName']) ? $_POST['formName'] : false , "userVerify") == 0 ? true : false;
+        if($fromVerify)
+            echo '<input type="button" name="backToVerify" value="Back To Users To Verify List" onClick="this.form.action='."'?userVerify=true'".';this.form.submit()" />';
+        ?>
         </div><div align="center" class="login">
             <table>
             <?php if ($_SESSION['admin'] >= 50) { 
@@ -433,7 +432,7 @@ function displayUpdateProfile($config){
                 }
                   else  {  ?>                         
             <h3>Username: <?php echo $username; ?></h3>
-            <input type="hidden" name="userID" value="<?php echo $_SESSION['userIDnum']; ?>" />
+            <input type="hidden" name="userID" value="<?php echo $foundUserID; ?>" />
             <?php } ?>
                 
                     <tr><td>First Name: </td><td><input name="fname" type="text" <?php if(!$fname) showInputBoxError(); else echo 'value="'.$fname.'"'; ?> /></td></tr>
@@ -458,6 +457,7 @@ function displayUpdateProfile($config){
                         <?php
                     }
                     
+                    if($config->adminLvl >= 50){
                     ?>
                     <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", "date_1", $hireDate, $required=true); ?></td></tr>
                     <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
@@ -466,13 +466,23 @@ function displayUpdateProfile($config){
                     <tr><td>Cell Phone: </td><td><input name="cphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$cphone.'"'; ?> /></td></tr>
                     <tr><td>Work Phone: </td><td><input name="wphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$wphone.'"'; ?> /></td></tr>
                     <tr><td>Date of Birth: </td><td><?php displayDateSelect("dob", "date_2", $dob, $required=true); ?></td></tr>
-                    <script type="text/javascript">
-                    $('.datepicker').datepicker( "option", "yearRange", "2000:2010" );
-                    </script>
+                   
                     <tr><td>Emergency Contact: </td><td><input name="emergency" type="text" <?php if(!$emergency) showInputBoxError(); else echo 'value="'.$emergency.'"'; ?> /></td></tr>
                     
                     <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
-                    <?php 
+                    <?php
+                    }
+                    else{
+                      ?><tr><td>Hire Date: </td><td><?php echo $hireDate; ?></td></tr>
+                    <tr><td>Radio Number: </td><td> <?php echo $radioID; ?> </td></tr>
+                    <tr><td>Address: </td><td> <?php echo $address; ?> </td></tr>
+                    <tr><td>Home Phone: </td><td> <?php echo $hphone; ?> </td></tr>
+                    <tr><td>Cell Phone: </td><td> <?php echo $cphone; ?> </td></tr>
+                    <tr><td>Work Phone: </td><td> <?php echo $wphone; ?> </td></tr>
+                    <tr><td>Date of Birth: </td><td><?php echo $dob; ?></td></tr>
+                    
+                    <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr>  
+                    <?php }
                     /* this makes no sense, what is this supposed to do??
                     if(isset($_POST['updateBtn'])){
                       echo '<tr><td></td><td>'. $result .'</td></tr>';  
@@ -484,6 +494,7 @@ function displayUpdateProfile($config){
         <div class="divider"></div>
         
     <?php
+    }
 }
 function displayRanks($selectName, $selected=false){
    $mysqli = connectToSQL();
@@ -735,7 +746,7 @@ function displayUserVerify($config){
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     echo '<h3>Verify Users</h3>';
-    echo '<form name="userVerify" method="POST">';
+    echo '<form name="userVerify" method="POST"><input type="hidden" name="formName" value="userVerify" />';
     
     if($config->adminLvl >= 50){
         $i=0;
