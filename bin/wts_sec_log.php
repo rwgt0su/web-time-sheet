@@ -51,7 +51,7 @@ function displaySecondaryLog($config){
             }
             if(!empty($secLogID))
                 showSecLogDetails($config, $secLogID, true);
-            else if(!$addBtn && !$showAll && !$changeDateBtn)
+            else if(!$addBtn && !$showAll && !$showNormal && !$changeDateBtn)
                 echo 'Error getting Reference Number!<br />';
         }
         if($goBtn){
@@ -141,7 +141,7 @@ function showSecLog($config, $dateSelect, $secLogID){
             <td>Supervisor</td><td>Sign Off</td></tr>';
 
         while($row = $result->fetch_assoc()) {
-            if(strcmp($row['TIMEOUT'], "00:00:00") == 0 || $showAll){
+            if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll){
                 $echo .= '<tr><td>
                     <input type="radio" name="secLogRadio'.$i.'" onclick="this.form.submit();" /></td>
                     <td><input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />'.$row['DEPUTYID'].'</td>
@@ -165,10 +165,14 @@ function showSecLog($config, $dateSelect, $secLogID){
     else{
        $echo = '<table><tr><td></td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
             <td>City/Twp</td><td>Contact#</td><td>Shift Start</td><td>Shift End</td></tr>';
-       $i=0;
-       
+       $showAll = isset($_POST['showAll']) ? true : false;
+        $i=0;
+        if($showAll)
+            $echo .= '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
+        else
+            $echo .= '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
         while($row = $result->fetch_assoc()) {
-            if(strcmp($row['TIMEOUT'], "00:00:00") != 0 ){
+            if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll ){
                 $echo .= '<tr><td>
                     <input type="radio" name="secLogRadio'.$i.'" onclick="this.form.submit();" /></td>
                     <td><input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />'.$row['DEPUTYID'].'</td>
@@ -206,11 +210,11 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $address = isset($_POST['address']) ? $_POST['address'] : '';
         $city = isset($_POST['city']) ? $_POST['city'] : '';
         $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
-        $shiftStart1 = isset($_POST['shiftStart1']) ? $_POST['shiftStart1'] : '';
-        $shiftStart2 = isset($_POST['shiftStart2']) ? $_POST['shiftStart2'] : '';
+        $shiftStart1 = !empty($_POST['shiftStart1']) ? $_POST['shiftStart1'] : '00';
+        $shiftStart2 = !empty($_POST['shiftStart2']) ? $_POST['shiftStart2'] : '00';
         $shiftStart = $shiftStart1.$shiftStart2."00";
-        $shiftEnd1 = isset($_POST['shiftEnd1']) ? $_POST['shiftEnd1'] : '';
-        $shiftEnd2 = isset($_POST['shiftEnd2']) ? $_POST['shiftEnd2'] : '';
+        $shiftEnd1 = !empty($_POST['shiftEnd1']) ? $_POST['shiftEnd1'] : '00';
+        $shiftEnd2 = !empty($_POST['shiftEnd2']) ? $_POST['shiftEnd2'] : '00';
         $shiftEnd = $shiftEnd1.$shiftEnd2."00";
         $dress = isset($_POST['dress']) ? $_POST['dress'] : '';
         $isReserve = isset($_POST['isReserve']) ? '1' : '0';
@@ -285,7 +289,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     
     if($isEditing){
         $mysqli = $config->mysqli;
-        $myq = "SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYID', S.RADIO, LOCATION, S.CITY, PHONE,
+        $myq = "SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', S.RADIO, LOCATION, S.CITY, PHONE,
                     SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
                 FROM SECLOG S
                 JOIN EMPLOYEE AS SEC ON SEC.IDNUM=S.DEPUTYID
@@ -302,7 +306,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $row = $result->fetch_assoc();
         if($config->adminLvl >= 25){
             echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
-                Deputy: <input type="text" name="deputy" value="'.$row['DEPUTYID'].'" /><br/>
+                Deputy: '.$row['DEPUTYNAME'].'<br/>
                 Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" /><br/>
                 Site Name or Address: <input type="text" name="address" value="'.$row['LOCATION'].'" /><br/>
                 City/Twp: <input type="text" name="city" value="'.$row['CITY'].'" /><br/>
@@ -339,7 +343,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         }
         else{
             echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
-                Deputy: <input type="hidden" name="deputy" value="'.$row['DEPUTYID'].'" />'.$row['DEPUTYID'].'<br/>
+                Deputy: <input type="hidden" name="deputy" value="'.$row['DEPUTYNAME'].'" />'.$row['DEPUTYNAME'].'<br/>
                 Radio#: <input type="hidden" name="radioNum" value="'.$row['RADIO'].'" />'.$row['RADIO'].'<br/>
                 Site Name or Address: <input type="hidden" name="address" value="'.$row['LOCATION'].'" />'.$row['LOCATION'].'<br/>
                 City/Twp: <input type="hidden" name="city" value="'.$row['CITY'].'" />'.$row['CITY'].'<br/>

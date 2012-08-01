@@ -253,63 +253,109 @@ function logoutUser($message){
         unset($_SESSION['isLDAP']);
         unset($_SESSION['lastLogin']);
         
+        myAlertsLogout();
+        
 	session_destroy(); 
         
         echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
         echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
 }
 function displayUpdateProfile($config){
+    //Get pass search results
+    $foundUserFNAME = '';
+    $foundUserLNAME = '';
+    $foundUserName = '';
+    $foundUserID = $_SESSION['userIDnum'] ;
+    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : '';
+    if($totalRows > 0) {         
+        //get post info providied from search results
+        for($i=1;$i<=$totalRows;$i++){
+            if(isset($_POST['foundUser'.$i])) {
+                $foundUserID = $_POST['foundUserID'.$i];
+                break;
+            }//end if
+        }//end for
+    }//end If Nothing passed
+    
     $mysqli = $config->mysqli;   
     if(isset($_POST['updateBtn'])){
         $fname = isset($_POST['fname']) ? $mysqli->real_escape_string( strtoupper($_POST['fname']) ) : false;
         $lname = isset($_POST['lname']) ? $mysqli->real_escape_string( strtoupper($_POST['lname']) ) : false;
-        $rankID = isset($_POST['rankID']) ? $_POST['rankID'] : '';
-        $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
-        $assignID = isset($_POST['assignID']) ? $_POST['assignID'] : false;
-        $supvID = isset($_POST['supvID']) ? $_POST['supvID'] : false;
-        $hireDate = isset($_POST['hireDate']) ? $_POST['hireDate'] : false;
+        $rankID = isset($_POST['rankID']) ? $mysqli->real_escape_string($_POST['rankID']) : '';
+        $divisionID = isset($_POST['divisionID']) ? $mysqli->real_escape_string($_POST['divisionID']) : false;
+        $assignID = isset($_POST['assignID']) ? $mysqli->real_escape_string($_POST['assignID']) : false;
+        $supvID = isset($_POST['supvID']) ? $mysqli->real_escape_string($_POST['supvID']) : false;
+        $hireDate = isset($_POST['hireDate']) ? $mysqli->real_escape_string($_POST['hireDate']) : false;
         $radioID = isset($_POST['radioID']) ? $mysqli->real_escape_string($_POST['radioID']) : false;
         $munisID = isset($_POST['munisID']) ? $mysqli->real_escape_string($_POST['munisID']) : false;
-        $userID = isset($_POST['userID']) ? $_POST['userID'] : false;
-        $address = isset($_POST['address']) ? $_POST['address'] : false;
-        $phone = isset($_POST['phone']) ? $_POST['phone'] : false;
-        $dob = isset($_POST['dob']) ? $_POST['dob'] : false;
-        $emergency = isset($_POST['emergency']) ? $_POST['emergency'] : false;
+        $userID = isset($_POST['userID']) ? $mysqli->real_escape_string($_POST['userID']) : false;
+        $address = isset($_POST['address']) ? $mysqli->real_escape_string($_POST['address']) : false;
+        $hphone = isset($_POST['hphone']) ? $mysqli->real_escape_string($_POST['hphone']) : false;
+        $cphone = isset($_POST['cphone']) ? $mysqli->real_escape_string($_POST['cphone']) : false;
+        $wphone = isset($_POST['wphone']) ? $mysqli->real_escape_string($_POST['wphone']) : false;
+        $dob = isset($_POST['dob']) ? $mysqli->real_escape_string($_POST['dob']) : false;
+        $emergency = isset($_POST['emergency']) ? $mysqli->real_escape_string($_POST['emergency']) : false;
         
-        $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
-            `MUNIS` = '".$munisID."',
-            `LNAME` = '".$lname."',
-            `FNAME` = '".$fname."',
-            `GRADE` = '".$rankID."',
-            `DIVISIONID` = '".$divisionID."',
-            `SUPV` = '".$supvID."',
-            `ASSIGN` = '".$assignID."',
-            `TIS` = '".Date('Y-m-d', strtotime($hireDate))."',    
-            `RADIO` = '".$radioID."',
-             ADDRESS = '".$address."',
-             PHONE = '".$phone."',
-             DOB = '".Date('Y-m-d', strtotime($dob))."',
-             EMERGCON = '".$emergency."',
-            ADMINLVL = ".$config->adminLvl." 
-            WHERE ID = '".$userID."'";
-            echo $myq; //DEBUG
+        //popUpMessage("Hit Update");
+        if($config->adminLvl >= 50){
+            $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+                `MUNIS` = '".$munisID."',
+                `LNAME` = '".$lname."',
+                `FNAME` = '".$fname."',
+                `GRADE` = '".$rankID."',
+                `DIVISIONID` = '".$divisionID."',
+                `SUPV` = '".$supvID."',
+                `ASSIGN` = '".$assignID."',
+                `TIS` = '".Date('Y-m-d', strtotime($hireDate))."',    
+                `RADIO` = '".$radioID."',
+                ADDRESS = '".$address."',
+                HOMEPH = '".$hphone."',
+                CELLPH = '".$cphone."',
+                WORKPH = '".$wphone."',
+                DOB = '".Date('Y-m-d', strtotime($dob))."',
+                EMERGCON = '".$emergency."',
+                IS_VERIFY = 1,
+                AUDITID = '".$_SESSION['userIDnum']."',
+                AUDIT_TIME = NOW(),
+                AUDIT_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."')
+                WHERE IDNUM = '".$userID."'";
+        }
+        else{
+            $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+                `MUNIS` = '".$munisID."',
+                `LNAME` = '".$lname."',
+                `FNAME` = '".$fname."',
+                `GRADE` = '".$rankID."',
+                `DIVISIONID` = '".$divisionID."',
+                `SUPV` = '".$supvID."',
+                `ASSIGN` = '".$assignID."',
+                `TIS` = '".Date('Y-m-d', strtotime($hireDate))."',    
+                `RADIO` = '".$radioID."',
+                ADDRESS = '".$address."',
+                HOMEPH = '".$hphone."',
+                CELLPH = '".$cphone."',
+                WORKPH = '".$wphone."',
+                DOB = '".Date('Y-m-d', strtotime($dob))."',
+                EMERGCON = '".$emergency."',
+                WHERE IDNUM = '".$userID."'";
+        }
+            //popUpMessage($myq); //DEBUG
         //Perform SQL Query
+       
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
         if (!SQLerrorCatch($mysqli, $result)) 
-            $result = "Successfully Updated Profile";
+            echo "Successfully Updated Profile";
+        else{
+            echo "Did not Update";
+        }
     }   
     else{
         //Get stored information (first view)
-        $sql_user = strtoupper($mysqli->real_escape_string($_SESSION['userName']));
-        if(isset($_GET['userIDnum'])){
-            $myq = "SELECT * FROM EMPLOYEE WHERE IDNUM=".$_GET['userIDnum'];
-            
-        }
-        else
-            $myq = "SELECT * FROM EMPLOYEE WHERE ID='". $sql_user . "'";
-        
+        $sql_user = strtoupper($mysqli->real_escape_string($foundUserID));
+        $myq = "SELECT * FROM EMPLOYEE WHERE IDNUM=".$foundUserID;
+
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
@@ -330,7 +376,9 @@ function displayUpdateProfile($config){
         $radioID = $resultAssoc['RADIO'];
         $munisID = $resultAssoc['MUNIS'];
         $address = $resultAssoc['ADDRESS'];
-        $phone = $resultAssoc['PHONE'];
+        $hphone = $resultAssoc['HOMEPH'];
+        $cphone = $resultAssoc['CELLPH'];
+        $wphone = $resultAssoc['WORKPH'];
         $dob = $resultAssoc['DOB'];
         $emergency = $resultAssoc['EMERGCON'];
         
@@ -338,33 +386,48 @@ function displayUpdateProfile($config){
     $username = strtoupper($_SESSION['userName']);
     ?>
         <form name="update" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
+            <input type="hidden" name="formName" value="updateProfile" />
         </div><div align="center" class="login">
             <table>
             <?php if ($_SESSION['admin'] >= 50) { 
-                  echo "<tr><td>User: </td>";
-                  $myq = "SELECT IDNUM, ID, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
-                  $result = $mysqli->query($myq);
-                  SQLerrorCatch($mysqli, $result);
-                  
-                  $uri =  preg_replace("/&userIDnum=.*/", "", $_SERVER['REQUEST_URI']);
-                  ?> <td> <select name="userIDnum" onchange="window.location=<?php echo "'".$uri."'"; ?> + '&userIDnum=' + this.value"> <?php
-                  while ($row = $result->fetch_assoc()) {
-                      echo '<option value="' . $row["IDNUM"] . '"';
-                      if(isset($_GET['userIDnum'])) {
-                          if($row['IDNUM']==$_GET['userIDnum']){
-                              echo "selected";
-                              $chosenUserID = $row['ID'];
-                          }
-                      }
-                      else {
-                      if($row['ID']==$username)
-                          echo "selected";
-                      }
-                      echo ">".$row['FULLNAME']."</option>";
-                  }
-                 echo "</select></tr>";
-                 echo '<input type="hidden" name="userID" value="'.$chosenUserID.'" />';
-                 }
+                
+                  echo "<tr><td>User: </td><td>";
+//                  $myq = "SELECT IDNUM, ID, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
+//                  $result = $mysqli->query($myq);
+//                  SQLerrorCatch($mysqli, $result);
+//                  
+//                  $uri =  preg_replace("/&userIDnum=.*/", "", $_SERVER['REQUEST_URI']);
+//                  echo<td> <select name="userIDnum" onchange="window.location=<?php echo "'".$uri."'";  + '&userIDnum=' + this.value"> <?php
+//                  while ($row = $result->fetch_assoc()) {
+//                      echo '<option value="' . $row["IDNUM"] . '"';
+//                      if(isset($_GET['userIDnum'])) {
+//                          if($row['IDNUM']==$_GET['userIDnum']){
+//                              echo "selected";
+//                              $chosenUserID = $row['ID'];
+//                          }
+//                      }
+//                      else {
+//                      if($row['ID']==$username)
+//                          echo "selected";
+//                      }
+//                      echo ">".$row['FULLNAME']."</option>";
+//                  }
+//                 echo "</select></tr>";
+                if($totalRows > 0) { 
+                    echo $lname. ', '. $fname. ' ';
+                    echo '<input type="hidden" name="userID" value="'.$foundUserID.'" />';
+                    echo '<input type="hidden" name="totalRows" value="1" />';
+                    echo '<input type="hidden" name="foundUserName1" value="'.$foundUserID.'" />';
+                }
+                else{
+                    echo $_SESSION['userName']."  ";
+                    echo '<input type="hidden" name="userID" value="'.$_SESSION['userIDnum'].'" />';
+                }
+                displayUserLookup($config);
+                echo '<input type="hidden" name="searchReserves" value="false" />';
+                echo '</td></tr>';
+                 
+                }
                   else  {  ?>                         
             <h3>Username: <?php echo $username; ?></h3>
             <input type="hidden" name="userID" value="<?php echo $username; ?>" />
@@ -377,7 +440,7 @@ function displayUpdateProfile($config){
                     echo "<tr><td>Supervisor:</td><td>"; displaySUPVDropDown("supvID", $supvID); echo "</td></tr>";
                     
                     //Payrate dependent
-                    if($config->adminLvl >= 75){
+                    if($config->adminLvl >= 50){
                         echo "<tr><td>Rank:</td><td>"; displayRanks("rankID", $rankID); echo "</td></tr>";
                         echo "<tr><td>Assigned Shift:</td><td>"; displayAssign("assignID", $assignID); echo "</td></tr>";
                         ?>
@@ -396,7 +459,9 @@ function displayUpdateProfile($config){
                     <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", "date_1", $hireDate, $required=true); ?></td></tr>
                     <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
                     <tr><td>Address: </td><td><input name="address" type="text" <?php if(!$address) showInputBoxError(); else echo 'value="'.$address.'"'; ?> /></td></tr>
-                    <tr><td>Phone: </td><td><input name="phone" type="text" <?php if(!$phone) showInputBoxError(); else echo 'value="'.$phone.'"'; ?> /></td></tr>
+                    <tr><td>Home Phone: </td><td><input name="hphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$hphone.'"'; ?> /></td></tr>
+                    <tr><td>Cell Phone: </td><td><input name="cphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$cphone.'"'; ?> /></td></tr>
+                    <tr><td>Work Phone: </td><td><input name="wphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$wphone.'"'; ?> /></td></tr>
                     <tr><td>Date of Birth: </td><td><?php displayDateSelect("dob", "date_2", $dob, $required=true); ?></td></tr>
                     <script type="text/javascript">
                     $('.datepicker').datepicker( "option", "yearRange", "2000:2010" );
@@ -543,6 +608,7 @@ function displayLogout(){
                 echo "Last Login: " .$_SESSION['lastLogin'];
 		echo '<br /><a href="?logout=true">Log Out </a><br /><br />';
         echo "</div>";
+        
 }
 function displayLogin($config){
     if (!isValidUser()){
@@ -654,6 +720,47 @@ function getUserID($config, $userName){
     $row = $result->fetch_assoc();
     
     return $row['IDNUM'];
+}
+function displayUserVerify($config){
+    $mysqli = $config->mysqli;
+    $myq = "SELECT E.IDNUM, E.ID, E.LNAME, E.FNAME, E.RADIO, E.SUPV, E.HOMEPH, E.CELLPH, E.WORKPH, E.DOB, E.EMERGCON, D.DESCR
+        FROM `EMPLOYEE` E
+        LEFT JOIN DIVISION AS D USING (DIVISIONID)
+        LEFT JOIN EMPLOYEE AS SUP ON E.IDNUM=SUP.IDNUM
+        WHERE E.IS_VERIFY =  0
+        ORDER BY E.LNAME";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    echo '<h3>Verify Users</h3>';
+    echo '<form name="userVerify" method="POST">';
+    
+    if($config->adminLvl >= 50){
+        $i=0;
+        $echo = '<table style="white-space: nowrap"><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Division</td><td>Supervisor</td><td>Home Phone</td>
+            <td>Cell Phone</td><td>Work Phone</td><td>Date Of Birth</td><td>Emergency Contact</td></tr>';
+
+        while($row = $result->fetch_assoc()) {
+            $echo .= '<tr><td>
+                <input type="hidden" name="foundUserID'.$i.'" value= "'.$row['IDNUM'].'" />
+                <input type="radio" name="foundUser'.$i.'" onClick="this.form.action='."'?updateProfile=true'".';this.form.submit()" /></td>
+                <td>'.$row['LNAME'].", ".$row['FNAME'].'</td>
+                <td>'.$row['RADIO'].'</td>
+                <td>'.$row['DESCR'].'</td>
+                <td>'.$row['SUPV'].'</td>
+                <td>'.$row['HOMEPH'].'</td>
+                <td>'.$row['CELLPH'].'</td>
+                <td>'.$row['WORKPH'].'</td>
+                <td>'.$row['DOB'].'</td>
+                <td>'.$row['EMERGCON'].'</td>
+                </tr>';
+            $i++;
+            
+        }
+        $echo .= '</table></form>';
+        echo '<input type="hidden" name="totalRows" value="'.$i.'" />';
+        echo $echo;
+    }
+    
 }
 
 ?>

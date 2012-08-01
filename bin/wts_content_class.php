@@ -18,6 +18,7 @@ Class wts_content {
     public $isSecLog;
     public $isUserLookup;
     public $isResManage;
+    public $isUserVerify;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -39,6 +40,7 @@ Class wts_content {
         $this->isUserLookup = isset($_GET['userLookup']) ? $_GET['userLookup'] : false;
         $this->isSecApprove = isset($_GET['secApprove']) ? $_GET['secApprove'] : false;
         $this->isResManage = isset($_GET['resManage']) ? $_GET['resManage'] : false;
+        $this->isUserVerify = isset($_GET['userVerify']) ? $_GET['userVerify'] : false;
         
         
         if(empty($_GET)){
