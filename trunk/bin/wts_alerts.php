@@ -19,10 +19,10 @@ function myAlerts($config){
             SQLerrorCatch($mysqli, $result);
 
             if($result->num_rows > 0){
-                popUpMessage('<form name="verifyAlert" method="POST" action="?userVerify=true">
+                popUpMessage('<div align="center"><form name="verifyAlert" method="POST" action="?userVerify=true">
                     You Have New Users to Verify
-                    <input type="submit" name="verifyUserAlertBtn" value="Go To Alert" />
-                    </form>');
+                    <input type="submit" name="verifyUserAlertBtn" value="Go To and Dismiss Alert" />
+                    </form></div>');
             }
         }
         else{

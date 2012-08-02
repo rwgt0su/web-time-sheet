@@ -262,12 +262,13 @@ function logoutUser($message){
 }
 function displayUpdateProfile($config){
     //Get pass search results
+    //var_dump($_POST); //DEBUG
     $foundUserFNAME = '';
     $foundUserLNAME = '';
     $foundUserName = '';
     $foundUserID = $_SESSION['userIDnum'] ;
-    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : '';
-    if($totalRows > 0) {         
+    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 'none found';
+    if($totalRows > 0) {
         //get post info providied from search results
         for($i=1;$i<=$totalRows;$i++){
             if(isset($_POST['foundUser'.$i])) {
@@ -391,30 +392,8 @@ function displayUpdateProfile($config){
         ?>
         </div><div align="center" class="login">
             <table>
-            <?php if ($_SESSION['admin'] >= 50) { 
-                
+        <?php if ($_SESSION['admin'] >= 50) { 
                   echo "<tr><td>User: </td><td>";
-//                  $myq = "SELECT IDNUM, ID, CONCAT_WS(', ',LNAME,FNAME) FULLNAME FROM EMPLOYEE ORDER BY LNAME";
-//                  $result = $mysqli->query($myq);
-//                  SQLerrorCatch($mysqli, $result);
-//                  
-//                  $uri =  preg_replace("/&userIDnum=.*/", "", $_SERVER['REQUEST_URI']);
-//                  echo<td> <select name="userIDnum" onchange="window.location=<?php echo "'".$uri."'";  + '&userIDnum=' + this.value"> <?php
-//                  while ($row = $result->fetch_assoc()) {
-//                      echo '<option value="' . $row["IDNUM"] . '"';
-//                      if(isset($_GET['userIDnum'])) {
-//                          if($row['IDNUM']==$_GET['userIDnum']){
-//                              echo "selected";
-//                              $chosenUserID = $row['ID'];
-//                          }
-//                      }
-//                      else {
-//                      if($row['ID']==$username)
-//                          echo "selected";
-//                      }
-//                      echo ">".$row['FULLNAME']."</option>";
-//                  }
-//                 echo "</select></tr>";
                 if($totalRows > 0) { 
                     echo $lname. ', '. $fname. ' ';
                     echo '<input type="hidden" name="userID" value="'.$foundUserID.'" />';
@@ -483,10 +462,6 @@ function displayUpdateProfile($config){
                     
                     <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr>  
                     <?php }
-                    /* this makes no sense, what is this supposed to do??
-                    if(isset($_POST['updateBtn'])){
-                      echo '<tr><td></td><td>'. $result .'</td></tr>';  
-                    }*/
                     ?>
                 </table>
             </div><div class="clear"></div>
@@ -594,7 +569,7 @@ function displayDateSelect($inputName, $id, $selected = false, $required = false
             });
         });
     </script>
-    <input name="<?php echo $inputName ?>" type="text" class="datepicker" <?php if($today) echo 'value="'. date('m/d/Y', strtotime('today')).'"'; ?>" id="<?php echo $id; ?>" <?php if(!$selected){ if($required) showInputBoxError (); } else echo 'value="'.$selected.'"'; ?> />
+    <input name="<?php echo $inputName ?>" type="text" class="datepicker" <?php if($today) echo 'value="'. date('m/d/Y', strtotime('today')).'"'; ?> id="<?php echo $id; ?>" <?php if(!$selected){ if($required) showInputBoxError (); } else echo 'value="'.$selected.'"'; ?> />
     <?php
 }
 function delUser($user){
@@ -745,18 +720,35 @@ function displayUserVerify($config){
         ORDER BY E.LNAME";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
-    echo '<h3>Verify Users</h3>';
-    echo '<form name="userVerify" method="POST"><input type="hidden" name="formName" value="userVerify" />';
     
     if($config->adminLvl >= 50){
-        $i=0;
-        $echo = '<table style="white-space: nowrap"><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Division</td><td>Supervisor</td><td>Home Phone</td>
-            <td>Cell Phone</td><td>Work Phone</td><td>Date Of Birth</td><td>Emergency Contact</td></tr>';
+        $i=1;
+        $echo = '';
+        echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
+        <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
+            <h3>Verify Users</h3>
+            <form name="userVerify" method="POST">
+            <div id="wrapper">';
+            
+        $echo = '<table class="sortable" id="sorter">
+            <input type="hidden" name="formName" value="userVerify" />
+                <tr>
+                    <th>Edit</th>
+                    <th>Deputy</th>
+                    <th>Radio#</th>
+                    <th>Division</th>
+                    <th>Supervisor</th>
+                    <th>Home Phone</th>
+                    <th>Cell Phone</th>
+                    <th>Work Phone</th>
+                    <th>Date Of Birth</th>
+                    <th>Emergency Contact</th>
+                </tr>';
 
         while($row = $result->fetch_assoc()) {
             $echo .= '<tr><td>
                 <input type="hidden" name="foundUserID'.$i.'" value= "'.$row['IDNUM'].'" />
-                <input type="radio" name="foundUser'.$i.'" onClick="this.form.action='."'?updateProfile=true'".';this.form.submit()" /></td>
+                '.$i.'<input type="radio" name="foundUser'.$i.'" onClick="this.form.action='."'?updateProfile=true'".';this.form.submit()" /></td>
                 <td>'.$row['LNAME'].", ".$row['FNAME'].'</td>
                 <td>'.$row['RADIO'].'</td>
                 <td>'.$row['DESCR'].'</td>
@@ -770,11 +762,19 @@ function displayUserVerify($config){
             $i++;
             
         }
-        $echo .= '</table></form>';
-        echo '<input type="hidden" name="totalRows" value="'.$i.'" />';
+        $echo = '<input type="hidden" name="totalRows" value="'.$i.'" />'.$echo;
+        $echo .= '</table></form></div>
+            <script type="text/javascript">
+                var sorter=new table.sorter("sorter");
+                sorter.init("sorter",1);
+            </script>';
+       
         echo $echo;
+    }
+    else{
+        echo 'Unauthorized Access';
+
     }
     
 }
-
 ?>
