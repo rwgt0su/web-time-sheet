@@ -46,7 +46,7 @@ function displaySecondaryLog($config){
         }
         if(isset($_POST['editRows'])){
             for ($i=0; $i <= $editSelect; $i++){
-                if(isset($_POST['secLogRadio'.$i]))
+                if(isset($_POST['secLogID'.$i]))
                     $secLogID = $_POST['secLogID'.$i];
             }
             if(!empty($secLogID))
@@ -128,78 +128,98 @@ function showSecLog($config, $dateSelect, $secLogID){
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $echo = '';
+    $x=0;
     if($config->adminLvl >= 25){
         //resultTable($mysqli, $result, 'false');
         $showAll = isset($_POST['showAll']) ? true : false;
-        $i=0;
         if($showAll)
-            $echo .= '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
+            echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
         else
-            $echo .= '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
-        $echo .= '<table><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
-            <td>City/Twp</td><td>Shift Start</td><td>Shift End</td><td>Dress</td><td>Log Off</td><td>C/Deputy</td>
-            <td>Supervisor</td><td>Sign Off</td></tr>';
+            echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
+        $theTable = array(array());
+        $theTable[$x][0] = "Edit";
+        $theTable[$x][1] = "Deputy";
+        $theTable[$x][2] = "Radio#";
+        $theTable[$x][3] = "Log In";
+        $theTable[$x][4] = "C/Deputy";
+        $theTable[$x][5] = "Site Name/Address";
+        $theTable[$x][6] = "City/Twp";
+        $theTable[$x][7] = "Contact#";
+        $theTable[$x][8] = "Shift Start";
+        $theTable[$x][9] = "Shift End";
+        $theTable[$x][10] = "Dress";
+        $theTable[$x][11] = "Log Off";
+        $theTable[$x][12] = "C/Deputy";
+        $theTable[$x][13] = "Supervisor";
+        $theTable[$x][14] = "Sign Off";
 
         while($row = $result->fetch_assoc()) {
             if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll){
-                $echo .= '<tr><td>
-                    <input type="radio" name="secLogRadio'.$i.'" onclick="this.form.submit();" /></td>
-                    <td><input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />'.$row['DEPUTYID'].'</td>
-                    <td>'.$row['RADIO'].'</td>
-                    <td>'.$row['TIMEIN'].'</td>
-                    <td>'.$row['AUDIT_IN_ID'].'</td>
-                    <td>'.$row['LOCATION'].'</td>
-                    <td>'.$row['CITY'].'</td>
-                    <td>'.$row['SHIFTSTART'].'</td>
-                    <td>'.$row['SHIFTEND'].'</td>
-                    <td>'.$row['DRESS'].'</td>
-                    <td>'.$row['TIMEOUT'].'</td>
-                    <td>'.$row['AUDIT_OUT_ID'].'</td>
-                    <td>'.$row['SUP_ID'].'</td>
-                    <td>'.$row['SUP_TIME'].'</td>
-                    </tr>';
-                $i++;
+                $x++;
+                $theTable[$x][0] = '<input type="button" value="Edit/View" name="secLogRadio'.$x.'" onclick="this.form.submit();" />
+                    <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
+                $theTable[$x][1] = $row['DEPUTYID'];
+                $theTable[$x][2] = $row['RADIO'];
+                $theTable[$x][3] = $row['TIMEIN'];
+                $theTable[$x][4] =$row['AUDIT_IN_ID'];
+                $theTable[$x][5] =$row['LOCATION'];
+                $theTable[$x][6] =$row['CITY'];
+                $theTable[$x][7] =$row['PHONE'];
+                $theTable[$x][8] =$row['SHIFTSTART'];
+                $theTable[$x][9] =$row['SHIFTEND'];
+                $theTable[$x][10] =$row['DRESS'];
+                $theTable[$x][11] =$row['TIMEOUT'];
+                $theTable[$x][12] =$row['AUDIT_OUT_ID'];
+                $theTable[$x][13] =$row['SUP_ID'];
+                $theTable[$x][14] =$row['SUP_TIME'];
+                
             }
         }
     }
     else{
-        $showAll = isset($_POST['showAll']) ? true : false;
-       $echo = '<table><tr><td></td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
-            <td>City/Twp</td><td>Contact#</td><td>Shift Start</td><td>Shift End</td>';
+       $showAll = isset($_POST['showAll']) ? true : false;
+       $theTable = array(array());
+        $theTable[$x][0] = "Edit";
+        $theTable[$x][1] = "Deputy";
+        $theTable[$x][2] = "Radio#";
+        $theTable[$x][3] = "Log In";
+        $theTable[$x][4] = "C/Deputy";
+        $theTable[$x][5] = "Site Name/Address";
+        $theTable[$x][6] = "City/Twp";
+        $theTable[$x][7] = "Contact#";
+        $theTable[$x][8] = "Shift Start";
+        $theTable[$x][9] = "Shift End";
+
        if($showAll)
            $echo .= '<td>Log Off</td>';
        $echo .= '</tr>';
-       
-        $i=0;
         if($showAll)
             $echo .= '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
         else
             $echo .= '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
         while($row = $result->fetch_assoc()) {
             if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll ){
-                $echo .= '<tr><td>
-                    <input type="radio" name="secLogRadio'.$i.'" onclick="this.form.submit();" /></td>
-                    <td><input type="hidden" name="secLogID'.$i.'" value="'.$row['IDNUM'].'" />'.$row['DEPUTYID'].'</td>
-                        <td>'.$row['RADIO'].'</td>
-                        <td>'.$row['TIMEIN'].'</td>
-                        <td>'.$row['AUDIT_IN_ID'].'</td>
-                        <td>'.$row['LOCATION'].'</td>
-                        <td>'.$row['CITY'].'</td>
-                        <td>'.$row['PHONE'].'</td>
-                        <td>'.$row['SHIFTSTART'].'</td>
-                        <td>'.$row['SHIFTEND'].'</td>';
-                        if($showAll)
-                            $echo .= '<td>'.$row['TIMEOUT'].'</td>';
-                        $echo .= '</tr>';
-                $i++;
+                $x++;
+                $theTable[$x][0] = '<input type="button" value="View" name="secLogRadio'.$x.'" onclick="this.form.submit();" />
+                    <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
+                $theTable[$x][1] = $row['DEPUTYID'];
+                $theTable[$x][2] = $row['RADIO'];
+                $theTable[$x][3] = $row['TIMEIN'];
+                $theTable[$x][4] =$row['AUDIT_IN_ID'];
+                $theTable[$x][5] =$row['LOCATION'];
+                $theTable[$x][6] =$row['CITY'];
+                $theTable[$x][7] =$row['PHONE'];
+                $theTable[$x][8] =$row['SHIFTSTART'];
+                $theTable[$x][9] =$row['SHIFTEND'];
             }
         } 
     }
-    $echo .= '<input type="hidden" name="editRows" value="'.$i.'" />';
+    showSortableTable($theTable, 1);
+    $echo .= '<input type="hidden" name="editRows" value="'.$x.'" />';
     $echo .= '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
     
     echo $echo;
-    echo '</table><input type="submit" name="addBtn" value="New Log In" />';
+    echo '<input type="submit" name="addBtn" value="New Log In" />';
     
 }
 function showSecLogDetails($config, $secLogID, $isEditing=false){
@@ -446,11 +466,12 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
 
 function approveSecLog($config) {
     ?>
-    <h2>Completed Secondary Employment Daily Logs for Approval</h2>
+    <h2>Approval for Secondary Employment Daily Logs</h2>
     <form name="secLogApprove" action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="POST"><?php
     $mysqli = $config->mysqli; 
     
     $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : false;
+    $dateSelect = isset($_POST['changeDate']) ? false : $dateSelect;
     
     if(!$dateSelect){
             echo 'Select Date: ';
@@ -458,7 +479,34 @@ function approveSecLog($config) {
             echo '<input type=submit name="goBtn" value="Go" /><br />';
     }
     else{
-                  
+        echo '<h5>Date: '.$dateSelect.' <input type="submit" name="changeDate" value="Change" />
+            <input type="hidden" name="dateSelect" value="'.$dateSelect.'" /></h5>';
+    
+        $showAll = isset($_POST['showAll']) ? true : false;
+        if($showAll)
+            echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Approvals</div>';
+        else
+            echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
+        
+        $approveBtn = isset($_POST['approveBtn']) ? $_POST['approveBtn'] : false;
+    
+        if($approveBtn) {
+            for($i=0;$i<$_POST['rowCount'];$i++) {
+                $box[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
+                if($box[$i]=='true'){
+                $secLogID = $_POST['secLogID'.$i];
+                    $myq = "UPDATE SECLOG 
+                            SET SUP_ID = '".$_SESSION['userIDnum']."',
+                                SUP_TIME = NOW(),
+                                SUP_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."') 
+                            WHERE SECLOG.IDNUM = ".$secLogID;
+                    $result = $mysqli->query($myq);
+                    SQLerrorCatch($mysqli, $result);
+                    echo 'Log #'.$secLogID.' approved.<br />';
+                }
+            }
+        }
+        
         /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
         depending on the value of SECLOG.IS_RESERVE*/
         $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
@@ -498,54 +546,69 @@ function approveSecLog($config) {
 
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
-        $echo = '<table>';
+        $theTable = array(array());
+        $x=0;
+        $theTable[$x][0] = "Approve";
+        $theTable[$x][1] = "Deputy";
+        $theTable[$x][2] = "Radio#";
+        $theTable[$x][3] = "Log In";
+        $theTable[$x][4] = "C/Deputy";
+        $theTable[$x][5] = "Site Name/Address";
+        $theTable[$x][6] = "City/Twp";
+        $theTable[$x][7] = "Contact#";
+        $theTable[$x][8] = "Shift Start";
+        $theTable[$x][9] = "Shift End";
+        $theTable[$x][10] = "Dress";
+        $theTable[$x][11] = "Log Off";
+        $theTable[$x][12] = "C/Deputy";
+        $theTable[$x][13] = "Supervisor";
+        $theTable[$x][14] = "Sign Off";
 
-        $echo = '<table><tr><td>Edit</td><td>Deputy</td><td>Radio#</td><td>Log In</td><td>C/Deputy</td><td>Site Name/Address</td>
-            <td>City/Twp</td><td>Shift Start</td><td>Shift End</td><td>Dress</td><td>Log Off</td><td>C/Deputy</td>
-            <td>Supervisor</td><td>Sign Off</td></tr>';
-        $i=0;
         while($row = $result->fetch_assoc()) {
-            $echo .= '<tr>  <td><input type="hidden" name="secIDNUM'.$i.'" value="'.$row['IDNUM'].'" />
-                                <input type="checkbox" name="secLogApproved'.$i.'" value="true" /></td>
-                            <td>'.$row['DEPUTYID'].'</td>
-                            <td>'.$row['RADIO'].'</td>
-                            <td>'.$row['TIMEIN'].'</td>
-                            <td>'.$row['AUDIT_IN_ID'].'</td>
-                            <td>'.$row['LOCATION'].'</td>
-                            <td>'.$row['CITY'].'</td>
-                            <td>'.$row['SHIFTSTART'].'</td>
-                            <td>'.$row['SHIFTEND'].'</td>
-                            <td>'.$row['DRESS'].'</td>
-                            <td>'.$row['TIMEOUT'].'</td>
-                            <td>'.$row['AUDIT_OUT_ID'].'</td>
-                            <td>'.$row['SUP_ID'].'</td>
-                            <td>'.$row['SUP_TIME'].'</td>
-                            </tr>';
-            $i++;
-        }
-        //$rowCount = $i;
-        echo $echo.'</table>';
-        echo '<input type="hidden" name="rowCount" value="'.$i.'" />';
-        ?><input type='submit' name="approveBtn" value='Approve Selected Logs'/></form><?php
-    }
-    
-    $approveBtn = isset($_POST['approveBtn']) ? $_POST['approveBtn'] : false;
-    
-    if($approveBtn) {
-        for($i=0;$i<$_POST['rowCount'];$i++) {
-            $box[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
-            if($box[$i]=='true'){
-               $secLogID = $_POST['secIDNUM'.$i];
-                $myq = "UPDATE SECLOG 
-                        SET SUP_ID = '".$_SESSION['userIDnum']."',
-                            SUP_TIME = NOW(),
-                            SUP_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."') 
-                        WHERE SECLOG.IDNUM = ".$secLogID;
-                $result = $mysqli->query($myq);
-                SQLerrorCatch($mysqli, $result);
-                echo 'Log #'.$secLogID.' approved.';
+            if(strcmp($row['SUP_TIME'],"00/00/00 0000") ==0){
+                $x++;
+                $theTable[$x][0] = '<input type="checkbox" name="secLogApproved'.$x.'" value="true" />
+                    <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />Ref: '.$x;
+                $theTable[$x][1] = $row['DEPUTYID'];
+                $theTable[$x][2] = $row['RADIO'];
+                $theTable[$x][3] = $row['TIMEIN'];
+                $theTable[$x][4] =$row['AUDIT_IN_ID'];
+                $theTable[$x][5] =$row['LOCATION'];
+                $theTable[$x][6] =$row['CITY'];
+                $theTable[$x][7] =$row['PHONE'];
+                $theTable[$x][8] =$row['SHIFTSTART'];
+                $theTable[$x][9] =$row['SHIFTEND'];
+                $theTable[$x][10] =$row['DRESS'];
+                $theTable[$x][11] =$row['TIMEOUT'];
+                $theTable[$x][12] =$row['AUDIT_OUT_ID'];
+                $theTable[$x][13] =$row['SUP_ID'];
+                $theTable[$x][14] =$row['SUP_TIME'];
+            }
+            if(strcmp($row['SUP_TIME'],"00/00/00 0000") !=0 && $showAll){
+                $x++;
+                $theTable[$x][0] = 'Approved';
+                $theTable[$x][1] = $row['DEPUTYID'];
+                $theTable[$x][2] = $row['RADIO'];
+                $theTable[$x][3] = $row['TIMEIN'];
+                $theTable[$x][4] =$row['AUDIT_IN_ID'];
+                $theTable[$x][5] =$row['LOCATION'];
+                $theTable[$x][6] =$row['CITY'];
+                $theTable[$x][7] =$row['PHONE'];
+                $theTable[$x][8] =$row['SHIFTSTART'];
+                $theTable[$x][9] =$row['SHIFTEND'];
+                $theTable[$x][10] =$row['DRESS'];
+                $theTable[$x][11] =$row['TIMEOUT'];
+                $theTable[$x][12] =$row['AUDIT_OUT_ID'];
+                $theTable[$x][13] =$row['SUP_ID'];
+                $theTable[$x][14] =$row['SUP_TIME'];
+                
             }
         }
+        showSortableTable($theTable, 1);
+
+        echo '<input type="hidden" name="rowCount" value="'.$x.'" />';
+        ?><input type='submit' name="approveBtn" value='Approve Selected Logs'/></form><?php
     }
+
 }
 ?>

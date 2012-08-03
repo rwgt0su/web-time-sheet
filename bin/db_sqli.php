@@ -27,7 +27,11 @@ function resultTable($mysqli, $result, $isEditable = true){
     
     $numOfCols = $mysqli->field_count; //get number of columns
     $isEditBtn = isset($_POST['editBtn']);
-    echo '<table border="1" ><tr>';
+    //echo '<table border="1" ><tr>';
+    echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
+        <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
+            <div id="wrapper">
+            <table class="sortable" id="sorter">';
     //fetch and write field names
     $i = 0;
     $fieldNameArray = array(); //to store original column names as in SQL
@@ -89,7 +93,12 @@ function resultTable($mysqli, $result, $isEditable = true){
        
     } //loop through records
 
-    echo '</tr></table>';
+    echo '</tr>';
+    echo '</table></div>
+            <script type="text/javascript">
+                var sorter=new table.sorter("sorter");
+                sorter.init("sorter",1);
+            </script>';
     ?>
     <form action="<?php echo $action; ?>" method="post" name="editBtn">
     <?php 
