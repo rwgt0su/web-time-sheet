@@ -3,20 +3,21 @@
 function displayReserves($config){
     $prevNum = isset($_POST['prevNum']) ? $_POST['prevNum'] : "0";
     $nextNum = isset($_POST['nextNum']) ? $_POST['nextNum'] : "25";
-    $limit = isset($_POST['limit']) ? $_POST['limit'] : "25";
+    $limit = 25;
     
-    if(isset($_POST['prev'])){
+    if(isset($_POST['prevBtn'])){
         $prevNum = $prevNum - $limit;
         $nextNum = $nextNum - $limit;
     }
-    if(isset($_POST['next'])){
+    if(isset($_POST['nextBtn'])){
         $prevNum = $prevNum + $limit;
         $nextNum = $nextNum + $limit;
     }
+    //popUpMessage('limit: '.$limit.' prevnum: '.$prevNum.' nextnum: '.$nextNum);
     
     $mysqli = connectToSQL($reserveDB = TRUE);
     if($config->adminLvl > 75)
-        $myq = "SELECT *  FROM `RESERVE` WHERE `LNAME` LIKE CONVERT(_utf8 '%' USING latin1) COLLATE latin1_swedish_ci LIMIT ".$prevNum.",  ".$nextNum;
+        $myq = "SELECT *  FROM `RESERVE` WHERE `LNAME` LIKE CONVERT(_utf8 '%' USING latin1) COLLATE latin1_swedish_ci LIMIT ".$nextNum.",  ".$limit;
     else
         $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5 AND `LNAME` LIKE CONVERT(_utf8 '%' USING latin1) COLLATE latin1_swedish_ci LIMIT 0, 50";
     $result = $mysqli->query($myq);
@@ -36,11 +37,11 @@ function displayReserves($config){
         $echo .= "</td></tr></table></div><br /><hr />";
     }//end While Loop
     
-    echo "Number of entries found in the reserve database is " . $rowCount. '<br /><br /><hr />
+    echo "Number of entries found in the reserve database is: " . $rowCount. '<br /><br /><hr />
         <form name="resMan" method="POST" action="'.$_SERVER['REQUEST_URI'].'" >';
     echo '<input type="hidden" name="prevNum" value="'.$prevNum.'" />';
     echo '<input type="hidden" name="nextNum" value="'.$nextNum.'" />';
-    echo '<select name="limit">
+    echo 'Rows To Show: <select name="limit">
         <option value="25"';
     if($limit = "25")
         echo ' SELECTED';
@@ -51,9 +52,9 @@ function displayReserves($config){
     echo '>50</option>
         </select>';
     if($prevNum > 0)
-        echo '<input type="submit" name="prev" value="Previous" />';
-    if($nextNum < $result->num_rows)
-        echo '<input type="submit" name="next" value="Next" />';
+        echo '<input type="submit" name="prevBtn" value="Previous" />';
+    if($limit = $rowCount)
+        echo '<input type="submit" name="nextBtn" value="Next" />';
     echo $echo;
     echo '</form>';
     

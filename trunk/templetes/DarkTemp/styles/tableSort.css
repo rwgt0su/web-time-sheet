@@ -13,14 +13,14 @@
     background:#444; 
     color:#fff; 
     text-align:left; 
-    white-space: nowrap;
+    white-space: normal;
     color:#ccc
 }
 .sortable td {
     padding:2px 4px 4px; 
     background:#000000; 
     border-bottom:1px solid #ccc;
-    white-space: nowrap
+    white-space: normal
 }
 .sortable .head {
     background:#444 url(../images/sort.gif) 6px center no-repeat; 

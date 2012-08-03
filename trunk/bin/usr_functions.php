@@ -722,59 +722,43 @@ function displayUserVerify($config){
     SQLerrorCatch($mysqli, $result);
     
     if($config->adminLvl >= 50){
-        $i=1;
-        $echo = '';
-        echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
-        <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
-            <h3>Verify Users</h3>
-            <form name="userVerify" method="POST">
-            <div id="wrapper">';
-            
-        $echo = '<table class="sortable" id="sorter">
-            <input type="hidden" name="formName" value="userVerify" />
-                <tr>
-                    <th>Edit</th>
-                    <th>Deputy</th>
-                    <th>Radio#</th>
-                    <th>Division</th>
-                    <th>Supervisor</th>
-                    <th>Home Phone</th>
-                    <th>Cell Phone</th>
-                    <th>Work Phone</th>
-                    <th>Date Of Birth</th>
-                    <th>Emergency Contact</th>
-                </tr>';
+        $theTable = array(array());
+        $x=0;
+        $formName = "userVerify";
+        echo '<h3>Verify Users</h3><form name="'.$formName.'" method="POST">';
+        
+        $theTable[$x][0] = "Edit";
+        $theTable[$x][1] = "Deputy";
+        $theTable[$x][2] = "Radio #";
+        $theTable[$x][3] = "Division";
+        $theTable[$x][4] = "Supervisor";
+        $theTable[$x][5] = "Home Phone";
+        $theTable[$x][6] = "Cell Phone";
+        $theTable[$x][7] = "Work Phone";
+        $theTable[$x][8] = "Date Of Birth";
+        $theTable[$x][9] = "Emergency Contact";
 
         while($row = $result->fetch_assoc()) {
-            $echo .= '<tr><td>
-                <input type="hidden" name="foundUserID'.$i.'" value= "'.$row['IDNUM'].'" />
-                '.$i.'<input type="radio" name="foundUser'.$i.'" onClick="this.form.action='."'?updateProfile=true'".';this.form.submit()" /></td>
-                <td>'.$row['LNAME'].", ".$row['FNAME'].'</td>
-                <td>'.$row['RADIO'].'</td>
-                <td>'.$row['DESCR'].'</td>
-                <td>'.$row['SUPV'].'</td>
-                <td>'.$row['HOMEPH'].'</td>
-                <td>'.$row['CELLPH'].'</td>
-                <td>'.$row['WORKPH'].'</td>
-                <td>'.$row['DOB'].'</td>
-                <td>'.$row['EMERGCON'].'</td>
-                </tr>';
-            $i++;
-            
+            $x++;
+            $theTable[$x][0] = '<input type="hidden" name="foundUserID'.$x.'" value= "'.$row['IDNUM'].'" />
+                '.$x.'<input type="radio" name="foundUser'.$x.'" onClick="this.form.action='."'?updateProfile=true'".';this.form.submit()" />';
+            $theTable[$x][1] = $row['LNAME'].", ".$row['FNAME'];
+            $theTable[$x][2] = $row['RADIO'];
+            $theTable[$x][3] = $row['DESCR'];
+            $theTable[$x][4] = $row['SUPV'];
+            $theTable[$x][5] = $row['HOMEPH'];
+            $theTable[$x][6] = $row['CELLPH'];
+            $theTable[$x][7] = $row['WORKPH'];
+            $theTable[$x][8] = $row['DOB'];
+            $theTable[$x][9] = $row['EMERGCON'];  
         }
-        $echo = '<input type="hidden" name="totalRows" value="'.$i.'" />'.$echo;
-        $echo .= '</table></form></div>
-            <script type="text/javascript">
-                var sorter=new table.sorter("sorter");
-                sorter.init("sorter",1);
-            </script>';
        
-        echo $echo;
-    }
-    else{
-        echo 'Unauthorized Access';
+        showSortableTable($theTable, 1);
+        echo '<input type="hidden" name="formName" value="'.$formName.'" /><a href="javascript:window.print()">Print</a></form>';
 
     }
-    
+    else{
+        echo 'Unauthorized Access'; 
+    }
 }
 ?>
