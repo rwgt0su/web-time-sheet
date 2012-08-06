@@ -35,8 +35,8 @@ function displaySecondaryLog($config){
         }
         if(!$dateSelect){
             echo 'Select Date: ';
-            displayDateSelect("dateSelect", "dateSel",false,false,true);
-            echo '<input type=submit name="goBtn" value="Go" /><br />'; 
+            displayDateSelect("dateSelect", "dateSel",false,false,true,true);
+            echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
             
         }
         else{
