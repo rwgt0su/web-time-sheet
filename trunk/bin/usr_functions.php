@@ -558,7 +558,7 @@ function displaySUPVDropDown($selectName, $selected = false){
 
     echo '</select>';
 }
-function displayDateSelect($inputName, $id, $selected = false, $required = false,$today=false){
+function displayDateSelect($inputName, $id, $selected = false, $required = false,$today=false,$submitForm=false){
     ?>
     <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
     <script type="text/javascript" src="bin/jQuery/js/jquery-1.7.2.min.js"></script>
@@ -568,13 +568,35 @@ function displayDateSelect($inputName, $id, $selected = false, $required = false
             // Datepicker
             $('.datepicker').datepicker({
                     inline: true,
+                    <?php
+                    if($submitForm){
+                        echo 'onSelect: function(){
+                            var _form = document.getElementById("secLog");
+                            var _goBtn = document.getElementById("goBtn");
+                            _goBtn.click();
+                            _form.submit();
+                            
+                            },';
+                    }
+                    ?>
                     changeYear: true,
                     yearRange: "-100:+100"
             });
         });
     </script>
-    <input name="<?php echo $inputName ?>" type="text" class="datepicker" <?php if($today) echo 'value="'. date('m/d/Y', strtotime('today')).'"'; ?> id="<?php echo $id; ?>" <?php if(!$selected){ if($required) showInputBoxError (); } else echo 'value="'.$selected.'"'; ?> />
-    <?php
+    <input name="<?php echo $inputName ?>" type="text" class="datepicker" <?php 
+        if($today) 
+            echo 'value="'. date('m/d/Y', strtotime('today')).'"'; 
+        ?> id="<?php echo $id; ?>" <?php 
+            if(!$selected){ 
+                if($required) 
+                    showInputBoxError(); 
+            } 
+            else 
+                echo 'value="'.$selected.'"';
+            if($submitForm)
+                echo ' onchange="submitSecLog();this.form.submit()"';
+            echo ' />';
 }
 function delUser($user){
 	$errorText = '';
