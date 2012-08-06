@@ -45,14 +45,17 @@ function displaySecondaryLog($config){
                 <input type="submit" name="changeDate" value="Change Date" /></h3>';
         }
         if(isset($_POST['editRows'])){
+            //popUpMessage($_POST['secLogRadio1']);
             for ($i=0; $i <= $editSelect; $i++){
-                if(isset($_POST['secLogID'.$i]))
+                if(isset($_POST['secLogRadio'.$i]))
                     $secLogID = $_POST['secLogID'.$i];
             }
             if(!empty($secLogID))
                 showSecLogDetails($config, $secLogID, true);
-            else if(!$addBtn && !$showAll && !$showNormal && !$changeDateBtn)
+            else if(!$addBtn && !$showAll && !$showNormal && !$changeDateBtn){
                 echo 'Error getting Reference Number!<br />';
+                echo '<input type="submit" name="goBtn" value="Back To Logs" />';
+            }
         }
         if($goBtn){
             if($config->adminLvl < 25){
@@ -156,7 +159,7 @@ function showSecLog($config, $dateSelect, $secLogID){
         while($row = $result->fetch_assoc()) {
             if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll){
                 $x++;
-                $theTable[$x][0] = '<input type="button" value="Edit/View" name="secLogRadio'.$x.'" onclick="this.form.submit();" />
+                $theTable[$x][0] = '<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
                     <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
                 $theTable[$x][1] = $row['DEPUTYID'];
                 $theTable[$x][2] = $row['RADIO'];
