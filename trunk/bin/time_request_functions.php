@@ -161,7 +161,7 @@ else{
                 if( isset($_POST['findBtn'])){
                     $rowCount = 0;
                     if(!empty($searchUser) && $isFullTime)
-                        $rowCount = selectUserSearch($config, $searchUser, true);
+                        $rowCount = selectUserSearch($config, $searchUser, $rowCount, true);
                     if($isReserve)
                         $rowCount2 = searchReserves($config, $searchUser, $rowCount);
                     else
@@ -180,7 +180,7 @@ else{
                 $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : '';
                 if($totalRows > 0) {         
                     //get post info providied from search results
-                    for($i=1;$i<=$totalRows;$i++){
+                    for($i=0;$i<=$totalRows;$i++){
                         if(isset($_POST['foundUser'.$i])) {
                             $foundUserFNAME = $_POST['foundUserFNAME'.$i];
                             $foundUserLNAME = $_POST['foundUserLNAME'.$i];
@@ -224,20 +224,32 @@ else{
                     function addLookupButton(formName) {
                         var _form = document.getElementById(formName);
                         var _calloff = document.getElementById('calloff');
-
-                        var _search = document.createElement('input');
-                        _search.type = "submit";
-                        _search.name = "searchBtn";
-                        _search.value = "Lookup User";
-                        //_form.appendChild(_search);
-                        _form.insertBefore(_search, _calloff);
+                        if(_calloff.checked){
+                            if(document.getElementById('jsearchBtn')){}
+                            else{
+                                var _search = document.createElement('input');
+                                _search.type = "submit";
+                                _search.name = "searchBtn";
+                                _search.value = "Lookup User";
+                                _search.id = "jsearchBtn";
+                                _search.onclick = function(){_form.submit()};
+                                //_form.appendChild(_search);
+                                _form.insertBefore(_search, _calloff);
+                            }   
+                        }
+                        else{
+                            if(document.getElementById('jsearchBtn')){
+                                var _oldSearch = document.getElementById('jsearchBtn');
+                                _form.removeChild(_oldSearch);
+                            }
+                        }
                     }
                     </script>
                     <?php
                     $isCallOff = "";
                     if(isset($_POST['calloff'])){
                         $isCallOff = "CHECKED ";
-                        echo '<input type="submit" name="searchBtn" value="Lookup Users" />';
+                        echo '<input type="submit" name="searchBtn" id="jsearchBtn" value="Lookup Users" />';
                     }
                     echo '<input type="checkbox" id="calloff" name="calloff" value="YES" '.$isCallOff.'onclick=\'addLookupButton("leave");\' />Check If filling out for another employee.';    
                 }
