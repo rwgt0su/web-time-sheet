@@ -343,10 +343,13 @@ function displayUpdateProfile($config){
         
         //show SQL error msg if query failed
         if (!SQLerrorCatch($mysqli, $result)) 
-            echo "Successfully Updated Profile";
+            echo "Successfully Updated Profile<br />";
         else{
-            echo "Did not Update";
+            echo "Did not Update<br />";
         }
+        $fromVerify = strcmp(isset($_POST['formName']) ? $_POST['formName'] : false, "userVerify") == 0 ? true : false;
+        if($fromVerify)
+            echo '<form method="POST"><input type="button" name="backToVerify" value="Back To Users To Verify List" onClick="this.form.action='."'?userVerify=true'".';this.form.submit()" /></form>';
     }   
     else{
         //Get stored information (first view)
@@ -386,9 +389,10 @@ function displayUpdateProfile($config){
         <input type="hidden" name="formName" value="updateProfile" />
         <?php 
         //how does this double overloaded call work!!!!
-        $fromVerify = strcmp(isset($_POST['formName']) ? $_POST['formName'] : false , "userVerify") == 0 ? true : false;
+        $fromVerify = strcmp(isset($_POST['formName']) ? $_POST['formName'] : false, "userVerify") == 0 ? true : false;
         if($fromVerify)
-            echo '<input type="button" name="backToVerify" value="Back To Users To Verify List" onClick="this.form.action='."'?userVerify=true'".';this.form.submit()" />';
+            echo '<input type="button" name="backToVerify" value="Back To Users To Verify List" onClick="this.form.action='."'?userVerify=true'".';this.form.submit()" />
+                    <input type="hidden" name="formName" value="userVerify" />';
         ?>
         </div><div align="center" class="login">
             <table>
