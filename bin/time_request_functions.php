@@ -43,7 +43,7 @@ $mysqli = $config->mysqli;
                 $foundUserFNAME = $row['FNAME'];
                 $foundUserLNAME = $row['LNAME'];
                 $foundUserID = $row['IDNUM'];
-                //var_dump($_POST); //DEBUG
+                var_dump($_POST); //DEBUG
             } 
             
 //Get all passed variables
@@ -492,37 +492,60 @@ SQLerrorCatch($mysqli, $result);
 
 $fieldCount = $result->field_count;
 //load array for table
-$theTable = array(array());
-//get field info
+//$theTable = array(array());
+
+
+
+echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
+        <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
+            <div id="wrapper">';
+//open form
+?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> <?php            
+echo '<table class="sortable" id="sorter"><tr>';
+        //get field info
+echo '<td>Edit</td><td>Delete</td>';     
 for($y=0; $finfo = $result->fetch_field();$y++) {
     //assign field names as table header (row 0)
-    $theTable[0][$y] = $finfo->name;
+    echo '<td>'. $finfo->name.'</td>';
 }
-$result->data_seek(0);
-//load results beginning in row 1
-for($x=1; $resultArray = $result->fetch_array(MYSQLI_NUM); $x++) { //record loop
+echo '</tr>';
+
+for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
+    if($resultArray['Status']=='EXPUNGED'){
+        echo '<tr style="text-decoration:line-through" >';
+    }
+    else
+        echo '<tr >';
+    
     if($admin>0){
         for($y=0; $y<$fieldCount+2; $y++){ //field loop    
-            //edit button one field after end of record that redirects to request page
-            if($y==$fieldCount)
-            $theTable[$x][$y] = '<input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />';
-            //delete button 2 fields after end of record. needs a condition to run an expunge query in this function after the reload
-            else if($y==$fieldCount+1)
-                $theTable[$x][$y] = '<button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button>';
-            else{ //load results
-                $theTable[$x][$y] = $resultArray[$y];
-                if($y==0) //hide the key value in the 1st column
-                    $theTable[$x][0] .= '<input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" />';
-            }
+            //edit button that redirects to request page
+            if($y==0)
+            echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                  <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+            //delete button
+            else if($y==1)
+                echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
+            else //load results
+                echo '<td>'. $resultArray[$y-2].'</td>';
+            
         }
-    }
+    } //end admin table
     else { //no edit capabilities
         for($y=0; $y<$fieldCount; $y++){ //field loop 
             //load results
-            $theTable[$x][$y] = $resultArray[$y];        
+            echo '<td>'. $resultArray[$y].'</td>';        
         }
     }
 }//end array loading
+echo '</tr>';
+        
+        echo  '<input type="hidden" name="totalRows" value="'.$x.'" />';
+        echo '</table></form></div>
+            <script type="text/javascript">
+                var sorter=new table.sorter("sorter");
+                sorter.init("sorter",2);
+            </script>';
 
 //check if we're deleting a record
 for($i=0; $i<$x; $i++){
@@ -534,9 +557,9 @@ for($i=0; $i<$x; $i++){
 }//end of deleteBtn checking loop
 
 
-?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> <?php
-showSortableTable($theTable, 0);
-?></form><?php
+
+//showSortableTable($theTable, 0);
+
 //build table
 //resultTable($mysqli, $result);
 //show a print button. printed look defined by print.css
