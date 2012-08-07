@@ -12,8 +12,10 @@ $mysqli = $config->mysqli;
 
     //check if we're coming from an edit button on the submitted report
             $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
-
-            if($totalRows && $_POST['formName']==='submittedRequests') {
+            $updatingRequest = isset($_POST['formName']) ?  $_POST['formName'] : false;
+            //echo "updatingRequest = $updatingRequest"; //DEBUG
+            
+            if($totalRows && $updatingRequest) {
                 for($i=0; $i<$totalRows; $i++){
                     if(isset($_POST['editBtn'.$i]))
                             $referNum=$_POST['requestID'.$i];
@@ -27,6 +29,7 @@ $mysqli = $config->mysqli;
                 SQLerrorCatch($mysqli, $result);
                 $row = $result->fetch_assoc();
                 //set posts to pre-fill form from record we want to edit
+                $_POST['referNum']= $referNum;
                 $_POST['type'] = $row['TIMETYPEID'];   
                 $_POST['ID'] = $row['IDNUM'];
                 $_POST['beg1'] = substr($row['BEGTIME'],0,2);
@@ -72,7 +75,7 @@ $mysqli = $config->mysqli;
 
 
 //Submit Button Pressed.  Add record to the database
-if (isset($_POST['submit'])) {
+if (isset($_POST['submit']) || isset($_POST['update'])) {
     
 
     $ID = $mysqli->real_escape_string(strtoupper($postID));
@@ -110,35 +113,59 @@ if (isset($_POST['submit'])) {
     //SQL TIME format
     $beg = $beg->format("H:i:s");  
     $end = $end->format("H:i:s");
-
+    
+    
+       
     if($isDateUse){
         if(!empty($postEnding) || !empty($postBegin)){
             //query to insert the record. loops until number of days is reached
-            for($i=0; $i <= $daysOff; $i++){
-                $myq="INSERT INTO REQUEST (IDNUM, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
-                        VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
-                                '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
-                //echo $myq; //DEBUG
-                $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
-                $result = $mysqli->query($myq);
+            if(!isset($_POST['update'])){
+                for($i=0; $i <= $daysOff; $i++){
+                    $myq="INSERT INTO REQUEST (IDNUM, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
+                            VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
+                                    '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
+                    //echo $myq; //DEBUG
+                    $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
+                    $result = $mysqli->query($myq);
 
-                //show SQL error msg if query failed
-                if (SQLerrorCatch($mysqli, $result)) {
-                    echo 'Request not accepted.';
-                }
-                else {
-                    echo '<h3>Request accepted. The reference number for this request is <b>' 
-                        . $mysqli->insert_id . '</b></h3>.';
-                }
-            }//end for loop
+                    //show SQL error msg if query failed
+                    if (SQLerrorCatch($mysqli, $result)) {
+                        echo 'Request not accepted.';
+                    }
+                    else {
+                        echo '<h3>Request accepted. The reference number for this request is <b>' 
+                            . $mysqli->insert_id . '</b>.</h3>';
+                    }
+                }//end for loop
+            }
         }//end blank start or end time
         else
             echo '<font color="red" >Must provide a valid Start and End time!</font><br /><br />';
     }//end blank use date submission verification
-    else{
+    else
         echo '<font color="red" >Must provide a valid Date!</font><br /><br />';
-    } 
-} //end of 'is submit pressed?'
+     
+
+
+//update an existing record instead of inserting a new one
+    if(isset($_POST['update'])){
+        $myq="UPDATE REQUEST SET USEDATE='".$usedate->format('Y-m-d')."', 
+                BEGTIME='$beg', ENDTIME='$end', HOURS='$hours', 
+                TIMETYPEID='$type', SUBTYPE='$subtype', NOTE='$comment', 
+                AUDITID='$auditid', IP=INET_ATON('".$_SERVER['REMOTE_ADDR']."'), CALLOFF='$calloff'
+                WHERE REFER=".$_POST['referNum'];
+        echo $myq;
+                
+                $result = $mysqli->query($myq);
+                //show SQL error msg if query failed
+                if (SQLerrorCatch($mysqli, $result)) {
+                    echo 'Error: Request not updated.';
+                }
+                else {
+                    echo '<h3>Request updated successfully.</h3>';
+                }
+    }//end of "is update button pressed?"
+} //end of 'is submit or update pressed?'  
 if(!isset($_POST['searchBtn'])){
     ?>
     <h2>Employee Request</h2>
@@ -152,6 +179,9 @@ else{
  <form name="leave" id="leave" method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
       <input type='hidden' name='formName' value='leave' />
      <?php  
+     if ( isset($_POST['referNum']) )
+         echo '<input type="hidden" name="referNum" value="'.$_POST['referNum'].'" />';
+             
         $type  = isset($_POST['type']) ? $_POST['type'] : ''; 
         $myq = "SELECT DESCR FROM TIMETYPE WHERE TIMETYPEID='".$type."'";
         $result = $mysqli->query($myq);
@@ -307,8 +337,11 @@ else{
 
                 </br>
                 <p>Comment: <input type="text" name="comment" value="<?php echo $comment; ?>"></p>
-
-                <p><input type="submit" name="submit" value="Submit for Approval"></p>  
+                <?php if($updatingRequest==='submittedRequests')
+                    echo '<p><input type="submit" name="update" value="Update Request"></p>';
+                else
+                    echo '<p><input type="submit" name="submit" value="Submit for Approval"></p>';
+                ?>
 
         </form> 
 
@@ -467,21 +500,40 @@ for($y=0; $finfo = $result->fetch_field();$y++) {
 }
 $result->data_seek(0);
 //load results beginning in row 1
-for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
-    for($y=0; $y<$fieldCount+2; $y++){ //field loop    
-        //edit button one field after end of record that redirects to request page
-        if($y==$fieldCount)
-           $theTable[$x][$y] = '<input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" >Edit</button>';
-        //delete button 2 fields after end of record. needs a condition to run an expunge query in this function after the reload
-        else if($y==$fieldCount+1)
-            $theTable[$x][$y] = '<button type="button"  name="deleteBtn'.$x.'" value="Delete" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button>';
-        else{ //load results
-            $theTable[$x][$y] = $resultArray[$y];
-            if($y==0) //hide the key value in the 1st column
-                $theTable[$x][0] .= '<input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" />';
+for($x=1; $resultArray = $result->fetch_array(MYSQLI_NUM); $x++) { //record loop
+    if($admin>0){
+        for($y=0; $y<$fieldCount+2; $y++){ //field loop    
+            //edit button one field after end of record that redirects to request page
+            if($y==$fieldCount)
+            $theTable[$x][$y] = '<input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />';
+            //delete button 2 fields after end of record. needs a condition to run an expunge query in this function after the reload
+            else if($y==$fieldCount+1)
+                $theTable[$x][$y] = '<button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button>';
+            else{ //load results
+                $theTable[$x][$y] = $resultArray[$y];
+                if($y==0) //hide the key value in the 1st column
+                    $theTable[$x][0] .= '<input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" />';
+            }
         }
     }
-}
+    else { //no edit capabilities
+        for($y=0; $y<$fieldCount; $y++){ //field loop 
+            //load results
+            $theTable[$x][$y] = $resultArray[$y];        
+        }
+    }
+}//end array loading
+
+//check if we're deleting a record
+for($i=0; $i<$x; $i++){
+    if(isset($_POST['deleteBtn'.$i])){
+        $refToDelete = $_POST['deleteBtn'.$i];
+        //procede w delete
+        expungeRequest($mysqli, $refToDelete);
+    }
+}//end of deleteBtn checking loop
+
+
 ?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> <?php
 showSortableTable($theTable, 0);
 ?></form><?php
@@ -819,5 +871,23 @@ function MUNISreport($config) {
     
 <?php
     }
+}
+
+function expungeRequest($mysqli, $referNum) {
+    
+    $myq="UPDATE REQUEST 
+        SET STATUS='EXPUNGED'
+        WHERE REFER=".$referNum;
+    
+    $result = $mysqli->query($myq);
+    
+    if(!SQLerrorCatch($mysqli, $result))
+        popUpMessage ('Request '.$referNum.' expunged. 
+                    <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
+                    <input type="submit" value="OK" />
+                    </form></div>');
+    else
+        popUpMessage ("Error");    
+        
 }
 ?>
