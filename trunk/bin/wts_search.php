@@ -252,10 +252,17 @@ function displayUserLookup($config) {
             echo '<input type="hidden" name="searchReserves" value="false" />';   
             $searchReserves = false;
         }
+        if(strcmp($searchReserves,"checked")== 0 ){  
+            $isReserve = true;
+        }
         if(strcmp($searchFullTime,"false") == 0){
             echo '<input type="hidden" name="searchFullTime" value="false" />';   
             $searchFullTime = false;
         }
+        if(strcmp($searchFullTime,"checked")== 0 ){  
+            $isFullTime = true;
+        }
+        
         echo '<h3>Search for Employees by Last Name: </h3>';
         //show check boxes and keep checked box checked after results return
         if($searchFullTime){
