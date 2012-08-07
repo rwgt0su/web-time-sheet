@@ -422,9 +422,33 @@ else {
     
 $result = $mysqli->query($myq);
 SQLerrorCatch($mysqli, $result);
-    
+
+$fieldCount = $result->field_count;
+//load array for table
+$theTable = array(array());
+//get field info
+for($y=0; $finfo = $result->fetch_field();$y++) {
+    //assign field names as table header (row 0)
+    $theTable[0][$y] = $finfo->name;
+}
+$result->data_seek(0);
+//load results beginning in row 1
+for($x=1; $result->fetch_array(MYSQLI_NUM); $x++) { //record loop
+    for($y=0; $y<$fieldCount+2; $y++){ //field loop
+        $theTable[$x][$y] = $result[$y];
+        //edit button one field after end of record that redirects to request page
+        if($y==$fieldCount+1)
+           $theTable[$x][$y] = '<button type="button"  name="editBtn" value="Edit" onClick="this.form.action=' . "'?submittedRequests=true'" . ';this.form.submit()" >Edit</button>';
+        //delete button 2 fields after end of record. needs a condition to run an expunge query in this function after the reload
+        else if($y==$fieldCount+2)
+            $theTable[$x][$y] = '<button type="button"  name="deleteBtn" value="Delete" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button>';
+    }
+}
+?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> <?php
+showSortableTable($theTable, 0);
+?></form><?php
 //build table
-resultTable($mysqli, $result);
+//resultTable($mysqli, $result);
 //show a print button. printed look defined by print.css
 echo '<a href="javascript:window.print()">Print</a>';
 } //end displaySubmittedRequests()

@@ -27,8 +27,12 @@
 error_reporting(E_ALL);
 ini_set('display_errors', True);
 
-session_save_path('/var/www/sessions');
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') 
+    session_save_path('C:\temp'); //windows server
+else
+    session_save_path('/var/www/sessions'); //linux server
 session_start();
+
 
 //Database related fucntions
 require_once 'bin/db_sqli.php';
