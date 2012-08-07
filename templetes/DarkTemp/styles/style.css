@@ -9,7 +9,7 @@ a {
 }
 
 .header_cotainer {
-    width: 100%;
+    width: auto;
     height: 70px;
     display: block;
     background: url(../images/menu_bg.jpg) repeat-x;
@@ -82,14 +82,14 @@ a {
 
 
 .content_container {
-    width: 100%;
+    width: auto;
     min-height: 524px;
     display: block;
     background: url(../images/content_bg.jpg) repeat;
 }
 
     .content_highlight {
-        background: url(../images/content_highlight.jpg) no-repeat;
+        background: url(../images/content_highlight.jpg) ;
         min-height: 524px;
         display: block;
         background-position: center top;
@@ -324,7 +324,7 @@ a {
                 }
 
 .footer_container {
-    width: 100%;
+    width: auto;
     height: 46px;
     display: block;
     background: url(../images/footer_bg.jpg) repeat-x;

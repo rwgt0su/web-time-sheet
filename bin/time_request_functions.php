@@ -10,6 +10,39 @@ function displayLeaveForm($config){
   
 $mysqli = $config->mysqli;
 
+    //check if we're coming from an edit button on the submitted report
+            $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
+
+            if($totalRows && $_POST['formName']==='submittedRequests') {
+                for($i=0; $i<$totalRows; $i++){
+                    if(isset($_POST['editBtn'.$i]))
+                            $referNum=$_POST['requestID'.$i];
+                }
+                $myq='SELECT REQUEST.IDNUM, TIMETYPEID, BEGTIME, ENDTIME, NOTE, CALLOFF, USEDATE, SUBTYPE,
+                       LNAME, FNAME
+                    FROM REQUEST, EMPLOYEE
+                    WHERE EMPLOYEE.IDNUM=REQUEST.IDNUM
+                    AND REFER='.$referNum;
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result);
+                $row = $result->fetch_assoc();
+                //set posts to pre-fill form from record we want to edit
+                $_POST['type'] = $row['TIMETYPEID'];   
+                $_POST['ID'] = $row['IDNUM'];
+                $_POST['beg1'] = substr($row['BEGTIME'],0,2);
+                $_POST['beg2'] = substr($row['BEGTIME'],3,2);
+                $_POST['end1'] = substr($row['ENDTIME'],0,2);
+                $_POST['end2'] = substr($row['ENDTIME'],3,2);
+                $_POST['comment'] = $row['NOTE'];
+                $_POST['calloff'] = $row['CALLOFF'];
+                $_POST['usedate'] = $row['USEDATE'];
+                $_POST['subtype'] = $row['SUBTYPE'];
+                $foundUserFNAME = $row['FNAME'];
+                $foundUserLNAME = $row['LNAME'];
+                $foundUserID = $row['IDNUM'];
+                //var_dump($_POST); //DEBUG
+            } 
+            
 //Get all passed variables
     $postID = isset($_POST['ID']) ? $_POST['ID'] : $_SESSION['userIDnum'];
     $postThruDate = isset($_POST['thrudate']) ? $_POST['thrudate'] : false;
@@ -37,7 +70,8 @@ $mysqli = $config->mysqli;
             $isDateUse = true;
     $subtype = isset($_POST['subtype']) ? $mysqli->real_escape_string($_POST['subtype']) : 'NONE';
 
-//Submit Button Pressed.  Updated the database
+
+//Submit Button Pressed.  Add record to the database
 if (isset($_POST['submit'])) {
     
 
@@ -124,7 +158,7 @@ else{
         SQLerrorCatch($mysqli, $result);
         $typeDescr = $result->fetch_assoc();
         
-        if (!empty($type)) { //$_GET['type'] is set
+        if (!empty($type)) { //$_POST['type'] is set
             //hidden field with type set
             echo "<input type='hidden' name='type' value='".$type."'>";
             
@@ -173,10 +207,10 @@ else{
                 }//end lookup button pressed
             }//end search or lookup button pressed
             else{
-                $foundUserFNAME = '';
-                $foundUserLNAME = '';
-                $foundUserName = '';
-                $foundUserID = '' ;
+                $foundUserFNAME = isset($foundUserFNAME) ? $foundUserFNAME : '';
+                $foundUserLNAME = isset($foundUserLNAME) ? $foundUserLNAME : '';
+                $foundUserName = isset($foundUserName) ? $foundUserName : '';
+                $foundUserID = isset($foundUserID) ? $foundUserID : '';
                 $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : '';
                 if($totalRows > 0) {         
                     //get post info providied from search results
@@ -283,8 +317,8 @@ else{
             }
         }
         else {
-             //intitial choice of type
-            //not hidden
+            
+            //intitial choice of type
             echo "<p><h3>Type of Request: </h3>";
             dropDownMenu($mysqli, 'DESCR', 'TIMETYPE', FALSE, 'type');
             echo "</p>";
@@ -433,15 +467,19 @@ for($y=0; $finfo = $result->fetch_field();$y++) {
 }
 $result->data_seek(0);
 //load results beginning in row 1
-for($x=1; $result->fetch_array(MYSQLI_NUM); $x++) { //record loop
-    for($y=0; $y<$fieldCount+2; $y++){ //field loop
-        $theTable[$x][$y] = $result[$y];
+for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
+    for($y=0; $y<$fieldCount+2; $y++){ //field loop    
         //edit button one field after end of record that redirects to request page
-        if($y==$fieldCount+1)
-           $theTable[$x][$y] = '<button type="button"  name="editBtn" value="Edit" onClick="this.form.action=' . "'?submittedRequests=true'" . ';this.form.submit()" >Edit</button>';
+        if($y==$fieldCount)
+           $theTable[$x][$y] = '<input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" >Edit</button>';
         //delete button 2 fields after end of record. needs a condition to run an expunge query in this function after the reload
-        else if($y==$fieldCount+2)
-            $theTable[$x][$y] = '<button type="button"  name="deleteBtn" value="Delete" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button>';
+        else if($y==$fieldCount+1)
+            $theTable[$x][$y] = '<button type="button"  name="deleteBtn'.$x.'" value="Delete" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button>';
+        else{ //load results
+            $theTable[$x][$y] = $resultArray[$y];
+            if($y==0) //hide the key value in the 1st column
+                $theTable[$x][0] .= '<input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" />';
+        }
     }
 }
 ?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> <?php

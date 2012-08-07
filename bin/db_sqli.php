@@ -159,7 +159,7 @@ function resultTable($mysqli, $result, $isEditable = true){
  */
 function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
     if (!strcmp($fieldName, 'DESCR') && !strcmp($tableName, 'TIMETYPE')) {
-        $myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE";  
+        $myq="SELECT TIMETYPEID, DESCR FROM TIMETYPE ORDER BY DESCR";  
     ?>
      <td> <select name="<?php echo $formName; ?>" onchange="this.form.action='?leave=true';this.form.submit()">
     <?php
