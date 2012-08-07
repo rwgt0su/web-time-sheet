@@ -203,7 +203,7 @@ function showSecLog($config, $dateSelect, $secLogID){
         while($row = $result->fetch_assoc()) {
             if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll ){
                 $x++;
-                $theTable[$x][0] = '<input type="button" value="View" name="secLogRadio'.$x.'" onclick="this.form.submit();" />
+                $theTable[$x][0] = '<input type="submit" value="View" name="secLogRadio'.$x.'" />
                     <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
                 $theTable[$x][1] = $row['DEPUTYID'];
                 $theTable[$x][2] = $row['RADIO'];
