@@ -1,15 +1,17 @@
 <?php
 
 function displayReserves($config){
+    echo '<h3>Reserves Manager</h3>';
     if($config->adminLvl > 75){
         //get passed variables
         $addBtn = isset($_POST['addBtn']) ? true : false;
         $editSelect = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
+        $goBackBtn = isset($_POST['goBackBtn']) ? $addBtn = false : false;
         $reserveID = false;
 
         if(isset($_POST['totalRows'])){
             for ($i=0; $i <= $editSelect; $i++){
-                if(isset($_POST['resRadioBtn'.$i])){
+                if(isset($_POST['foundUser'.$i])){
                     $reserveID = $_POST['foundUserID'.$i];
                     break;
                 }
@@ -17,19 +19,34 @@ function displayReserves($config){
         }
 
         //Main Content
-        echo '<form name="resMan" method="POST" action="'.$_SERVER['REQUEST_URI'].'" >';
+        echo '<form name="resManage" method="POST" action="'.$_SERVER['REQUEST_URI'].'" >';
+        echo '<input type="hidden" name="formName" value="resManage" />';
 
         if(!$addBtn && !$reserveID){
             reservesTable($config);
             echo '<input type="submit" name="addBtn" value="Add Reserve" />';
         }
         if($addBtn){
+            //get return to location
+            $prevNum = isset($_POST['prevNum']) ? $_POST['prevNum'] : "0";
+            $nextNum = isset($_POST['nextNum']) ? $_POST['nextNum'] : "25";
+            $limit= isset($_POST['limit']) ? $_POST['limit'] : "25";
+            echo '<input type="hidden" name="prevNum" value="'.$prevNum.'" />';
+            echo '<input type="hidden" name="nextNum" value="'.$nextNum.'" />'; 
+            echo '<input type="hidden" name="limit" value="'.$limit.'" />'; 
+            
             showAddReserve($config);
-            echo '<input type="submit" name="goBackBtn" value="Back To Reserves" />';
         }
-        if(strcmp($reserveID, "false") != 0){
+        if(!empty($reserveID)){
+            //get return to location
+            $prevNum = isset($_POST['prevNum']) ? $_POST['prevNum'] : "0";
+            $nextNum = isset($_POST['nextNum']) ? $_POST['nextNum'] : "25";
+            $limit= isset($_POST['limit']) ? $_POST['limit'] : "25";
+            echo '<input type="hidden" name="prevNum" value="'.$prevNum.'" />';
+            echo '<input type="hidden" name="nextNum" value="'.$nextNum.'" />'; 
+            echo '<input type="hidden" name="limit" value="'.$limit.'" />'; 
+            
             reserveDetails($config, $reserveID);
-            echo '<input type="submit" name="goBackBtn" value="Back To Reserves" />';
         }
 
         //End Content
@@ -53,18 +70,20 @@ function reservesTable($config){
         $prevNum = $prevNum + $limit;
         $nextNum = $nextNum + $limit;
     }
-    //popUpMessage('limit: '.$limit.' prevnum: '.$prevNum.' nextnum: '.$nextNum);
     
     $mysqli = connectToSQL($reserveDB = TRUE);
-    $myq = "SELECT *  FROM `RESERVE` WHERE `LNAME` LIKE CONVERT(_utf8 '%' USING latin1) COLLATE latin1_swedish_ci";
+    if($config->adminLvl > 75)
+        $myq = "SELECT *  FROM `RESERVE`";
+    else
+        $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $totalRows = $result->num_rows;
     
     if($config->adminLvl > 75)
-        $myq = "SELECT *  FROM `RESERVE` WHERE `LNAME` LIKE CONVERT(_utf8 '%' USING latin1) COLLATE latin1_swedish_ci LIMIT ".$nextNum.",  ".$limit;
+        $myq = "SELECT *  FROM `RESERVE` ORDER BY LNAME LIMIT ".$nextNum.",  ".$limit;
     else
-        $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5 AND `LNAME` LIKE CONVERT(_utf8 '%' USING latin1) COLLATE latin1_swedish_ci LIMIT 0, 50";
+        $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5 ORDER BY LNAME LIMIT ".$nextNum.",  ".$limit;
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $rowCount = 0;
@@ -79,7 +98,7 @@ function reservesTable($config){
     
     while($row = $result->fetch_assoc()) {
         $rowCount++;
-        $theTable[$rowCount][0] = $rowCount.'<input name="resRadioBtn'.$rowCount.'" type="submit" value="Edit/View" />';
+        $theTable[$rowCount][0] = $rowCount.'<input name="foundUser'.$rowCount.'" type="submit" value="Edit/View" />';
         $theTable[$rowCount][1] = '<input type="hidden" name="foundUserFNAME'.$rowCount.'" value="'.$row['FNAME'].'" /> ' . $row['FNAME'];
         $theTable[$rowCount][2] = '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$row['LNAME'].'" />' . $row['LNAME'];
         $theTable[$rowCount][3] =  '<input type="hidden" name="foundUserID'.$rowCount.'" value="'.$row['IDNUM'].'" />' . $row['FNAME'].".".$row['LNAME'].
@@ -97,7 +116,13 @@ function reservesTable($config){
     
     
     
-    echo "Number of entries found in the reserve database is: " . $totalRows. '<br /><br /><hr />';
+    echo "Number of entries found in the reserve database is: " . $totalRows;
+    echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+    echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+    echo '<input type="hidden" name="searchFullTime" value="false" />';
+    echo '<input type="hidden" name="searchReserves" value="checked" />';
+    displayUserLookup($config);
+    echo '<br /><br /><hr />';
     echo '<input type="hidden" name="prevNum" value="'.$prevNum.'" />';
     echo '<input type="hidden" name="nextNum" value="'.$nextNum.'" />';
     echo 'Showing Records '. $prevNum . ' to ' . $nextNum;
@@ -123,15 +148,172 @@ function reservesTable($config){
         </select>';
     if($prevNum > 0)
         echo '<input type="submit" name="prevBtn" value="Previous" />';
-    if($limit = $rowCount)
+    if($limit == $rowCount)
         echo '<input type="submit" name="nextBtn" value="Next" />';
     //echo $echo;
     showSortableTable($theTable, 0);
 }
 function showAddReserve($config){
-    echo 'Add button Pressed';
+    if($config->adminLvl >75){
+        $saveBtn = isset($_POST['saveBtn']) ? true : false;
+        if($saveBtn){
+            $group = isset($_POST['resGroup']) ? $_POST['resGroup'] : "";
+            $fName = isset($_POST['foundUserFNAME']) ? $_POST['foundUserFNAME'] : "";
+            $lName = isset($_POST['foundUserLNAME']) ? $_POST['foundUserLNAME'] : "";
+            $radio = isset($_POST['radioNum']) ? $_POST['radioNum'] : "";
+            $address = isset($_POST['address']) ? $_POST['address'] : "";
+            $city = isset($_POST['city']) ? $_POST['city'] : "";
+            $state = isset($_POST['state']) ? $_POST['state'] : "";
+            $zip = isset($_POST['zip']) ? $_POST['zip'] : "";
+            $hPhone = isset($_POST['hPhone']) ? $_POST['hPhone'] : "";
+            $cPhone = isset($_POST['cPhone']) ? $_POST['cPhone'] : "";
+            $wPhone = isset($_POST['wPhone']) ? $_POST['wPhone'] : "";
+            $tis = isset($_POST['tis']) ? $_POST['tis'] : "";
+            $agency = isset($_POST['agency']) ? $_POST['agency'] : "";
+            $notes = isset($_POST['notes']) ? $_POST['notes'] : "";
+            
+            if(empty($fName) || empty($lName) || empty($group)){
+                echo '<br />Must provide all the highlighted items<br /> Did not Save<br />';
+                $saveBtn = false;
+            }
+            else{
+                $mysqli = connectToSQL($reserveDB = TRUE);
+                $myq = "INSERT INTO `RESERVE`.`RESERVE` (`GRP` ,`LNAME` ,`FNAME` ,`RADIO` ,`ADDRESS` ,`CITY` ,`ST` ,`ZIP` ,`HOMEPH` ,`CELLPH` ,`WORKPH` ,`TIS` ,`AGENCY` ,`NOTES` ,`IDNUM`)
+                    VALUES (
+                    '".$group."',
+                    '".$lName."',
+                    '".$fName."',
+                    '".$radio."',
+                    '".$address."',
+                    '".$city."',
+                    '".$state."',
+                    '".$zip."',
+                    '".$hPhone."',
+                    '".$cPhone."',
+                    '".$wPhone."',
+                    '".$tis."',
+                    '".$agency."',
+                    '".$notes."',
+                    NULL
+                    );";
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result);
+                echo 'Successfully Saved Reserve with ID: '.$mysqli->insert_id. '<br />';
+                reserveDetails($config, $mysqli->insert_id);
+            }
+        }
+        if(!$saveBtn){
+            echo '</div><div align="left" class="login"><table>';
+            echo '<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td>
+                First Name: </td><td><input type="text" name="foundUserFNAME" ';
+            echo showInputBoxError();
+            echo ' /></td></tr>';
+            echo '<tr><td></td><td>Last Name: </td><td><input type="text" name="foundUserLNAME" ';
+            echo showInputBoxError();
+            echo '/></td></tr>';
+            echo '<tr><td></td><td>Group: </td><td><select name="resGroup" ';
+            echo showInputBoxError();
+            echo '>
+                <option value="">Select Group</option>
+                <option value="1">Group 1</option>
+                <option value="2">Group 2</option>
+                <option value="3">Group 3</option>
+                <option value="4">Group 4</option>
+                <option value="5">Group 5</option>
+                </select></td></tr>';
+            echo '<tr><td></td><td>Radio#: </td><td><input type="text" name="radioNum" /></td></tr>';
+            echo '<tr><td></td><td>Address: </td><td><input type="text" name="address" /></td></tr>';
+            echo '<tr><td></td><td>City: </td><td><input type="text" name="city" /></td></tr>';
+            echo '<tr><td></td><td>State: </td><td><input type="text" name="state" /></td></tr>';
+            echo '<tr><td></td><td>ZIP: </td><td><input type="text" name="zip" /></td></tr>';
+            echo '<tr><td></td><td>Home Phone: </td><td><input type="text" name="hPhone" /></td></tr>';
+            echo '<tr><td></td><td>Cell Phone: </td><td><input type="text" name="cPhone" /></td></tr>';
+            echo '<tr><td></td><td>Work Phone: </td><td><input type="text" name="wPhone" /></td></tr>';
+            echo '<tr><td></td><td>Time in Service: </td><td>';
+            displayDateSelect("tis", "tis", false, false, true);
+            echo '</td></tr>';
+            echo '<tr><td></td><td>Agency: </td><td><input type="text" name="agency" /></td></tr>';
+            echo '<tr><td></td><td>Additional Notes: </td><td><input type="text" name="notes" /></td></tr><tr><td></td></tr>';
+            echo '<tr><td></td><td><input type="submit" name="saveBtn" value="Save" /></td><td>';
+            echo '<input type="hidden" name="addBtn" value="true" />';
+            echo '<input type="submit" name="goBackBtn" value="Back To Reserves" /></td></tr>';
+            echo '</table></div>';
+        }
+    }
 }
 function reserveDetails($config, $reserveID){
     echo 'Details for: ' . $reserveID;
+    if($config->adminLvl >75){
+        $updateBtn = isset($_POST['updateBtn']) ? true : false;
+        if($updateBtn){
+            $group = isset($_POST['resGroup']) ? $_POST['resGroup'] : "";
+            $fName = isset($_POST['foundUserFNAME']) ? $_POST['foundUserFNAME'] : "";
+            $lName = isset($_POST['foundUserLNAME']) ? $_POST['foundUserLNAME'] : "";
+            $radio = isset($_POST['radioNum']) ? $_POST['radioNum'] : "";
+            $address = isset($_POST['address']) ? $_POST['address'] : "";
+            $city = isset($_POST['city']) ? $_POST['city'] : "";
+            $state = isset($_POST['state']) ? $_POST['state'] : "";
+            $zip = isset($_POST['zip']) ? $_POST['zip'] : "";
+            $hPhone = isset($_POST['hPhone']) ? $_POST['hPhone'] : "";
+            $cPhone = isset($_POST['cPhone']) ? $_POST['cPhone'] : "";
+            $wPhone = isset($_POST['wPhone']) ? $_POST['wPhone'] : "";
+            $tis = isset($_POST['tis']) ? $_POST['tis'] : "";
+            $agency = isset($_POST['agency']) ? $_POST['agency'] : "";
+            $notes = isset($_POST['notes']) ? $_POST['notes'] : "";
+            
+            if(empty($fName) || empty($lName) || empty($group)){
+                echo '<br />Must provide all the highlighted items<br /> Did not Save<br />';
+                $saveBtn = false;
+            }
+        }
+        else{
+            $mysqli = connectToSQL($reserveDB = TRUE);
+            $myq = "SELECT * FROM `RESERVE` WHERE `IDNUM` = ".$reserveID;
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+            $row = $result->fetch_assoc();
+            $group = $row['GRP'];
+            $fName = $row['FNAME'];
+            $lName = $row['LNAME'];
+            $radio = $row['RADIO'];
+            $address = $row['ADDRESS'];
+            $city = $row['CITY'];
+            $state = $row['ST'];
+            $zip = $row['ZIP'];
+            $hPhone = $row['HOMEPH'];
+            $cPhone = $row['CELLPH'];
+            $wPhone = $row['WORKPH'];
+            $tis = $row['TIS'];
+            $agency = $row['AGENCY'];
+            $notes = $row['NOTES'];
+        }
+        echo '</div><div align="left" class="login"><table>';
+        echo '<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td>First Name: </td><td><input type="text" name="foundUserFNAME" value="'.$fName.'" /></td></tr>';
+        echo '<tr><td></td><td>Last Name: </td><td><input type="text" name="foundUserLNAME" value="'.$lName.'" /></td></tr>';
+        echo '<tr><td></td><td>Group: </td><td><select name="resGroup">
+            <option value="">Select Group</option>            
+            <option value="1">Group 1</option>
+            <option value="2">Group 2</option>
+            <option value="3">Group 3</option>
+            <option value="4">Group 4</option>
+            <option value="5">Group 5</option>
+            </select></td></tr>';
+        echo '<tr><td></td><td>Radio#: </td><td><input type="text" name="radioNum" value="'.$radio.'" /></td></tr>';
+        echo '<tr><td></td><td>Address: </td><td><input type="text" name="address" value="'.$address.'" /></td></tr>';
+        echo '<tr><td></td><td>City: </td><td><input type="text" name="city" value="'.$city.'" /></td></tr>';
+        echo '<tr><td></td><td>State: </td><td><input type="text" name="state" value="'.$state.'" /></td></tr>';
+        echo '<tr><td></td><td>ZIP: </td><td><input type="text" name="zip" value="'.$zip.'" /></td></tr>';
+        echo '<tr><td></td><td>Home Phone: </td><td><input type="text" name="hPhone" value="'.$hPhone.'" /></td></tr>';
+        echo '<tr><td></td><td>Cell Phone: </td><td><input type="text" name="cPhone" value="'.$cPhone.'" /></td></tr>';
+        echo '<tr><td></td><td>Work Phone: </td><td><input type="text" name="wPhone" value="'.$wPhone.'" /></td></tr>';
+        echo '<tr><td></td><td>Time in Service: </td><td>';
+        displayDateSelect("tis", "tis", false, false, false, $tis);
+        echo '</td></tr>';
+        echo '<tr><td></td><td>Agency: </td><td><input type="text" name="agency" value="'.$agency.'" /></td></tr>';
+        echo '<tr><td></td><td>Additional Notes: </td><td><input type="text" name="notes" value="'.$notes.'" /></td></tr><tr><td></td></tr>';
+        echo '<tr><td></td><td><input type="submit" name="updateBtn" value="Update and Save" /></td><td>';
+        echo '<input type="submit" name="goBackBtn" value="Back To Reserves" /></td></tr>';
+        echo '</table></div>';
+    }
 }
 ?>

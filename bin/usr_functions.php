@@ -558,7 +558,7 @@ function displaySUPVDropDown($selectName, $selected = false){
 
     echo '</select>';
 }
-function displayDateSelect($inputName, $id, $selected = false, $required = false,$today=false,$submitForm=false){
+function displayDateSelect($inputName, $id, $selected = false, $required = false,$today=false,$submitForm=false, $oldValue= false){
     ?>
     <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
     <script type="text/javascript" src="bin/jQuery/js/jquery-1.7.2.min.js"></script>
@@ -585,8 +585,12 @@ function displayDateSelect($inputName, $id, $selected = false, $required = false
         });
     </script>
     <input name="<?php echo $inputName ?>" type="text" class="datepicker" <?php 
-        if($today) 
+        if($today && !empty($oldValue)) 
             echo 'value="'. date('m/d/Y', strtotime('today')).'"'; 
+        if(!$oldValue){
+             echo 'value="';
+            echo $oldValue.'"';
+        }
         ?> id="<?php echo $id; ?>" <?php 
             if(!$selected){ 
                 if($required) 

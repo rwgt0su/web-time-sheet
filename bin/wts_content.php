@@ -117,7 +117,8 @@ function displayWelcome($config){
     ?>
     <div class="thumbnail"><img src="/style/WellingtonBadge.gif" alt="" /></div>
     <h3><?php echo $config->getTitle(); ?></h3> 
-    <p>Welcome to the Mahoning County Sheriff's Office Web Portal</p>
+    <p>Welcome to the Mahoning County Sheriff's Office Web Portal<br /><br />
+        One you login you will have access to items such as Time Request Forms and Secondary Employment Logs</p>
     <?php
 }
 function displayAbout($config){
