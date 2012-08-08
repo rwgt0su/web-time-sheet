@@ -43,7 +43,6 @@ $mysqli = $config->mysqli;
                 $foundUserFNAME = $row['FNAME'];
                 $foundUserLNAME = $row['LNAME'];
                 $foundUserID = $row['IDNUM'];
-                var_dump($_POST); //DEBUG
             } 
             
 //Get all passed variables
@@ -532,15 +531,19 @@ for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loo
         }
     } //end admin table
     else { //no edit capabilities
+        if($y==0)
+            echo '<td></td>';
+        else if($y==1)
+            echo '<td></td>';
         for($y=0; $y<$fieldCount; $y++){ //field loop 
             //load results
             echo '<td>'. $resultArray[$y].'</td>';        
         }
     }
 }//end array loading
-echo '</tr>';
-        
+      
         echo  '<input type="hidden" name="totalRows" value="'.$x.'" />';
+        echo '</tr>';
         echo '</table></form></div>
             <script type="text/javascript">
                 var sorter=new table.sorter("sorter");
