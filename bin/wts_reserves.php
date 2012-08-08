@@ -307,7 +307,7 @@ function reserveDetails($config, $reserveID){
         echo '<tr><td></td><td>Cell Phone: </td><td><input type="text" name="cPhone" value="'.$cPhone.'" /></td></tr>';
         echo '<tr><td></td><td>Work Phone: </td><td><input type="text" name="wPhone" value="'.$wPhone.'" /></td></tr>';
         echo '<tr><td></td><td>Time in Service: </td><td>';
-        displayDateSelect("tis", "tis", false, false, false, $tis);
+        displayDateSelect("tis", "tis", $tis, false, false);
         echo '</td></tr>';
         echo '<tr><td></td><td>Agency: </td><td><input type="text" name="agency" value="'.$agency.'" /></td></tr>';
         echo '<tr><td></td><td>Additional Notes: </td><td><input type="text" name="notes" value="'.$notes.'" /></td></tr><tr><td></td></tr>';
