@@ -43,6 +43,7 @@ $mysqli = $config->mysqli;
                 $foundUserFNAME = $row['FNAME'];
                 $foundUserLNAME = $row['LNAME'];
                 $foundUserID = $row['IDNUM'];
+                //var_dump($_POST);
             } 
             
 //Get all passed variables
@@ -153,7 +154,7 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                 TIMETYPEID='$type', SUBTYPE='$subtype', NOTE='$comment', 
                 AUDITID='$auditid', IP=INET_ATON('".$_SERVER['REMOTE_ADDR']."'), CALLOFF='$calloff'
                 WHERE REFER=".$_POST['referNum'];
-        echo $myq;
+        //echo $myq; //DEBUG
                 
                 $result = $mysqli->query($myq);
                 //show SQL error msg if query failed
@@ -316,8 +317,9 @@ else{
                     }
                     echo '<input type="checkbox" id="calloff" name="calloff" value="YES" '.$isCallOff.'onclick=\'addLookupButton("leave");\' />Check If filling out for another employee.';    
                 }
+                
                 ?>
-                <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , !$isDateUse); ?>
+                <p>Date of use/accumulation: <?php displayDateSelect('usedate','date_1', $postUseDate , true, !$isDateUse); ?>
                     Through date (optional): <?php displayDateSelect('thrudate','date_2'); ?></p>
                 <p>Start time: <?php showTimeSelector("beg", $postBeg1, $postBeg2); ?>
                 <?php 
@@ -502,7 +504,9 @@ echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
 ?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> <?php            
 echo '<table class="sortable" id="sorter"><tr>';
         //get field info
-echo '<td>Edit</td><td>Delete</td>';     
+if($admin>0)
+    echo '<td>Edit</td><td>Delete</td>';   
+
 for($y=0; $finfo = $result->fetch_field();$y++) {
     //assign field names as table header (row 0)
     echo '<td>'. $finfo->name.'</td>';
@@ -510,7 +514,10 @@ for($y=0; $finfo = $result->fetch_field();$y++) {
 echo '</tr>';
 
 for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
-    if($resultArray['Status']=='EXPUNGED'){
+    $leaveStatus = isset($resultArray['Status']) ? $resultArray['Status'] : '';
+    $leaveSTATUS = isset($resultArray['STATUS']) ? $resultArray['STATUS'] : '';
+    
+    if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'){
         echo '<tr style="text-decoration:line-through" >';
     }
     else
@@ -531,10 +538,6 @@ for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loo
         }
     } //end admin table
     else { //no edit capabilities
-        if($y==0)
-            echo '<td></td>';
-        else if($y==1)
-            echo '<td></td>';
         for($y=0; $y<$fieldCount; $y++){ //field loop 
             //load results
             echo '<td>'. $resultArray[$y].'</td>';        
