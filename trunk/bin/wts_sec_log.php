@@ -234,37 +234,41 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     
     if($addSecLog){
         //get passed values
-        $deputy = isset($_POST['deputy']) ? $_POST['deputy'] : '';
-        $radioNum = isset($_POST['radioNum']) ? $_POST['radioNum'] : '';
-        $address = isset($_POST['address']) ? $_POST['address'] : '';
-        $city = isset($_POST['city']) ? $_POST['city'] : '';
-        $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
-        $shiftStart1 = !empty($_POST['shiftStart1']) ? $_POST['shiftStart1'] : '00';
-        $shiftStart2 = !empty($_POST['shiftStart2']) ? $_POST['shiftStart2'] : '00';
+        $deputy = isset($_POST['deputy']) ? $mysqli->real_escape_string($_POST['deputy']) : false;
+        $radioNum = isset($_POST['radioNum']) ? $mysqli->real_escape_string($_POST['radioNum']) : '';
+        $address = isset($_POST['address']) ? $mysqli->real_escape_string($_POST['address']) : '';
+        $city = isset($_POST['city']) ? $mysqli->real_escape_string($_POST['city']) : '';
+        $phone = isset($_POST['phone']) ? $mysqli->real_escape_string($_POST['phone']) : '';
+        $shiftStart1 = !empty($_POST['shiftStart1']) ? $mysqli->real_escape_string($_POST['shiftStart1']) : '00';
+        $shiftStart2 = !empty($_POST['shiftStart2']) ? $mysqli->real_escape_string($_POST['shiftStart2']) : '00';
         $shiftStart = $shiftStart1.$shiftStart2."00";
-        $shiftEnd1 = !empty($_POST['shiftEnd1']) ? $_POST['shiftEnd1'] : '00';
-        $shiftEnd2 = !empty($_POST['shiftEnd2']) ? $_POST['shiftEnd2'] : '00';
+        $shiftEnd1 = !empty($_POST['shiftEnd1']) ? $mysqli->real_escape_string($_POST['shiftEnd1']) : '00';
+        $shiftEnd2 = !empty($_POST['shiftEnd2']) ? $mysqli->real_escape_string($_POST['shiftEnd2']) : '00';
         $shiftEnd = $shiftEnd1.$shiftEnd2."00";
-        $dress = isset($_POST['dress']) ? $_POST['dress'] : '';
+        $dress = isset($_POST['dress']) ? $mysqli->real_escape_string($_POST['dress']) : '';
         $isReserve = isset($_POST['isReserve']) ? '1' : '0';
         
         //add to database
-        
-        $myq = "INSERT INTO `PAYROLL`.`SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
-            `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
-            `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
-            `SUP_TIME` ,`SUP_IP`, IS_RESERVE) VALUES (
-            NULL , '".$deputy."', '".$radioNum."', NOW(), '".$_SESSION['userIDnum']."', NOW(), INET_ATON('".$_SERVER['REMOTE_ADDR']."'), 
-                '".$address."', '".$city."', '".$phone."', '".Date('Y-m-d', strtotime($_POST['dateSelect']))."', 
-                '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', '',".$isReserve."
-            );";
-        $result = $mysqli->query($myq);
-        if(!SQLerrorCatch($mysqli, $result)) {
-            $secLogID = $mysqli->insert_id;      
-            echo '<h2>Results</h2>Successfully Added Secondary Employment Log, Reference Number: '.$secLogID.'<br /><br />';
+        if(!$deputy){
+            $myq = "INSERT INTO `PAYROLL`.`SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
+                `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
+                `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
+                `SUP_TIME` ,`SUP_IP`, IS_RESERVE) VALUES (
+                NULL , '".$deputy."', '".$radioNum."', NOW(), '".$_SESSION['userIDnum']."', NOW(), INET_ATON('".$_SERVER['REMOTE_ADDR']."'), 
+                    '".$address."', '".$city."', '".$phone."', '".Date('Y-m-d', strtotime($_POST['dateSelect']))."', 
+                    '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', '',".$isReserve."
+                );";
+            $result = $mysqli->query($myq);
+            if(!SQLerrorCatch($mysqli, $result)) {
+                $secLogID = $mysqli->insert_id;      
+                echo '<h2>Results</h2>Successfully Added Secondary Employment Log, Reference Number: '.$secLogID.'<br /><br />';
+            }
+            else
+                echo '<h2>Results</h2>Failed to add Secondary Employment Log, try again.<br /><Br />';
         }
-        else
+        else{
             echo '<h2>Results</h2>Failed to add Secondary Employment Log, try again.<br /><Br />';
+        }
         
         
         //display results and get secLogID just added
@@ -288,18 +292,18 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     
     if($updateSecLog){
         //get posted values
-        $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] : '';
-        $radioNum = isset($_POST['radioNum']) ? $_POST['radioNum'] : '';
-        $address = isset($_POST['address']) ? $_POST['address'] : '';
-        $city = isset($_POST['city']) ? $_POST['city'] : '';
-        $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
-        $shiftStart1 = isset($_POST['shiftStart1']) ? $_POST['shiftStart1'] : '';
-        $shiftStart2 = isset($_POST['shiftStart2']) ? $_POST['shiftStart2'] : '';
+        $secLogID = isset($_POST['secLogID']) ? $mysqli->real_escape_string($_POST['secLogID']) : '';
+        $radioNum = isset($_POST['radioNum']) ? $mysqli->real_escape_string($_POST['radioNum']) : '';
+        $address = isset($_POST['address']) ? $mysqli->real_escape_string($_POST['address']) : '';
+        $city = isset($_POST['city']) ? $mysqli->real_escape_string($_POST['city']) : '';
+        $phone = isset($_POST['phone']) ? $mysqli->real_escape_string($_POST['phone']) : '';
+        $shiftStart1 = isset($_POST['shiftStart1']) ? $mysqli->real_escape_string($_POST['shiftStart1']) : '';
+        $shiftStart2 = isset($_POST['shiftStart2']) ? $mysqli->real_escape_string($_POST['shiftStart2']) : '';
         $shiftStart = $shiftStart1.$shiftStart2."00";
-        $shiftEnd1 = isset($_POST['shiftEnd1']) ? $_POST['shiftEnd1'] : '';
-        $shiftEnd2 = isset($_POST['shiftEnd2']) ? $_POST['shiftEnd2'] : '';
+        $shiftEnd1 = isset($_POST['shiftEnd1']) ? $mysqli->real_escape_string($_POST['shiftEnd1']) : '';
+        $shiftEnd2 = isset($_POST['shiftEnd2']) ? $mysqli->real_escape_string($_POST['shiftEnd2']) : '';
         $shiftEnd = $shiftEnd1.$shiftEnd2."00";
-        $dress = isset($_POST['dress']) ? $_POST['dress'] : '';
+        $dress = isset($_POST['dress']) ? $mysqli->real_escape_string($_POST['dress']) : '';
         
         $myq = "UPDATE SECLOG 
                 SET RADIO = '".$radioNum."', LOCATION = '".$address."', 
