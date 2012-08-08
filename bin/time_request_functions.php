@@ -426,8 +426,6 @@ else {
 <?php 
 } ?>
 
-
-
 <?php
 
     switch($admin) { //switch to show different users different reports
@@ -487,6 +485,37 @@ else {
                     WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'"; 
             break;
 } //end switch
+$divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
+if(isset($_POST['divisionID'])){
+    if($divisionID == "All"){
+         $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R
+                    INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    ORDER BY REFER";
+    }
+    else{
+        $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R
+                    INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    AND REQ.DIVISIONID IN (".
+                        $divisionID.
+                    ") ORDER BY REFER";
+    }
+}
     
 $result = $mysqli->query($myq);
 SQLerrorCatch($mysqli, $result);
@@ -495,13 +524,55 @@ $fieldCount = $result->field_count;
 //load array for table
 //$theTable = array(array());
 
+//open form
+?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> 
+<?php 
+if($admin >= 25){
+    echo '<div align="center">
+    Show Submitted Requests for the following division: 
+    <select name="divisionID" onchange="this.form.submit()">';
 
+    if(isset($_POST['divisionID'])){
+        $myDivID = $_POST['divisionID'];
+    }
+    else{
+        if($admin >= 50){
+        $myDivID = "All"; 
+        }
+        else{
+            $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
+            $myDivResult = $mysqli->query($mydivq);
+            SQLerrorCatch($mysqli, $myDivResult);
+            $temp = $myDivResult->fetch_assoc();
+            $myDivID = $temp['DIVISIONID'];
+        }
+    }
 
+    $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
+    $allDivResult = $mysqli->query($alldivq);
+    SQLerrorCatch($mysqli, $allDivResult);
+    while($Divrow = $allDivResult->fetch_assoc()) {
+        echo '<option value="'.$Divrow['DIVISIONID'].'"';
+        if($Divrow['DIVISIONID']==$myDivID)
+            echo ' SELECTED ';
+        echo '>'.$Divrow['DESCR'].'</option>';
+    }
+    if($admin >= 50){
+        if(isset($_POST['divisionID'])){
+            if($divisionID == "All")
+                echo '<option value="All" SELECTED>All</option>';
+            else
+                echo '<option value="All">All</option>';
+        }
+        else
+            echo '<option value="All" SELECTED>All</option>';
+    }
+    echo '</select></div>';
+}
 echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
         <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
             <div id="wrapper">';
-//open form
-?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> <?php            
+
 echo '<table class="sortable" id="sorter"><tr>';
         //get field info
 if($admin>0)
