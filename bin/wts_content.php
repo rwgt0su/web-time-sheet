@@ -101,6 +101,16 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displayUserVerify($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isMySubmitReq){
+            ?>
+            <div class="post"><?php displayMySubmittedRequests($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isReports){
+            ?>
+            <div class="post"><?php displayReportMenu($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
     }
     else{
         if($wts_content->isSearching){

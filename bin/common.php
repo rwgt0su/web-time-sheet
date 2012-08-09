@@ -70,8 +70,11 @@ require_once 'bin/wts_sec_log.php';
 //reserve employee management
 require_once 'bin/wts_reserves.php';
 
-//Alert functions (not ready yet)
+//Alert functions
 require_once 'bin/wts_alerts.php';
+
+//Report functions
+require_once 'bin/wts_reports.php';
 
 function popUpMessage($message){
 	?>
