@@ -21,6 +21,12 @@ $mysqli = $config->mysqli;
                     if(isset($_POST['editBtn'.$i]))
                             $referNum=$_POST['requestID'.$i];
                 }
+                if(empty($referNum)){
+                    for($i=0; $i<$totalRows; $i++){
+                        if(isset($_POST['foundUser'.$i]))
+                                $referNum=$_POST['requestID'.$i];
+                    }
+                }
                 $myq='SELECT REQUEST.IDNUM, TIMETYPEID, BEGTIME, ENDTIME, NOTE, CALLOFF, USEDATE, SUBTYPE,
                        LNAME, FNAME
                     FROM REQUEST, EMPLOYEE
