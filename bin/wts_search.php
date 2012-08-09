@@ -53,8 +53,8 @@ function selectUserSearch($config, $userToFind, $rowCount, $select = false) {
             echo '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$info[$i]["sn"][0].'" /> Last Name: ' . $info[$i]["sn"][0] . "<br />";
             echo '<input type="hidden" name="foundUserName' . $rowCount . '" value="' . $info[$i]["samaccountname"][0] . '" /> Username: ' . $info[$i]["samaccountname"][0] . '<br />';
             //Check user in Employee Database and output IDNUM if found
-            $result = searchDatabase($config, $info[$i]["samaccountname"][0], $i, false);
-            if ($result < 1) {
+            $searchResult = searchDatabase($config, $info[$i]["samaccountname"][0], $i, false);
+            if ($searchResult < 1) {
                 //User not in database, so register the user
                 registerUser($info[$i]["samaccountname"][0], "temp01", "temp01", 0, 1);
             }
@@ -69,7 +69,7 @@ function selectUserSearch($config, $userToFind, $rowCount, $select = false) {
             echo "Rank: " . $row['GRADE'] . "<br />";
             //echo "Department: " . $row['DESCR'] . "<br />";
 
-            if ($result < 1) {
+            if ($searchResult < 1) {
                 //Update newly created user's information with their Active Directory Info
                 $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
                     `LNAME` = '" . $info[$i]["sn"][0] . "',

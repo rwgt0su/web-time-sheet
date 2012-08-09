@@ -249,7 +249,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $isReserve = isset($_POST['isReserve']) ? '1' : '0';
         
         //add to database
-        if(!$deputy){
+        if(!empty($deputy)){
             $myq = "INSERT INTO `PAYROLL`.`SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
                 `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
                 `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
@@ -262,17 +262,18 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
             if(!SQLerrorCatch($mysqli, $result)) {
                 $secLogID = $mysqli->insert_id;      
                 echo '<h2>Results</h2>Successfully Added Secondary Employment Log, Reference Number: '.$secLogID.'<br /><br />';
+                $isEditing = true;
             }
             else
                 echo '<h2>Results</h2>Failed to add Secondary Employment Log, try again.<br /><Br />';
         }
         else{
-            echo '<h2>Results</h2>Failed to add Secondary Employment Log, try again.<br /><Br />';
+            echo '<h2>Results</h2>Must select a user.<br /><Br />';
         }
         
         
         //display results and get secLogID just added
-        $isEditing = true;
+        
         
         
     }
@@ -426,7 +427,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $foundUserID = '' ;
         if($totalRows > 0) {         
             //get post info providied from search results
-            for($i=1;$i<=$totalRows;$i++){
+            for($i=0;$i<=$totalRows;$i++){
                 if(isset($_POST['foundUser'.$i])) {
                     $foundUserFNAME = $_POST['foundUserFNAME'.$i];
                     $foundUserLNAME = $_POST['foundUserLNAME'.$i];
@@ -498,7 +499,7 @@ function approveSecLog($config) {
         $approveBtn = isset($_POST['approveBtn']) ? $_POST['approveBtn'] : false;
     
         if($approveBtn) {
-            for($i=0;$i<$_POST['rowCount'];$i++) {
+            for($i=0;$i<=$_POST['rowCount'];$i++) {
                 $box[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
                 if($box[$i]=='true'){
                 $secLogID = $_POST['secLogID'.$i];
