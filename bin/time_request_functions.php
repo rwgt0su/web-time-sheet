@@ -576,7 +576,7 @@ if($admin >= 25){
                 echo '<option value="All">All</option>';
         }
         else
-            echo '<option value="All" SELECTED>All</option>';
+            echo '<option value="All">All</option>';
     }
     echo '</select></div>';
 }
