@@ -661,32 +661,54 @@ function displayLeaveApproval(){
     * Form used to approve leave
     * 
     */
+    ?><form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn"><?php
+    
+    echo '<h3>Leave Pending Approvals</h3>';
     $admin = $_SESSION['admin'];
     if($admin >= 25) { 
+        $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
         
-
         $mysqli = connectToSQL();
         
-        $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
-                        DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
-                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', NOTE 'Comment', STATUS 'Status'                         
-                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.TIMETYPEID=T.TIMETYPEID
-                    AND   R.IDNUM=E.IDNUM
-                    AND STATUS='PENDING'
-                    AND E.DIVISIONID IN
-                        (SELECT DIVISIONID 
-                        FROM EMPLOYEE
-                        WHERE IDNUM='" . $_SESSION['userIDnum'] . "')
-                    ORDER BY RADIO DESC, REFER";
-        //echo $myq; //DEBUG
+        echo '<div align="center">
+            Show Submitted Requests for the following division: 
+            <select name="divisionID" onchange="this.form.submit()">';
 
-        $result = $mysqli->query($myq);
-        SQLerrorCatch($mysqli, $result);
-        
-        if (isset($_POST['approveBtn'])) {
+        if(isset($_POST['divisionID'])){
+            $divisionID = $_POST['divisionID'];
+        }
+        else{
+            if($admin >= 50){
+                $divisionID = "All"; 
+            }
+            else{
+                $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
+                $myDivResult = $mysqli->query($mydivq);
+                SQLerrorCatch($mysqli, $myDivResult);
+                $temp = $myDivResult->fetch_assoc();
+                $divisionID = $temp['DIVISIONID'];
+            }
+        }
+
+        $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
+        $allDivResult = $mysqli->query($alldivq);
+        SQLerrorCatch($mysqli, $allDivResult);
+        while($Divrow = $allDivResult->fetch_assoc()) {
+            echo '<option value="'.$Divrow['DIVISIONID'].'"';
+            if($Divrow['DIVISIONID']==$divisionID)
+                echo ' SELECTED ';
+            echo '>'.$Divrow['DESCR'].'</option>';
+        }
+        if(isset($_POST['divisionID'])){
+            if($divisionID == "All")
+                echo '<option value="All" SELECTED>All</option>';
+            else
+                echo '<option value="All">All</option>';
+        }
+        else
+            echo '<option value="All">All</option>';
+        echo '</select></div><br />';
+                if (isset($_POST['approveBtn'])) {
             for ($j=0; $result->num_rows > $j; $j++) {
                 $row = $result->fetch_row();
                 $refs[$j] = $row[0]; //save ref # in an array
@@ -706,14 +728,43 @@ function displayLeaveApproval(){
                 }
             }
         }
-       
+        if(strcmp($divisionID, "All") == 0){
+            $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
+                            DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                            DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                            T.DESCR 'Type', SUBTYPE 'Subtype', NOTE 'Comment', STATUS 'Status'                         
+                        FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                        WHERE R.TIMETYPEID=T.TIMETYPEID
+                        AND   R.IDNUM=E.IDNUM
+                        AND STATUS='PENDING'
+                        ORDER BY RADIO DESC, REFER";
+        }
+        else{
+            $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
+                            DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                            DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                            T.DESCR 'Type', SUBTYPE 'Subtype', NOTE 'Comment', STATUS 'Status'                         
+                        FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                        WHERE R.TIMETYPEID=T.TIMETYPEID
+                        AND   R.IDNUM=E.IDNUM
+                        AND STATUS='PENDING'
+                        AND E.DIVISIONID IN (".$divisionID.")
+                        ORDER BY RADIO DESC, REFER";
+        }
+        
+        
+        //echo $myq; //DEBUG
+
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        
         //build table
         //resultTable($mysqli, $result);
         ?>
-        
-        <hr>
+
         <table>
-            <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn">
             <!-- <tr><th>Ref #</th><th>Approve?</th><th>Reason</th></tr> -->
             <tr>
             <?php    
