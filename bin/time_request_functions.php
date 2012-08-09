@@ -284,7 +284,8 @@ else{
                         echo '<input type="hidden" name="ID" value="'.$foundUserID.'" />'.$foundUserLNAME.', '.$foundUserFNAME;
                     }
                     else{
-                        dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
+                        //dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
+                        echo $_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userIDnum']."'>";
                     }
                     ?>
                     <script language="JavaScript" type="text/javascript">   
