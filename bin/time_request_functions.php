@@ -602,32 +602,41 @@ function displaySubmittedRequests(){
         $leaveStatus = isset($resultArray['Status']) ? $resultArray['Status'] : '';
         $leaveSTATUS = isset($resultArray['STATUS']) ? $resultArray['STATUS'] : '';
         
-        if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED' && $admin>=50){
-            echo '<tr style="text-decoration:line-through" >';
+        if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'){
+            if($admin>=50)
+                echo '<tr style="text-decoration:line-through" >';
         }
         else
             echo '<tr >';
 
-        if($admin>0){
+        if($admin>=25){
             for($y=0; $y<$fieldCount+2; $y++){ //field loop    
-                //edit button that redirects to request page
-                if($y==0)
-                echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
-                    <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
-                //delete button
-                else if($y==1)
-                    echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
-                else //load results
-                    echo '<td>'. $resultArray[$y-2].'</td>';
-
-            }
+                if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'){
+                    if($admin>=50){
+                        //edit button that redirects to request page
+                        if($y==0)
+                        echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                            <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+                        //delete button
+                        else if($y==1)
+                            echo '<td><button type="submit"  name="unDeleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >unDelete</button></td>';
+                        else //load results
+                            echo '<td>'. $resultArray[$y-2].'</td>';
+                    }
+                }
+                else{
+                    //edit button that redirects to request page
+                    if($y==0)
+                    echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                        <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+                    //delete button
+                    else if($y==1)
+                        echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
+                    else //load results
+                        echo '<td>'. $resultArray[$y-2].'</td>';
+                }//end if EXPUNGED
+            }//end for loop
         } //end admin table
-        else { //no edit capabilities
-            for($y=0; $y<$fieldCount; $y++){ //field loop 
-                //load results
-                echo '<td>'. $resultArray[$y].'</td>';        
-            }
-        }
     }//end array loading
 
             echo  '<input type="hidden" name="totalRows" value="'.$x.'" />';
@@ -644,6 +653,13 @@ function displaySubmittedRequests(){
             $refToDelete = $_POST['deleteBtn'.$i];
             //procede w delete
             expungeRequest($mysqli, $refToDelete);
+        }
+    }//end of deleteBtn checking loop
+    for($i=0; $i<$x; $i++){
+        if(isset($_POST['unDeleteBtn'.$i])){
+            $refToDelete = $_POST['unDeleteBtn'.$i];
+            //procede w delete
+            expungeRequest($mysqli, $refToDelete, $unExpunge=true);
         }
     }//end of deleteBtn checking loop
 
@@ -1038,19 +1054,32 @@ function MUNISreport($config) {
     }
 }
 
-function expungeRequest($mysqli, $referNum) {
-    
-    $myq="UPDATE REQUEST 
-        SET STATUS='EXPUNGED'
-        WHERE REFER=".$referNum;
+function expungeRequest($mysqli, $referNum, $unExpunge=false) {
+    if($unExpunge){
+        $myq="UPDATE REQUEST 
+            SET STATUS='0'
+            WHERE REFER=".$referNum;
+    }
+    else{
+        $myq="UPDATE REQUEST 
+            SET STATUS='EXPUNGED'
+            WHERE REFER=".$referNum;
+    }
     
     $result = $mysqli->query($myq);
     
-    if(!SQLerrorCatch($mysqli, $result))
-        popUpMessage ('Request '.$referNum.' expunged. 
+    if(!SQLerrorCatch($mysqli, $result)){
+        if($unExpunge)
+            popUpMessage ('Request '.$referNum.' Has been placed back into PENDING State. 
                     <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
                     <input type="submit" value="OK" />
                     </form></div>');
+        else
+            popUpMessage ('Request '.$referNum.' expunged. 
+                        <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
+                        <input type="submit" value="OK" />
+                        </form></div>');
+    }
     else
         popUpMessage ("Error");    
         
