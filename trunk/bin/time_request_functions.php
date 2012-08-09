@@ -13,9 +13,10 @@ $mysqli = $config->mysqli;
     //check if we're coming from an edit button on the submitted report
             $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
             $updatingRequest = isset($_POST['formName']) ?  $_POST['formName'] : false;
+            $findBtn = isset($_POST['findBtn']) ?  true : false;
             //echo "updatingRequest = $updatingRequest"; //DEBUG
             
-            if($totalRows && $updatingRequest) {
+            if($totalRows && $updatingRequest && !$findBtn) {
                 for($i=0; $i<$totalRows; $i++){
                     if(isset($_POST['editBtn'.$i]))
                             $referNum=$_POST['requestID'.$i];

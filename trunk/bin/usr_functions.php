@@ -25,7 +25,7 @@ function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
                 SQLerrorCatch($mysqli, $result);
                 if($result->num_rows < 1){
                     $myq = "INSERT INTO EMPLOYEE 
-                        (ID,PASSWD,ADMINLVL,isLDAP,ACTIVE) 
+                        (ID,PASSWD,ADMINLVL,isLDAP,IS_ACTIVE) 
                         VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."','".$useAD."', '1')";
                     $result = $mysqli->query($myq);
                     SQLerrorCatch($mysqli, $result);
