@@ -88,7 +88,7 @@ function displayContent($wts_content, $config){
         }
         if($wts_content->isSecApprove){
             ?>
-            <div class="post"><?php approveSecLog($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <div class="post"><?php displaySecondaryLog($config, $approve=true) ; ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
         if($wts_content->isResManage){
