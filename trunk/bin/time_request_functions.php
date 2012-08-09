@@ -548,7 +548,7 @@ if($admin >= 25){
     }
     else{
         if($admin >= 50){
-        $myDivID = "All"; 
+            $myDivID = "All"; 
         }
         else{
             $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
@@ -568,7 +568,7 @@ if($admin >= 25){
             echo ' SELECTED ';
         echo '>'.$Divrow['DESCR'].'</option>';
     }
-    if($admin >= 50){
+    if($admin >= 25){
         if(isset($_POST['divisionID'])){
             if($divisionID == "All")
                 echo '<option value="All" SELECTED>All</option>';
@@ -1001,4 +1001,178 @@ function expungeRequest($mysqli, $referNum) {
         popUpMessage ("Error");    
         
 }
+
+function displayMySubmittedRequests($config){   
+/*
+ * A report of recent leave requests with
+ * different views according to admin level
+ */
+
+$mysqli = connectToSQL();
+$admin = $config->adminLvl;
+
+//what pay period are we currently in?
+$payPeriodQuery = "SELECT * FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
+$ppResult = $mysqli->query($payPeriodQuery);
+$ppArray = $ppResult->fetch_assoc();
+
+/* $ppOffset stands for the number of pay periods to adjust the query by 
+ * relative to the current period
+ */
+$ppOffset = isset($_GET['ppOffset']) ? $_GET['ppOffset'] : '0';
+//set the right URI for link
+if(isset($ppOffset))
+    //strip off the old GET variable and its value
+    $uri =  preg_replace("/&ppOffset=.*/", "", $_SERVER['REQUEST_URI'])."&ppOffset=";
+else
+    $uri = $_SERVER['REQUEST_URI']."&ppOffset="; //1st time set
+
+$startDate = new DateTime("{$ppArray['PPBEG']}");
+if($ppOffset < 0)
+    //backward in time by $ppOffset number of periods
+    $startDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+else
+    //forward in time by $ppOffset number of periods
+    $startDate->add(new DateInterval("P".($ppOffset*14)."D"));
+
+$endDate = new DateTime("{$ppArray['PPEND']}");
+if($ppOffset < 0)
+    //backward in time by $ppOffset number of periods
+    $endDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+else
+    //forward in time by $ppOffset number of periods
+    $endDate->add(new DateInterval("P".($ppOffset*14)."D"));
+
+?>
+<p><a href="<?php echo $_SERVER['REQUEST_URI'].'&cust=true'; ?>">Use Custom Date Range</a></br>
+<?php 
+if (isset($_GET['cust'])) {
+    echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
+    echo "<p> Start";
+    if ( isset($_POST['start']) && isset($_POST['end']) ) {
+        displayDateSelect('start', 'date_1', $_POST['start'],false,false);   
+        echo "End";
+        displayDateSelect('end', 'date_2',$_POST['end'],false,false);
+    }
+    else{
+        displayDateSelect('start', 'date_1', false,false,true);   
+        echo "End";
+        displayDateSelect('end', 'date_2',false,false,true);
+    }
+    echo "<input type='submit' value='Go' /></p></form>";
+    //overwrite current period date variables with 
+    //those provided by user
+    if ( isset($_POST['start']) && isset($_POST['end']) ) {
+        $startDate =  new DateTime( $_POST['start'] );
+        $endDate =  new DateTime( $_POST['end'] );
+        ?> <h3><center>Gain/Use Requests for <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3> <?php
+    }
+}
+else {
+?>
+<p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
+   <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
+<h3><center>Gain/Use Requests for pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
+<?php 
+} ?>
+
+<?php
+
+
+        $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST
+                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
+                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
+                    WHERE REQUEST.IDNUM=" . $_SESSION['userIDnum'] . 
+                    " AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    ORDER BY REFER";
+    
+$result = $mysqli->query($myq);
+SQLerrorCatch($mysqli, $result);
+
+$fieldCount = $result->field_count;
+//load array for table
+//$theTable = array(array());
+
+//open form
+?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> 
+<?php 
+
+echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
+        <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
+            <div id="wrapper">';
+
+echo '<table class="sortable" id="sorter"><tr>';
+        //get field info
+if($admin>0)
+    echo '<td>Edit</td><td>Delete</td>';   
+
+for($y=0; $finfo = $result->fetch_field();$y++) {
+    //assign field names as table header (row 0)
+    echo '<td>'. $finfo->name.'</td>';
+}
+echo '</tr>';
+
+for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
+    $leaveStatus = isset($resultArray['Status']) ? $resultArray['Status'] : '';
+    $leaveSTATUS = isset($resultArray['STATUS']) ? $resultArray['STATUS'] : '';
+    
+    if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'){
+        echo '<tr style="text-decoration:line-through" >';
+    }
+    else
+        echo '<tr >';
+    
+    if($admin>0){
+        for($y=0; $y<$fieldCount+2; $y++){ //field loop    
+            //edit button that redirects to request page
+            if($y==0)
+            echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                  <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+            //delete button
+            else if($y==1)
+                echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
+            else //load results
+                echo '<td>'. $resultArray[$y-2].'</td>';
+            
+        }
+    } //end admin table
+    else { //no edit capabilities
+        for($y=0; $y<$fieldCount; $y++){ //field loop 
+            //load results
+            echo '<td>'. $resultArray[$y].'</td>';        
+        }
+    }
+}//end array loading
+      
+        echo  '<input type="hidden" name="totalRows" value="'.$x.'" />';
+        echo '</tr>';
+        echo '</table></form></div>
+            <script type="text/javascript">
+                var sorter=new table.sorter("sorter");
+                sorter.init("sorter",2);
+            </script>';
+
+//check if we're deleting a record
+for($i=0; $i<$x; $i++){
+    if(isset($_POST['deleteBtn'.$i])){
+        $refToDelete = $_POST['deleteBtn'.$i];
+        //procede w delete
+        expungeRequest($mysqli, $refToDelete);
+    }
+}//end of deleteBtn checking loop
+
+
+
+//showSortableTable($theTable, 0);
+
+//build table
+//resultTable($mysqli, $result);
+//show a print button. printed look defined by print.css
+echo '<a href="javascript:window.print()">Print</a>';
+} //end displaySubmittedRequests()
 ?>
