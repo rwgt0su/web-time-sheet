@@ -663,14 +663,14 @@ function displayLeaveApproval(){
     */
     ?><form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn"><?php
     
-    echo '<h3>Leave Pending Approvals</h3>';
+    echo '<h3>Leave Request\'s Pending Approval</h3>';
     $admin = $_SESSION['admin'];
     if($admin >= 25) { 
         $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
         
         $mysqli = connectToSQL();
         
-        echo '<div align="center">
+        echo '<div align="center"><a href="?lookup=true">Request Lookup by Employee</a><br/><br />
             Show Submitted Requests for the following division: 
             <select name="divisionID" onchange="this.form.submit()">';
 
