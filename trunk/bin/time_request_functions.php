@@ -410,9 +410,16 @@ else
 if (isset($_GET['cust'])) {
     echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
     echo "<p> Start";
-    displayDateSelect('start', 'date_1');   
-    echo "End";
-    displayDateSelect('end', 'date_2');
+    if ( isset($_POST['start']) && isset($_POST['end']) ) {
+        displayDateSelect('start', 'date_1', $_POST['start'],false,false);   
+        echo "End";
+        displayDateSelect('end', 'date_2',$_POST['end'],false,false);
+    }
+    else{
+        displayDateSelect('start', 'date_1', false,false,true);   
+        echo "End";
+        displayDateSelect('end', 'date_2',false,false,true);
+    }
     echo "<input type='submit' value='Go' /></p></form>";
     //overwrite current period date variables with 
     //those provided by user
