@@ -246,6 +246,7 @@ function loginLDAPUser($user,$pass,$config){
     return $errorText;
 }
 function logoutUser($message){
+        unset($_SESSION['userIDnum']);
 	unset($_SESSION['validUser']);
 	unset($_SESSION['userName']);
 	unset($_SESSION['admin']);

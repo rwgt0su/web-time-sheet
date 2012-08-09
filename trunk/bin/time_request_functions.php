@@ -652,7 +652,7 @@ function displaySubmittedRequests(){
         if(isset($_POST['deleteBtn'.$i])){
             $refToDelete = $_POST['deleteBtn'.$i];
             //procede w delete
-            expungeRequest($mysqli, $refToDelete);
+            expungeRequest($mysqli, $refToDelete, false, $deleteIndex=$i, $totalRows=$x);
         }
     }//end of deleteBtn checking loop
     for($i=0; $i<$x; $i++){
@@ -1054,35 +1054,56 @@ function MUNISreport($config) {
     }
 }
 
-function expungeRequest($mysqli, $referNum, $unExpunge=false) {
-    if($unExpunge){
-        $myq="UPDATE REQUEST 
-            SET STATUS='0'
-            WHERE REFER=".$referNum;
-    }
-    else{
-        $myq="UPDATE REQUEST 
-            SET STATUS='EXPUNGED'
-            WHERE REFER=".$referNum;
-    }
+function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false, $totalRows=false) {
+    $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
     
-    $result = $mysqli->query($myq);
+    if($unExpunge && $_SESSION['admin']){
+        $myq="UPDATE REQUEST 
+            SET STATUS='PENDING'
+            WHERE REFER=".$referNum;
+        $result = $mysqli->query($myq);
     
-    if(!SQLerrorCatch($mysqli, $result)){
-        if($unExpunge)
+        if(!SQLerrorCatch($mysqli, $result)){
             popUpMessage ('Request '.$referNum.' Has been placed back into PENDING State. 
                     <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
                     <input type="submit" value="OK" />
                     </form></div>');
-        else
-            popUpMessage ('Request '.$referNum.' expunged. 
-                        <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
-                        <input type="submit" value="OK" />
-                        </form></div>');
+        }
     }
-    else
-        popUpMessage ("Error");    
-        
+    else{
+        if($confirmBtn && !empty($_POST['expungedReason']) && $_SESSION['admin']){
+            $myq="UPDATE REQUEST 
+                SET STATUS='EXPUNGED',
+                EX_REASON='".$_POST['expungedReason']."',
+                AUDITID='".$_SESSION['userIDnum']."',
+                IP= INET_ATON('".$_SERVER['REMOTE_ADDR']."')
+                WHERE REFER=".$referNum;
+            $result = $mysqli->query($myq);
+
+            if(!SQLerrorCatch($mysqli, $result)){
+                popUpMessage ('Request '.$referNum.' expunged. 
+                            <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
+                            <input type="submit" value="OK" />
+                            </form></div>');
+            }
+        }
+        else{
+            $result ="";
+            if(isset($_POST['expungedReason'])){
+                if(empty($_POST['expungedReason']))
+                    $result = '<font color="red">Requires a Reason</font><br/>';
+            }
+            $echo = '<div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
+                <input name="deleteBtn'.$delBtnIndex.'" type="hidden" value="'.$referNum.'" />
+                <input type="hidden" name="totalRows" value="'.$totalRows.'" />
+                Request '.$referNum.' to be expunged<br/>   '.$result.'
+                Reason:<textarea name="expungedReason"></textarea><br/>
+                <input type="submit" name="confirmBtn" value="CONFIRM EXPUNGE" />
+                </form></div>';
+            popUpMessage ($echo);
+            
+        }
+    }       
 }
 
 function displayMySubmittedRequests($config){   
@@ -1245,7 +1266,7 @@ for($i=0; $i<$x; $i++){
     if(isset($_POST['deleteBtn'.$i])){
         $refToDelete = $_POST['deleteBtn'.$i];
         //procede w delete
-        expungeRequest($mysqli, $refToDelete);
+        expungeRequest($mysqli, $refToDelete, false, $deleteIndex=$i, $totalRows=$x);
     }
 }//end of deleteBtn checking loop
 
