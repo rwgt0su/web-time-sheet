@@ -53,7 +53,7 @@ function displayPassChange($useAdmin, $addUser){
     
     if ((!isset($_POST['submitBtn'])) || ($error != '')) {
         if(!$addUser){
-            echo '<div class="caption">Change Password</div>';
+            echo '<h3>Change Password or Admin Level</h3>';
         }
         else{
             echo '<div class="caption">Add User</div>';
@@ -107,11 +107,11 @@ function displayPassChange($useAdmin, $addUser){
         <div id="result">
             <table width="100%"><tr><td><br/>
     <?php
-            if ($error == '' && !$addUser) {
+            if (empty($error) && !$addUser) {
                     echo " Password was successfully changed!<br/><br/>";
 					//history('Changed Password');
             }
-            else if ($error == '' && $useAdmin && $addUser) {
+            else if ($empty($error) && $useAdmin && $addUser) {
                     echo "User Added!!!<br/><br/>";
                     ?><a href="<?php echo $_SERVER['REQUEST_URI']; ?>">Add Another User</a><br /><?php
                     //history('Changed Password');
