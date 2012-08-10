@@ -40,6 +40,7 @@ function resetPass($user, $pass1, $pass2, $admin) {
     //reset $user's password to $pass
      
     // Check passwords match
+    if(!empty($pass1)){
 	if (strcmp($pass1, $pass2) != 0){
 		$error = "Passwords are not identical!";
                 return $error;
@@ -55,6 +56,16 @@ function resetPass($user, $pass1, $pass2, $admin) {
     $myq="UPDATE EMPLOYEE SET PASSWD='".saltyHash($pass1)."', ADMINLVL=". $admin ." " 
             . "WHERE ID='". $user . "' ";
     $result = $mysqli->query($myq);
+    }
+    else{
+            $mysqli = connectToSQL();
+        $user = strtoupper($mysqli->real_escape_string($user));
+        $pass1 = $mysqli->real_escape_string($pass1);
+        $myq="UPDATE EMPLOYEE SET ADMINLVL=". $admin ." " 
+                . "WHERE ID='". $user . "' ";
+        $result = $mysqli->query($myq);
+        $error = "Admin Level Changed Successfully";
+    }
 
     //show SQL error msg if query failed
     if (!$result) {
@@ -269,7 +280,7 @@ function displayUpdateProfile($config){
     $foundUserLNAME = '';
     $foundUserName = '';
     $foundUserID = $_SESSION['userIDnum'] ;
-    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 'none found';
+    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
     if($totalRows > 0) {
         //get post info providied from search results
         for($i=1;$i<=$totalRows;$i++){
@@ -398,7 +409,7 @@ function displayUpdateProfile($config){
         ?>
         </div><div align="center" class="login">
             <table>
-        <?php if ($_SESSION['admin'] >= 50) { 
+        <?php if ($_SESSION['admin'] >= 25) { 
                   echo "<tr><td>User: </td><td>";
                 if($totalRows > 0) { 
                     echo $lname. ', '. $fname. ' ';
