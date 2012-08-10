@@ -215,8 +215,9 @@ function loginLDAPUser($user,$pass,$config){
                     registerUser($user, $pass, $pass, $admin, "1");
                     //query to get the new auto_incremented IDNUM
                     $myq = "SELECT IDNUM FROM EMPLOYEE WHERE ID='".$user."'";
-                    $resultAssoc = $mysqli->query($myq);
+                    $result = $mysqli->query($myq);
                     SQLerrorCatch($mysqli, $result);
+                    $resultAssoc = $result->fetch_assoc();
                     
                     $errorText .= " and Valid password ";
                     $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
