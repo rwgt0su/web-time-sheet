@@ -215,23 +215,57 @@ function loginLDAPUser($user,$pass,$config){
        //User not found within database, check for Active Directory
        else{
             if ($user != "" && $pass != "") {
-                $ds = ldap_connect($config->ldap_server);
+                $cnx = ldap_connect($config->ldap_server);
                 $ldaprdn = $user . '@' . $config->domain;
-                ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
-                ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
-                if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
+                ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
+                ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
+                if ($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)) {
+//                $ds = ldap_connect($config->ldap_server);
+//                $ldaprdn = $user . '@' . $config->domain;
+//                ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
+//                ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
+//                if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
                     //Authorization success
                     $admin = "0";
                     $_SESSION['lastLogin'] = "Never";
+                    error_reporting(E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
+                    //Split given domain into LDAP Base DN
+                    $temp = explode(".", $config->domain);
+                    $dn = null;
+                    foreach ($temp as $dc) {
+                        if (empty($dn))
+                            $dn = "DC=" . $dc;
+                        else
+                            $dn = $dn . ",DC=" . $dc;
+                    }
+                    $userToFind = $user;
+                    $filter = "(&(objectCategory=person)(objectClass=user)";
+                    $filter.="(|(samaccountname=*" . $userToFind . "*)(sn=*" . $userToFind . "*)(displayname=*" . $userToFind . "*)";
+                    $filter.="(mail=*" . $userToFind . "*)(department=*" . $userToFind . "*)(title=*" . $userToFind . "*)))";  //Search fields
+                    $res = ldap_search($cnx, $dn, $filter);
+                    
+                    $info = ldap_get_entries($cnx, $res);
                     registerUser($user, $pass, $pass, $admin, "1");
                     //query to get the new auto_incremented IDNUM
-                    $myq = "SELECT IDNUM FROM EMPLOYEE WHERE ID='".$user."'";
+//                    $myq = "SELECT IDNUM FROM EMPLOYEE WHERE ID='".$user."'";
+//                    $result = $mysqli->query($myq);
+//                    SQLerrorCatch($mysqli, $result);
+//                    $resultAssoc = $result->fetch_assoc();
+
+                    //Update Newly Created User's Profile
+                    $idNum = getUserID($config, $user);
+                    $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+                        `LNAME` = '" . $info[0]["sn"][0] . "',
+                        `FNAME` = '" . $info[0]["givenname"][0] . "'
+                        WHERE EMPLOYEE.IDNUM = '" . $idNum . "'";
+                    //Perform SQL Query
                     $result = $mysqli->query($myq);
-                    SQLerrorCatch($mysqli, $result);
-                    $resultAssoc = $result->fetch_assoc();
-                    
+                    $message = "count: ".$info["count"]."<br/>";
+                                   
                     $errorText .= " and Valid password ";
-                    $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
+                    $_SESSION['userIDnum'] = getUserID($config, $user);
+
+                    //$_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
                     $_SESSION['userName'] = $user;
                     $_SESSION['admin'] = $admin;
                     $_SESSION['validUser'] = true;
@@ -279,11 +313,11 @@ function displayUpdateProfile($config){
     $foundUserFNAME = '';
     $foundUserLNAME = '';
     $foundUserName = '';
-    $foundUserID = $_SESSION['userIDnum'] ;
+    $foundUserID = $_SESSION['userIDnum'];
     $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
     if($totalRows > 0) {
         //get post info providied from search results
-        for($i=1;$i<=$totalRows;$i++){
+        for($i=0;$i<=$totalRows;$i++){
             if(isset($_POST['foundUser'.$i])) {
                 $foundUserID = $_POST['foundUserID'.$i];
                 break;
@@ -368,7 +402,7 @@ function displayUpdateProfile($config){
         //Get stored information (first view)
         $sql_user = strtoupper($mysqli->real_escape_string($foundUserID));
         $myq = "SELECT * FROM EMPLOYEE WHERE IDNUM=".$foundUserID;
-
+        
         $result = $mysqli->query($myq);
         
         //show SQL error msg if query failed
