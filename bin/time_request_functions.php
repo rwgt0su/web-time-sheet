@@ -727,26 +727,7 @@ function displayLeaveApproval(){
         else
             echo '<option value="All">All</option>';
         echo '</select></div><br />';
-                if (isset($_POST['approveBtn'])) {
-            for ($j=0; $result->num_rows > $j; $j++) {
-                $row = $result->fetch_row();
-                $refs[$j] = $row[0]; //save ref # in an array
-                $approve = 'approve' . $j;
-                $reason = 'reason' . $j;
-                if (isset($_POST["$approve"])) {
-                    $approveQuery="UPDATE REQUEST 
-                                    SET STATUS='".$_POST["$approve"]."',
-                                        REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
-                                        APPROVEDBY='".$_SESSION['userIDnum']."' 
-                                    WHERE REFER='$refs[$j]'";
-                    //echo $approveQuery; //DEBUG
-                    $approveResult = $mysqli->query($approveQuery);
-                    if(!SQLerrorCatch($mysqli, $approveResult))
-                            echo "<h3>Change Saved.</h3>";
-                    
-                }
-            }
-        }
+
         if(strcmp($divisionID, "All") == 0){
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
                             DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
@@ -778,7 +759,26 @@ function displayLeaveApproval(){
 
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
-        
+                if (isset($_POST['approveBtn'])) {
+            for ($j=0; $result->num_rows > $j; $j++) {
+                $row = $result->fetch_row();
+                $refs[$j] = $row[0]; //save ref # in an array
+                $approve = 'approve' . $j;
+                $reason = 'reason' . $j;
+                if (isset($_POST["$approve"])) {
+                    $approveQuery="UPDATE REQUEST 
+                                    SET STATUS='".$_POST["$approve"]."',
+                                        REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
+                                        APPROVEDBY='".$_SESSION['userIDnum']."' 
+                                    WHERE REFER='$refs[$j]'";
+                    //echo $approveQuery; //DEBUG
+                    $approveResult = $mysqli->query($approveQuery);
+                    if(!SQLerrorCatch($mysqli, $approveResult))
+                            echo "<h3>Change Saved.</h3>";
+                    
+                }
+            }
+        }
         //build table
         //resultTable($mysqli, $result);
         ?>
