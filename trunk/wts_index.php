@@ -27,6 +27,7 @@ require_once('bin/common.php');
                     <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="button_link" title="Home">Home</a>
                     <a href="https://mail.mahoningcountyoh.gov" target="_blank" class="button_link" title="Email">Email</a>
                     <a href="?about=true" class="button_link" title="About">About</a>
+                    <a href="/wts_help.htm" target="_blank" class="button_link" title="Help">Help</a>
 
                     <div class="search">
                         <form action="<?php echo $_SERVER['PHP_SELF']; ?>" name="Search_Form" method="POST" >
