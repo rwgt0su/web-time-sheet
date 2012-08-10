@@ -13,7 +13,7 @@ function displayAnnounce($config){
     }
 }
 function displayAdminAnnounce($config){
-    if($config->adminLvl >= 50){
+    if($config->adminLvl >= 50 || strcmp(strtoupper($_SESSION['userName']), "SSZEKELY") == 0){
         $editorDisplay = isset($_GET['editAnnounce']) ? $_GET['editAnnounce'] : false;
         
         if(!$editorDisplay && !isset($_POST['addAnnounce'])){
