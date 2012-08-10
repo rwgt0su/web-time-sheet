@@ -465,7 +465,9 @@ function displayUpdateProfile($config){
                     <tr><td>Work Phone: </td><td> <?php echo $wphone; ?> </td></tr>
                     <tr><td>Date of Birth: </td><td><?php echo $dob; ?></td></tr>
                     
-                    <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr>  
+                    <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr> 
+                    
+                    <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
                     <?php }
                     ?>
                 </table>
