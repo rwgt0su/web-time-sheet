@@ -1217,7 +1217,7 @@ if($admin>0)
 
 for($y=0; $finfo = $result->fetch_field();$y++) {
     //assign field names as table header (row 0)
-    echo '<td>'. $finfo->name.'</td>';
+    echo '<th>'. $finfo->name.'</th>';
 }
 echo '</tr>';
 
