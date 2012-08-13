@@ -347,7 +347,7 @@ function displayUpdateProfile($config){
         
         //popUpMessage("Hit Update");
         if($config->adminLvl >= 50){
-            $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+            $myq = "UPDATE `EMPLOYEE` SET 
                 `MUNIS` = '".$munisID."',
                 `LNAME` = '".$lname."',
                 `FNAME` = '".$fname."',
@@ -370,7 +370,7 @@ function displayUpdateProfile($config){
                 WHERE IDNUM = '".$userID."'";
         }
         else{
-            $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+            $myq = "UPDATE `EMPLOYEE` SET 
                 `MUNIS` = '".$munisID."',
                 `LNAME` = '".$lname."',
                 `FNAME` = '".$fname."',

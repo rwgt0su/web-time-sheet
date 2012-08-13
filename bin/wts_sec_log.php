@@ -132,7 +132,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
       depending on the value of SECLOG.IS_RESERVE */
     if(!$isApprove){
-        $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+        $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -149,7 +149,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
 
                 UNION
 
-                SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -166,7 +166,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 ORDER BY IDNUM";
     }
     else{
-        $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+        $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -184,7 +184,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
 
                 UNION
 
-                SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', SEC.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -297,7 +297,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
             }
         } 
     }
-    showSortableTable($theTable, 1);
+    showSortableTable($theTable, 3);
     $echo .= '<input type="hidden" name="editRows" value="'.$x.'" />';
     $echo .= '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
     
@@ -333,7 +333,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         
         //add to database
         if(!empty($deputy)){
-            $myq = "INSERT INTO `PAYROLL`.`SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
+            $myq = "INSERT INTO `SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
                 `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
                 `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
                 `SUP_TIME` ,`SUP_IP`, IS_RESERVE) VALUES (
@@ -363,7 +363,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     if($logoutSecLog){
         $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] : '';
         
-        $myq = "UPDATE `PAYROLL`.`SECLOG` SET `TIMEOUT` = NOW( ) ,
+        $myq = "UPDATE `SECLOG` SET `TIMEOUT` = NOW( ) ,
             `AUDIT_OUT_ID` = '".$_SESSION['userIDnum']."', `AUDIT_OUT_TIME` = NOW( ) ,
             `AUDIT_OUT_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE `SECLOG`.`IDNUM` = ".$secLogID." LIMIT 1 ;";
         $result = $mysqli->query($myq);
@@ -523,9 +523,28 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                 }//end if
             }//end for
         }
+        if(!empty($foundUserID)){
+            //get the selected user's radio and cell #s to pre-fill form
+            $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$foundUserID;         
+        }
+        else{
+            //get #s on the logged in user if no lookup was done
+            $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$_SESSION['userIDnum'];
+        }
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $row = $result->fetch_assoc();
+            
+        $radioNum = $row['RADIO'];   
+        $phone = $row['CELLPH'];
         
+            
         echo 'Deputy: <input type="hidden" name="deputy" value="'.$foundUserID.'" />';
-        echo $foundUserLNAME . ', ' . $foundUserFNAME;
+        if(!empty($foundUserID))
+            echo $foundUserLNAME . ', ' . $foundUserFNAME;
+        else
+            echo $row['LNAME'] . ', ' . $row['FNAME'];
+        
         displayUserLookup($config);
         echo '<br/>';
             echo 'Radio#: <input type="text" name="radioNum" value="'.$radioNum.'" /><br/>

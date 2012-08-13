@@ -111,6 +111,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displayReportMenu($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isApprovedUseReport){
+            ?>
+            <div class="post"><?php approvedTimeUseReport ($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
     }
     else{
         if($wts_content->isSearching){
