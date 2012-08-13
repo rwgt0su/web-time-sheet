@@ -96,3 +96,4 @@ require_once('bin/common.php');
 </body>
 </html>
 <?php $_SESSION['timeout'] = time(); //myAlerts($config); ?>
+ <meta http-equiv="refresh" content="1800;url='<?php echo $_SERVER['PHP_SELF']; ?> '" />

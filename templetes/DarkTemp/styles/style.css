@@ -202,6 +202,7 @@ a {
 
             .content_highlight .login table td {
                 padding: 4px;
+                vertical-align: top;
             }
 
             .content_highlight .login table tr {

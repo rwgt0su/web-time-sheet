@@ -106,7 +106,7 @@ function isValidUser(){
                 return false;
 	}
         else{
-            $timeout = 60;
+            $timeout = 60; //minutes
             if ($_SESSION['timeout'] + ($timeout * 60) < time()) {
                 //User has been inactive for 30 minutes
                 popUpMessage("Your Session has Timed Out. Please log back in");
