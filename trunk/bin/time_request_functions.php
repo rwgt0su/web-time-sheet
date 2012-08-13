@@ -344,7 +344,7 @@ else{
 
 
                 </br>
-                <p>Comment: <input type="text" name="comment" value="<?php echo $comment; ?>"></p>
+                <p>Comment: <textarea rows="3" cols="40" name="comment" ><?php echo $comment; ?></textarea></p>
                 <?php if($updatingRequest==='submittedRequests')
                     echo '<p><input type="submit" name="update" value="Update Request"></p>';
                 else

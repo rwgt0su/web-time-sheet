@@ -491,13 +491,13 @@ function displayUpdateProfile($config){
                     ?>
                     <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", "date_1", $hireDate, $required=true); ?></td></tr>
                     <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
-                    <tr><td>Address: </td><td><input name="address" type="text" <?php if(!$address) showInputBoxError(); else echo 'value="'.$address.'"'; ?> /></td></tr>
+                    <tr><td >Address: </td><td><textarea rows="3" cols="40" name="address" <?php if(!$address) showInputBoxError(); ?> ><?php echo $address; ?></textarea></td></tr>
                     <tr><td>Home Phone: </td><td><input name="hphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$hphone.'"'; ?> /></td></tr>
                     <tr><td>Cell Phone: </td><td><input name="cphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$cphone.'"'; ?> /></td></tr>
                     <tr><td>Work Phone: </td><td><input name="wphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$wphone.'"'; ?> /></td></tr>
                     <tr><td>Date of Birth: </td><td><?php displayDateSelect("dob", "date_2", $dob, $required=true); ?></td></tr>
                    
-                    <tr><td>Emergency Contact: </td><td><input name="emergency" type="text" <?php if(!$emergency) showInputBoxError(); else echo 'value="'.$emergency.'"'; ?> /></td></tr>
+                    <tr><td>Emergency Contact: </td><td><textarea rows="2" cols="40" name="emergency" <?php if(!$emergency) showInputBoxError(); ?> ><?php echo $emergency; ?></textarea></td></tr>
                     
                     <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
                     <?php

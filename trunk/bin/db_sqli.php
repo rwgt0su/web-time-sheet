@@ -1,11 +1,12 @@
 <?php
-function connectToSQL($useReserve = false){
+function connectToSQL(){
     //establish connetcion to 'PAYROLL' DB and return resource
-    if(!$useReserve){
+    $userName=isset($_SESSION['userName']) ? $_SESSION['userName'] : '';
+    if(strcasecmp($userName,'admin')==0 || strcasecmp($userName,'hr')==0 || strcasecmp($userName,'supv')==0 || strcasecmp($userName,'user')==0 )
+        $mysqli = new mysqli("localhost", "test", "test01", "PAYROLL_TEST");
+    else //production DB
         $mysqli = new mysqli("localhost", "web", "10paper", "PAYROLL");
-    }
-    else
-        $mysqli = new mysqli("localhost", "web_reserve", "Q4A5PK!loYcPh@P3pkPoAg9Pn", "RESERVE");
+   
     if ($mysqli->connect_errno) {
         $error = "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
         echo $error;
