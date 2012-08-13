@@ -682,7 +682,7 @@ function displayLeaveApproval(){
     */
     ?><form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn"><?php
     
-    echo '<h3>Leave Request\'s Pending Approval</h3>';
+    echo '<h3>Leave Requests Pending Approval</h3>';
     $admin = $_SESSION['admin'];
     if($admin >= 25) { 
         $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
@@ -726,7 +726,30 @@ function displayLeaveApproval(){
         }
         else
             echo '<option value="All">All</option>';
-        echo '</select></div><br />';
+        echo '</select>';
+        /*Shift selection that changes based on the selected division 
+          this still needs work, the menu appears but we need a query*/
+        /*if(isset($_POST['divisionID'])){
+            //echo "post div id = ". $_POST['divisionID']; //DEBUG
+            if($_POST['divisionID']=='All')
+                $shiftQ = "SELECT ABBREV, DESCR, DIVISIONID FROM ASSIGNMENT";  
+            else
+                $shiftQ = "SELECT ABBREV, DESCR, DIVISIONID FROM ASSIGNMENT WHERE DIVISIONID=".$_POST['divisionID']; 
+            
+            $shiftResult = $mysqli->query($shiftQ);
+            SQLerrorCatch($mysqli, $shiftResult);
+            echo '  and shift: <select name="shiftID" onchange="this.form.submit()">';
+            
+            while($shiftRow = $shiftResult->fetch_assoc()){
+                echo '<option value="'.$shiftRow['ABBREV'].'" >'.$shiftRow['DESCR'].'</option>';
+            }
+            echo '<option value="%" selected>All</option>';
+            echo '</select>';
+        }*/
+        echo    '</div><br />';
+        
+        //$shift = isset($_POST['shiftID']) ? $_POST['shiftID'] : '%';
+        //  i did add this to a where clause, didn't seem to work: AND E.ASSIGN LIKE '%".$shift."%'
 
         if(strcmp($divisionID, "All") == 0){
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
@@ -980,6 +1003,88 @@ function displayTimeUseReport ($config) {
             ORDER BY E.DIVISIONID, LNAME";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
+    resultTable($mysqli, $result);
+    }
+    //show a print button. printed look defined by print.css
+    echo '<a href="javascript:window.print()">Print</a>';
+    
+}
+
+function approvedTimeUseReport ($config) {
+    //what pay period are we currently in?
+    $mysqli = $config->mysqli;
+    
+    $payPeriodQuery = "SELECT * FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
+    $ppResult = $mysqli->query($payPeriodQuery);
+    $ppArray = $ppResult->fetch_assoc();
+
+    /* $ppOffset stands for the number of pay periods to adjust the query by 
+    * relative to the current period
+    */
+    $ppOffset = isset($_GET['ppOffset']) ? $_GET['ppOffset'] : '0';
+    //set the right URI for link
+    if(isset($ppOffset))
+        //strip off the old GET variable and its value
+        $uri =  preg_replace("/&ppOffset=.*/", "", $_SERVER['REQUEST_URI'])."&ppOffset=";
+    else
+        $uri = $_SERVER['REQUEST_URI']."&ppOffset="; //1st time set
+
+    $startDate = new DateTime("{$ppArray['PPBEG']}");
+    if($ppOffset < 0)
+        //backward in time by $ppOffset number of periods
+        $startDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+    else
+        //forward in time by $ppOffset number of periods
+        $startDate->add(new DateInterval("P".($ppOffset*14)."D"));
+
+    $endDate = new DateTime("{$ppArray['PPEND']}");
+    if($ppOffset < 0)
+        //backward in time by $ppOffset number of periods
+        $endDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
+    else
+        //forward in time by $ppOffset number of periods
+        $endDate->add(new DateInterval("P".($ppOffset*14)."D"));
+
+    ?>
+    <p><a href="<?php echo $_SERVER['REQUEST_URI'].'&cust=true'; ?>">Use Custom Date Range</a></br>
+    <?php 
+    if (isset($_GET['cust'])) {
+        echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
+        echo "<p> Start";
+        displayDateSelect('start', 'date_1');   
+        echo "End";
+        displayDateSelect('end', 'date_2');
+        echo "<input type='submit' value='Go' /></p></form>";
+        //overwrite current period date variables with 
+        //those provided by user
+        if ( isset($_POST['start']) && isset($_POST['end']) ) {
+            $startDate =  new DateTime( $_POST['start'] );
+            $endDate =  new DateTime( $_POST['end'] );
+            ?> <h3><center>Time Gained/Used from <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3> <?php
+        }
+    }
+    else {
+    ?>
+    <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
+    <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
+    <h3><center>Time Gained/Used in pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
+    <?php
+   
+    $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', 
+                    DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                    DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                    T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
+                    APR.LNAME 'ApprovedBy', REASON 'Reason' 
+            FROM REQUEST
+            LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
+            LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
+            INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
+            WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+            AND STATUS='APPROVED'
+            ORDER BY REQ.LNAME";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    echo "<h2>Approved Requests</h2>";
     resultTable($mysqli, $result);
     }
     //show a print button. printed look defined by print.css

@@ -21,6 +21,7 @@ Class wts_content {
     public $isUserVerify;
     public $isMySubmitReq;
     public $isReports;
+    public $isApprovedUseReport;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -45,6 +46,7 @@ Class wts_content {
         $this->isUserVerify = isset($_GET['userVerify']) ? $_GET['userVerify'] : false;
         $this->isMySubmitReq = isset($_GET['myReq']) ? $_GET['myReq'] : false;
         $this->isReports = isset($_GET['reports']) ? $_GET['reports'] : false;
+        $this->isApprovedUseReport = isset($_GET['approvedUse']) ? $_GET['approvedUse'] : false;
         
         
         if(empty($_GET)){
