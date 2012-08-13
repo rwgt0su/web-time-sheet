@@ -1212,54 +1212,68 @@ echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
 
 echo '<table class="sortable" id="sorter"><tr>';
         //get field info
-if($admin>0)
-    echo '<td>Edit</td><td>Delete</td>';   
 
+$echo = '';
 for($y=0; $finfo = $result->fetch_field();$y++) {
     //assign field names as table header (row 0)
-    echo '<th>'. $finfo->name.'</th>';
+
+    $echo .= '<th>'. $finfo->name.'</th>';
 }
-echo '</tr>';
+$echo .= '</tr>';
+if($admin < 25){
+        $echo = '<th>Edit</th>'.$echo;
+}
+else{
+    $echo = '<th>Edit</th><th>Delete</th>'.$echo;
+
+}
 
 for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
     $leaveStatus = isset($resultArray['Status']) ? $resultArray['Status'] : '';
     $leaveSTATUS = isset($resultArray['STATUS']) ? $resultArray['STATUS'] : '';
     
     if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'){
-        echo '<tr style="text-decoration:line-through" >';
+        $echo .= '<tr style="text-decoration:line-through" >';
     }
     else
-        echo '<tr >';
+        $echo .= '<tr >';
     
     if($admin>0){
         for($y=0; $y<$fieldCount+2; $y++){ //field loop    
             //edit button that redirects to request page
             if($y==0)
-            echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+            $echo .= '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
                   <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
             //delete button
             else if($y==1)
-                echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
+                $echo .='<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
             else //load results
-                echo '<td>'. $resultArray[$y-2].'</td>';
+                $echo .= '<td>'. $resultArray[$y-2].'</td>';
             
         }
     } //end admin table
     else { //no edit capabilities
+        if($leaveStatus=='PENDING' || $leaveSTATUS=='PENDING')
+                $echo .= '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                    <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+        else
+            $echo .= '<td></td>';
         for($y=0; $y<$fieldCount; $y++){ //field loop 
             //load results
-            echo '<td>'. $resultArray[$y].'</td>';        
+            $echo .= '<td>'. $resultArray[$y].'</td>';        
         }
     }
 }//end array loading
+
       
-        echo  '<input type="hidden" name="totalRows" value="'.$x.'" />';
-        echo '</tr>';
-        echo '</table></form></div>
+        $echo .=   '<input type="hidden" name="totalRows" value="'.$x.'" />';
+        $echo .=  '</tr>';
+        $echo .=  '</table></form></div>
             <script type="text/javascript">
                 var sorter=new table.sorter("sorter");
                 sorter.init("sorter",2);
             </script>';
+        echo $echo;
 
 //check if we're deleting a record
 for($i=0; $i<$x; $i++){
