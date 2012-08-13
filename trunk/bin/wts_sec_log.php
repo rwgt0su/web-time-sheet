@@ -264,6 +264,10 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     }
     else{
        $showAll = isset($_POST['showAll']) ? true : false;
+        if($showAll)
+            echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
+        else
+            echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
        $theTable = array(array());
         $theTable[$x][0] = "Edit";
         $theTable[$x][1] = "Deputy";
@@ -275,14 +279,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
         $theTable[$x][7] = "Contact#";
         $theTable[$x][8] = "Shift Start";
         $theTable[$x][9] = "Shift End";
-
-       if($showAll)
-           $echo .= '<td>Log Off</td>';
-       $echo .= '</tr>';
-        if($showAll)
-            $echo .= '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
-        else
-            $echo .= '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
+    
         while($row = $result->fetch_assoc()) {
             if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll ){
                 $x++;
