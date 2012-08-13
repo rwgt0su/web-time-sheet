@@ -236,7 +236,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
         $theTable[$x][14] = "Sign Off";
 
         while($row = $result->fetch_assoc()) {
-            if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll || strcmp($row['SUP_TIME'], "00/00/00 0000") == 0){
+            if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll || (strcmp($row['SUP_TIME'], "00/00/00 0000") == 0 && $isApprove)){
                 $x++;
                 if(!$isApprove)
                     $theTable[$x][0] = '<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
