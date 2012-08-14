@@ -1,5 +1,5 @@
 <?php
-function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
+function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0", $useMCO="0"){
 	$errorText = '';
  
 	// Check passwords
@@ -15,7 +15,7 @@ function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
 		$userpass = saltyHash($pass1);
 		//popUpMessage("userpass: ".$userpass);
 		
-		//Insert new user record using $user, $pass1, $adminLvl
+		//Insert new user record using $user, $pass1, $adminLvl if user doesn't already exist
 		$mysqli = connectToSQL();
                 $myq = "SELECT *
                     FROM `EMPLOYEE`
@@ -25,9 +25,8 @@ function registerUser($user,$pass1,$pass2,$adminLvl, $useAD = "0"){
                 SQLerrorCatch($mysqli, $result);
                 if($result->num_rows < 1){
                     $myq = "INSERT INTO EMPLOYEE 
-                        (ID,PASSWD,ADMINLVL,isLDAP,IS_ACTIVE) 
-                        VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."','".$useAD."', '1')";
-                    $result = $mysqli->query($myq);
+                        (ID,PASSWD,ADMINLVL,isLDAP,IS_ACTIVE,isMCO) 
+                        VALUES ('".strtoupper($user)."','".$userpass."','".$adminLvl."','".$useAD."', '1','".$useMCO."')";                    $result = $mysqli->query($myq);
                     SQLerrorCatch($mysqli, $result);
                 }
                 else 
@@ -127,7 +126,7 @@ function loginUser($user,$pass){
 	
 	return $errorText;
 }
-function loginLDAPUser($user,$pass,$config){
+function loginLDAPUser($user,$pass,$config, $domain=false){
 	$errorText = '';
 	$validUser = false;
 
@@ -154,6 +153,12 @@ function loginLDAPUser($user,$pass,$config){
             if ($resultAssoc['isLDAP']){
                 //login using LDAP Password
                 if ($user != "" && $pass != "") {
+                    if($resultAssoc['isMCO']){
+                        $ds = ldap_connect($config->ldap_MCO_server);
+                    }
+                    else{
+                        $ds = ldap_connect($config->ldap_server);
+                    }
                     $ds = ldap_connect($config->ldap_server);
                     $ldaprdn = $user . '@' . $config->domain;
                     ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
@@ -215,22 +220,25 @@ function loginLDAPUser($user,$pass,$config){
        //User not found within database, check for Active Directory
        else{
             if ($user != "" && $pass != "") {
-                $cnx = ldap_connect($config->ldap_server);
-                $ldaprdn = $user . '@' . $config->domain;
+                //Attempt login and registration for Mahoning County Domain
+                if(strcmp($domain, "MAHONINGCO") == 0){
+                    $ldap_domain = $config->ldap_MCO_domain;
+                    $cnx = ldap_connect($config->ldap_MCO_server);
+                }
+                else{
+                    $ldap_domain =$config->domain;
+                    $cnx = ldap_connect($config->ldap_server);
+                }
+                $ldaprdn = $user . '@' . $ldap_domain;
                 ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
                 ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
                 if ($ldapbind = ldap_bind($cnx, $ldaprdn, $pass)) {
-//                $ds = ldap_connect($config->ldap_server);
-//                $ldaprdn = $user . '@' . $config->domain;
-//                ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
-//                ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
-//                if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
                     //Authorization success
                     $admin = "0";
-                    $_SESSION['lastLogin'] = "Never";
+                    
                     error_reporting(E_ALL ^ E_NOTICE);   //Suppress some unnecessary messages
                     //Split given domain into LDAP Base DN
-                    $temp = explode(".", $config->domain);
+                    $temp = explode(".", $ldap_domain);
                     $dn = null;
                     foreach ($temp as $dc) {
                         if (empty($dn))
@@ -238,6 +246,8 @@ function loginLDAPUser($user,$pass,$config){
                         else
                             $dn = $dn . ",DC=" . $dc;
                     }
+                    if(strcmp($domain, "MAHONINGCO") == 0)
+                        $dn = $config->ldap_MCO_OU.$dn;
                     $userToFind = $user;
                     $filter = "(&(objectCategory=person)(objectClass=user)";
                     $filter.="(|(samaccountname=*" . $userToFind . "*)(sn=*" . $userToFind . "*)(displayname=*" . $userToFind . "*)";
@@ -245,34 +255,36 @@ function loginLDAPUser($user,$pass,$config){
                     $res = ldap_search($cnx, $dn, $filter);
                     
                     $info = ldap_get_entries($cnx, $res);
-                    registerUser($user, $pass, $pass, $admin, "1");
-                    //query to get the new auto_incremented IDNUM
-//                    $myq = "SELECT IDNUM FROM EMPLOYEE WHERE ID='".$user."'";
-//                    $result = $mysqli->query($myq);
-//                    SQLerrorCatch($mysqli, $result);
-//                    $resultAssoc = $result->fetch_assoc();
+                    if($info['count'] > 0){
+                        if(strcmp($domain, "MAHONINGCO") == 0)
+                            registerUser($user, $pass, $pass, $admin, "1", "1");
+                        else
+                            registerUser($user, $pass, $pass, $admin, "1");
 
-                    //Update Newly Created User's Profile
-                    $idNum = getUserID($config, $user);
-                    $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
-                        `LNAME` = '" . $info[0]["sn"][0] . "',
-                        `FNAME` = '" . $info[0]["givenname"][0] . "'
-                        WHERE EMPLOYEE.IDNUM = '" . $idNum . "'";
-                    //Perform SQL Query
-                    $result = $mysqli->query($myq);
-                    $message = "count: ".$info["count"]."<br/>";
-                                   
-                    $errorText .= " and Valid password ";
-                    $_SESSION['userIDnum'] = getUserID($config, $user);
+                        $idNum = getUserID($config, $user);
+                        $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
+                            `LNAME` = '" . $info[0]["sn"][0] . "',
+                            `FNAME` = '" . $info[0]["givenname"][0] . "'
+                            WHERE EMPLOYEE.IDNUM = '" . $idNum . "'";
+                        //Perform SQL Query
+                        $result = $mysqli->query($myq);
 
-                    //$_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
-                    $_SESSION['userName'] = $user;
-                    $_SESSION['admin'] = $admin;
-                    $_SESSION['validUser'] = true;
-                    $_SESSION['isLDAP'] = true;
-                    $_SESSION['timeout'] = time();
-                    $validUser = true;
-                    echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'?updateProfile=true" />';
+                        $errorText .= " and Valid password ";
+
+                        //Set Session variables
+                        $_SESSION['userIDnum'] = getUserID($config, $user);
+                        $_SESSION['lastLogin'] = "Never";
+                        $_SESSION['userName'] = $user;
+                        $_SESSION['admin'] = $admin;
+                        $_SESSION['validUser'] = true;
+                        $_SESSION['isLDAP'] = true;
+                        $_SESSION['timeout'] = time();
+                        $validUser = true;
+                        //echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'?updateProfile=true" />';
+                    }
+                    else{
+                        $errorText .= "WARNING! Failed to authenticate as a Sheriff user: " . $ldapbind;
+                    }
                     
                 }
                 else
@@ -683,6 +695,7 @@ function displayLogin($config){
             $noUser = false;
             $username = isset($_POST['username']) ? $_POST['username'] : '';
             $password = isset($_POST['password']) ? $_POST['password'] : '';
+            $domain = isset($_POST['domainOPT']) ? $_POST['domainOPT'] : 'SHERIFF';
 
             if(empty($username)) {
                     $noUser = true;
@@ -697,7 +710,7 @@ function displayLogin($config){
             }
             else{
                     //$error = loginUser($username,$password);
-                    $error = loginLDAPUser($username,$password, $config);
+                    $error = loginLDAPUser($username,$password, $config, $domain);
             }
         } 
         if ($error != '') {
@@ -711,6 +724,12 @@ function displayLogin($config){
                                         <?php echo "value=\"$username\""; if ($noUser) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?> /></td></tr>
                 <tr><td>Password:</td><td> <input class="text" name="password" type="password" 
                                         <?php if (isset($_POST['submitBtn'])) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?>/></td></tr>
+                <tr><td>Domain:</td><td> 
+                        <select name="domainOPT">
+                            <option value="SHERIFF">SHERIFF</option>
+                            <option value="MAHONINGCO">MAHONING COUNTY</option>
+                        </select> 
+                                        </td></tr>
                 <tr><td>&nbsp</td><td>&nbsp</td></tr>
                 <tr><td></td><td align="center"><input style="font-size: 20px;" class="text" type="submit" name="submitBtn" value="Login" /></td></tr>
                 </table>
