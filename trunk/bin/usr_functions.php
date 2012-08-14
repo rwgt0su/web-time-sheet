@@ -280,7 +280,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
                         $validUser = true;
-                        //echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'?updateProfile=true" />';
+                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'?updateProfile=true" />';
                     }
                     else{
                         $errorText .= "WARNING! Failed to authenticate as a Sheriff user: " . $ldapbind;
