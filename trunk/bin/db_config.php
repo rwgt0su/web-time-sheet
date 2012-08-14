@@ -8,6 +8,9 @@ Class Config {
         public $ldapUser;
         public $ldapPass;
         public $ldap_server;
+        public $ldap_MCO_server;
+        public $ldap_MCO_domain;
+        public $ldap_MCO_OU;
 
 	public function Config(){
 		$this->mysqli = connectToSQL();
@@ -34,7 +37,11 @@ Class Config {
                         if (strcmp($row['Variable'], "ldap_user_pass") == 0){
 				$this->ldapPass = $row['Value'];
 			}
-		}	
+		}
+                //Prepare for Mahoning County Domain Migration
+                $this->ldap_MCO_domain = "mahoningcountyoh.gov";
+                $this->ldap_MCO_server = "10.2.35.25";
+                $this->ldap_MCO_OU = "OU=Sheriff,OU=Departments,";
 	}
 	public function getTitle(){
 		return $this->webTitle;
