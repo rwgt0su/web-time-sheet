@@ -154,16 +154,17 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                 //login using LDAP Password
                 if ($user != "" && $pass != "") {
                     if($resultAssoc['isMCO']){
-                        $ds = ldap_connect($config->ldap_MCO_server);
+                        $ldap_domain = $config->ldap_MCO_domain;
+                        $cnx = ldap_connect($config->ldap_MCO_server);
                     }
                     else{
-                        $ds = ldap_connect($config->ldap_server);
+                        $ldap_domain =$config->domain;
+                        $cnx = ldap_connect($config->ldap_server);
                     }
-                    $ds = ldap_connect($config->ldap_server);
-                    $ldaprdn = $user . '@' . $config->domain;
-                    ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
-                    ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
-                    if($ldapbind = ldap_bind($ds, $ldaprdn, $pass)){ 
+                    $ldaprdn = $user . '@' . $ldap_domain;
+                    ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
+                    ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
+                    if (ldap_bind($cnx, $ldaprdn, $pass)) { 
                         //Authorization success
                         $errorText .= " and Valid password ";
                         
