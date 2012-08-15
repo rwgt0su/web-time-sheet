@@ -885,9 +885,9 @@ function displayRequestLookup($config) {
     
     if( isValidUser() && (isset($_POST['lname']) || isset($_POST['editBtn'])) ) {
         if(isset($_POST['lname'])) {
-        $lname = $_SESSION['lname'] = strtoupper( $_POST['lname'] );
-        $startDate = $_SESSION['start'] = new DateTime ($_POST['start']);
-        $endDate = $_SESSION['end'] = new DateTime ($_POST['end']);
+            $lname = $_SESSION['lname'] = strtoupper( $_POST['lname'] );
+            $startDate = $_SESSION['start'] = new DateTime ($_POST['start']);
+            $endDate = $_SESSION['end'] = new DateTime ($_POST['end']);
         }
         else {
             $lname = $_SESSION['lname'];
@@ -896,15 +896,16 @@ function displayRequestLookup($config) {
         }
             
         $mysqli = $config->mysqli;
-        $myq = "SELECT DISTINCT REFER 'RefNo', R.IDNUM 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+        $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
                         ENDTIME 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                        APPROVEDBY 'ApprovedBy', REASON 'Reason' 
-                    FROM REQUEST R, TIMETYPE T, EMPLOYEE E
-                    WHERE R.TIMETYPEID=T.TIMETYPEID 
-                    AND E.IDNUM=R.IDNUM
-                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
-                    AND LNAME LIKE '%".$lname."%'";
+                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                    FROM REQUEST R
+                    INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
+                    LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    AND REQ.LNAME LIKE '%".$lname."%'";
         //popUpMessage($myq); //DEBUG
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);

@@ -72,8 +72,8 @@ function selectUserSearch($config, $userToFind, $rowCount, $select = false) {
             if ($searchResult < 1) {
                 //Update newly created user's information with their Active Directory Info
                 $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET 
-                    `LNAME` = '" . $info[$i]["sn"][0] . "',
-                    `FNAME` = '" . $info[$i]["givenname"][0] . "'
+                    `LNAME` = '" . strtoupper($info[$i]["sn"][0]) . "',
+                    `FNAME` = '" . strtoupper($info[$i]["givenname"][0]) . "'
                     WHERE EMPLOYEE.IDNUM = '" . $row['IDNUM'] . "'";
                 //Perform SQL Query
                 $result = $mysqli->query($myq);

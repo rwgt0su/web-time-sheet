@@ -319,10 +319,10 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     
     if($addSecLog){
         //get passed values
-        $deputy = isset($_POST['deputy']) ? $mysqli->real_escape_string($_POST['deputy']) : false;
-        $radioNum = isset($_POST['radioNum']) ? $mysqli->real_escape_string($_POST['radioNum']) : '';
-        $address = isset($_POST['address']) ? $mysqli->real_escape_string($_POST['address']) : '';
-        $city = isset($_POST['city']) ? $mysqli->real_escape_string($_POST['city']) : '';
+        $deputy = isset($_POST['deputy']) ? $mysqli->real_escape_string(strtoupper($_POST['deputy'])) : false;
+        $radioNum = isset($_POST['radioNum']) ? $mysqli->real_escape_string(strtoupper($_POST['radioNum'])) : '';
+        $address = isset($_POST['address']) ? $mysqli->real_escape_string(strtoupper($_POST['address'])) : '';
+        $city = isset($_POST['city']) ? $mysqli->real_escape_string(strtoupper($_POST['city'])) : '';
         $phone = isset($_POST['phone']) ? $mysqli->real_escape_string($_POST['phone']) : '';
         $shiftStart1 = !empty($_POST['shiftStart1']) ? $mysqli->real_escape_string($_POST['shiftStart1']) : '00';
         $shiftStart2 = !empty($_POST['shiftStart2']) ? $mysqli->real_escape_string($_POST['shiftStart2']) : '00';
