@@ -656,8 +656,8 @@ function displayDateSelect($inputName, $id, $oldValue = false, $required = false
             } 
             else 
                 echo 'value="'.$oldValue.'"';
-            if($submitForm)
-                echo ' onchange="submitSecLog();this.form.submit()"';
+//            if($submitForm)
+//                echo ' onchange="submitSecLog();this.form.submit()"';
             echo ' />';
 }
 function delUser($user){
