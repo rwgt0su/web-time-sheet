@@ -129,7 +129,7 @@ function reservesTable($config){
     
     while($row = $result->fetch_assoc()) {
         $rowCount++;
-        $theTable[$rowCount][0] = '<input name="foundUser'.$rowCount.'" type="submit" value="Edit/View" />';
+        $theTable[$rowCount][0] = $rowCount.'<input name="foundUser'.$rowCount.'" type="submit" value="Edit/View" />';
         $theTable[$rowCount][1] = '<input type="hidden" name="foundUserFNAME'.$rowCount.'" value="'.$row['FNAME'].'" /> ' . $row['FNAME'];
         $theTable[$rowCount][2] = '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$row['LNAME'].'" />' . $row['LNAME'];
         $theTable[$rowCount][3] =  '<input type="hidden" name="foundUserID'.$rowCount.'" value="'.$row['IDNUM'].'" />' . $row['FNAME'].".".$row['LNAME'].
@@ -149,7 +149,8 @@ function reservesTable($config){
     echo '<br /><br /><hr />';
     echo '<input type="hidden" name="prevNum" value="'.$prevNum.'" />';
     echo '<input type="hidden" name="nextNum" value="'.$nextNum.'" />';
-    echo 'Showing Records '. $prevNum . ' to ' . $nextNum;
+    $lastRec = $prevNum + $limit;
+    echo 'Showing Records '. $prevNum . ' to ' .$lastRec;
     //Spacing characters
     echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
     echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
@@ -159,7 +160,7 @@ function reservesTable($config){
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
     }
-    echo 'Records: <select name="limit">
+    echo 'Records: <select name="limit" onChange="this.form.submit()" >
         <option value="25"';
     if(strcmp($limit, "25") ==0)
         echo ' SELECTED';
