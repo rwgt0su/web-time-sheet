@@ -358,7 +358,7 @@ function displayUpdateProfile($config){
         $dob = isset($_POST['dob']) ? $mysqli->real_escape_string($_POST['dob']) : false;
         $emergency = isset($_POST['emergency']) ? $mysqli->real_escape_string($_POST['emergency']) : false;
         
-        //popUpMessage("Hit Update");
+        //popUpMessage("Hit Update"); //DEBUG
         if($config->adminLvl >= 50){
             $myq = "UPDATE `EMPLOYEE` SET 
                 `MUNIS` = '".$munisID."',
@@ -690,12 +690,12 @@ function displayLogout(){
 function displayLogin($config){
     if (!isValidUser()){
         $error = '0';
-    
+        $noPass = false;
+        $noUser = false;
+        $username = isset($_POST['username']) ? $_POST['username'] : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
         if (isset($_POST['submitBtn'])){
-            $noPass = false;
-            $noUser = false;
-            $username = isset($_POST['username']) ? $_POST['username'] : '';
-            $password = isset($_POST['password']) ? $_POST['password'] : '';
+
             $domain = isset($_POST['domainOPT']) ? $_POST['domainOPT'] : 'SHERIFF';
 
             if(empty($username)) {
@@ -717,12 +717,12 @@ function displayLogin($config){
         if ($error != '') {
             //First time seeing this screen or Invalid User Input
             ?>
-            <div class="thumbnail"><img src="/style/icon4.gif" alt="" /></div>
+            <div class="thumbnail"><img src="style/icon4.gif" alt="" /></div>
             <h3><?php echo $config->getTitle(); ?></h3>
             <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="loginform">
                 <table width="50%">
                 <tr><td>Username:</td><td> <input class="text" name="username" type="text" 
-                                        <?php echo "value=\"$username\""; if ($noUser) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?> /></td></tr>
+                                        <?php echo "value='".$username."'"; if ($noUser) echo "style='background:#FFFFFF;border:1px solid #FF0000'"; ?> /></td></tr>
                 <tr><td>Password:</td><td> <input class="text" name="password" type="password" 
                                         <?php if (isset($_POST['submitBtn'])) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?>/></td></tr>
                 <tr><td>Domain:</td><td> 
