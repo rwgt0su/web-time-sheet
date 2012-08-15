@@ -36,6 +36,8 @@ function displaySecondaryLog($config, $isApprove = false){
         if($changeDateBtn){
             $dateSelect = false;
             $editSelect = false;
+            $goBtn = false;
+            $addBtn = false;
         }
         if(!$dateSelect){
             echo 'Select Date: ';
@@ -107,7 +109,7 @@ function displaySecondaryLog($config, $isApprove = false){
 
 function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     $mysqli = $config->mysqli;
-     $app = isset($_POST['isApprove']) ? true : $isApprove;
+    $app = isset($_POST['isApprove']) ? true : $isApprove;
      
              
     //Get Approved Checkboxes
