@@ -6,10 +6,17 @@ function displayReserves($config){
         //get passed variables
         $addBtn = isset($_POST['addBtn']) ? true : false;
         $editSelect = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
-        $goBackBtn = isset($_POST['goBackBtn']) ? $addBtn = false : false;
-        $reserveID = false;
+        $reserveID = isset($_POST['reserveID']) ? $_POST['reserveID'] : false;
+        $goBackBtn = isset($_POST['goBackBtn']) ?  true : false;
+        $delBtn = isset($_POST['delBtn']) ? true : false;
+        $delBtn = isset($_POST['noBtn']) ? false : $delBtn;
+        
+        if($goBackBtn){
+            $addBtn = false;
+            $reserveID = false;
+        }
 
-        if(isset($_POST['totalRows'])){
+        if(isset($_POST['totalRows']) && !$reserveID){
             for ($i=0; $i <= $editSelect; $i++){
                 if(isset($_POST['foundUser'.$i])){
                     $reserveID = $_POST['foundUserID'.$i];
@@ -17,7 +24,30 @@ function displayReserves($config){
                 }
             }
         }
-
+        if($delBtn){
+            $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
+            $mysqli = connectToSQL($reserveDB = TRUE);
+            
+            if(!$confirmBtn){
+                //Confirm Delete Record
+                popUpMessage('Are you Sure? <br/>
+                    <form method="POST" name="confirmForm">
+                    <input type="submit" name="confirmBtn" value="Yes" />
+                    <input type="submit" name="noBtn" value="Cancel" />
+                    <input type="hidden" name="delBtn" value="true" />
+                    <input type="hidden" name="reserveID" value="'.$reserveID.'" />
+                    </form>');
+            }
+            else{
+                $myq = "DELETE FROM `RESERVE`
+                    WHERE `IDNUM` = ".$reserveID." LIMIT 1";
+                
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result);
+                $reserveID = false;
+                echo 'Reserve Successfully Removed.<br/>';
+            }
+        }
         //Main Content
         echo '<form name="resManage" method="POST" action="'.$_SERVER['REQUEST_URI'].'" >';
         echo '<input type="hidden" name="formName" value="resManage" />';
@@ -81,9 +111,9 @@ function reservesTable($config){
     $totalRows = $result->num_rows;
     
     if($config->adminLvl > 75)
-        $myq = "SELECT *  FROM `RESERVE` ORDER BY LNAME LIMIT ".$nextNum.",  ".$limit;
+        $myq = "SELECT *  FROM `RESERVE` ORDER BY `RESERVE`.`RADIO` ASC LIMIT ".$prevNum.",  ".$limit;
     else
-        $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5 ORDER BY LNAME LIMIT ".$nextNum.",  ".$limit;
+        $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5 ORDER BY `RESERVE`.`RADIO` ASC LIMIT ".$prevNum.",  ".$limit;
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $rowCount = 0;
@@ -94,24 +124,18 @@ function reservesTable($config){
     $theTable[$rowCount][1] = "First Name";
     $theTable[$rowCount][2] = "Last Name";
     $theTable[$rowCount][3] = "Username";
-    $theTable[$rowCount][4] = "Group";
+    $theTable[$rowCount][4] = "Radio";
+    $theTable[$rowCount][5] = "Group";
     
     while($row = $result->fetch_assoc()) {
         $rowCount++;
-        $theTable[$rowCount][0] = $rowCount.'<input name="foundUser'.$rowCount.'" type="submit" value="Edit/View" />';
+        $theTable[$rowCount][0] = '<input name="foundUser'.$rowCount.'" type="submit" value="Edit/View" />';
         $theTable[$rowCount][1] = '<input type="hidden" name="foundUserFNAME'.$rowCount.'" value="'.$row['FNAME'].'" /> ' . $row['FNAME'];
         $theTable[$rowCount][2] = '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$row['LNAME'].'" />' . $row['LNAME'];
         $theTable[$rowCount][3] =  '<input type="hidden" name="foundUserID'.$rowCount.'" value="'.$row['IDNUM'].'" />' . $row['FNAME'].".".$row['LNAME'].
                 '<input type="hidden" name="foundUserName'.$rowCount.'" value="'.$row['FNAME'].".".$row['LNAME'].'" />';
-        $theTable[$rowCount][4] = $row['GRP'];
-//        $echo .= '<div align="center"><table width="400"><tr><td>';
-//        $echo .= $rowCount.'<input name="foundUser'.$rowCount.'" type="radio" onclick="this.form.submit();" />Select</td><td>';
-//        $echo .= '<input type="hidden" name="foundUserFNAME'.$rowCount.'" value="'.$row['FNAME'].'" /> First name: ' . $row['FNAME'] . "<br />";
-//        $echo .= '<input type="hidden" name="foundUserLNAME'.$rowCount.'" value="'.$row['LNAME'].'" /> Last Name: ' . $row['LNAME'] . "<br />";
-//        $echo .= '<input type="hidden" name="foundUserID'.$rowCount.'" value="'.$row['IDNUM'].'" /> Username: ' . $row['FNAME'].".".$row['LNAME'] . '<br />';
-//        $echo .= '<input type="hidden" name="foundUserName'.$rowCount.'" value="'.$row['FNAME'].".".$row['LNAME'].'" />';
-//        $echo .= "Reserve Group " . $row['GRP'] . "<br />";
-//        $echo .= "</td></tr></table></div><br /><hr />";
+        $theTable[$rowCount][4] = $row['RADIO'];
+        $theTable[$rowCount][5] = $row['GRP'];
     }//end While Loop
     
     
@@ -127,7 +151,6 @@ function reservesTable($config){
     echo '<input type="hidden" name="nextNum" value="'.$nextNum.'" />';
     echo 'Showing Records '. $prevNum . ' to ' . $nextNum;
     //Spacing characters
-    echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
     echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
     echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
     echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
@@ -151,36 +174,36 @@ function reservesTable($config){
     if($limit == $rowCount)
         echo '<input type="submit" name="nextBtn" value="Next" />';
     //echo $echo;
-    showSortableTable($theTable, 0);
+    showSortableTable($theTable, 4);
 }
 function showAddReserve($config){
     if($config->adminLvl >75){
+        $mysqli = connectToSQL($reserveDB = TRUE);
         $saveBtn = isset($_POST['saveBtn']) ? true : false;
         if($saveBtn){
-            $group = isset($_POST['resGroup']) ? $_POST['resGroup'] : "";
-            $fName = isset($_POST['foundUserFNAME']) ? $_POST['foundUserFNAME'] : "";
-            $lName = isset($_POST['foundUserLNAME']) ? $_POST['foundUserLNAME'] : "";
-            $radio = isset($_POST['radioNum']) ? $_POST['radioNum'] : "";
-            $address = isset($_POST['address']) ? $_POST['address'] : "";
-            $city = isset($_POST['city']) ? $_POST['city'] : "";
-            $state = isset($_POST['state']) ? $_POST['state'] : "";
-            $zip = isset($_POST['zip']) ? $_POST['zip'] : "";
-            $hPhone = isset($_POST['hPhone']) ? $_POST['hPhone'] : "";
-            $cPhone = isset($_POST['cPhone']) ? $_POST['cPhone'] : "";
-            $wPhone = isset($_POST['wPhone']) ? $_POST['wPhone'] : "";
-            $tis = isset($_POST['tis']) ? $_POST['tis'] : "";
-            $agency = isset($_POST['agency']) ? $_POST['agency'] : "";
-            $notes = isset($_POST['notes']) ? $_POST['notes'] : "";
+            $group = isset($_POST['resGroup']) ?  $mysqli->real_escape_string($_POST['resGroup']) : "";
+            $fName = isset($_POST['foundUserFNAME']) ?  $mysqli->real_escape_string($_POST['foundUserFNAME']) : "";
+            $lName = isset($_POST['foundUserLNAME']) ?  $mysqli->real_escape_string($_POST['foundUserLNAME']) : "";
+            $radio = isset($_POST['radioNum']) ?  $mysqli->real_escape_string($_POST['radioNum']) : "";
+            $address = isset($_POST['address']) ?  $mysqli->real_escape_string($_POST['address']) : "";
+            $city = isset($_POST['city']) ?  $mysqli->real_escape_string($_POST['city']) : "";
+            $state = isset($_POST['state']) ?  $mysqli->real_escape_string($_POST['state']) : "";
+            $zip = isset($_POST['zip']) ?  $mysqli->real_escape_string($_POST['zip']) : "";
+            $hPhone = isset($_POST['hPhone']) ?  $mysqli->real_escape_string($_POST['hPhone']) : "";
+            $cPhone = isset($_POST['cPhone']) ?  $mysqli->real_escape_string($_POST['cPhone']) : "";
+            $wPhone = isset($_POST['wPhone']) ?  $mysqli->real_escape_string($_POST['wPhone']) : "";
+            $tis = isset($_POST['tis']) ?  $mysqli->real_escape_string($_POST['tis']) : "";
+            $agency = isset($_POST['agency']) ?  $mysqli->real_escape_string($_POST['agency']) : "";
+            $notes = isset($_POST['notes']) ?  $mysqli->real_escape_string($_POST['notes']) : "";
             
             if(empty($fName) || empty($lName) || empty($group)){
                 echo '<br />Must provide all the highlighted items<br /> Did not Save<br />';
                 $saveBtn = false;
             }
             else{
-                $mysqli = connectToSQL($reserveDB = TRUE);
                 $myq = "INSERT INTO `RESERVE`.`RESERVE` (`GRP` ,`LNAME` ,`FNAME` ,`RADIO` ,`ADDRESS` ,`CITY` ,`ST` ,`ZIP` ,`HOMEPH` ,`CELLPH` ,`WORKPH` ,`TIS` ,`AGENCY` ,`NOTES` ,`IDNUM`)
                     VALUES (
-                    '".$group."',
+                    ".$group.",
                     '".$lName."',
                     '".$fName."',
                     '".$radio."',
@@ -242,32 +265,56 @@ function showAddReserve($config){
     }
 }
 function reserveDetails($config, $reserveID){
-    echo 'Details for: ' . $reserveID;
+    $mysqli = connectToSQL($reserveDB = TRUE);
+    echo 'Details for: ' . $reserveID . '<input type="hidden" name="reserveID" value="'.$reserveID.'" />';
     if($config->adminLvl >75){
         $updateBtn = isset($_POST['updateBtn']) ? true : false;
+        
         if($updateBtn){
-            $group = isset($_POST['resGroup']) ? $_POST['resGroup'] : "";
-            $fName = isset($_POST['foundUserFNAME']) ? $_POST['foundUserFNAME'] : "";
-            $lName = isset($_POST['foundUserLNAME']) ? $_POST['foundUserLNAME'] : "";
-            $radio = isset($_POST['radioNum']) ? $_POST['radioNum'] : "";
-            $address = isset($_POST['address']) ? $_POST['address'] : "";
-            $city = isset($_POST['city']) ? $_POST['city'] : "";
-            $state = isset($_POST['state']) ? $_POST['state'] : "";
-            $zip = isset($_POST['zip']) ? $_POST['zip'] : "";
-            $hPhone = isset($_POST['hPhone']) ? $_POST['hPhone'] : "";
-            $cPhone = isset($_POST['cPhone']) ? $_POST['cPhone'] : "";
-            $wPhone = isset($_POST['wPhone']) ? $_POST['wPhone'] : "";
-            $tis = isset($_POST['tis']) ? $_POST['tis'] : "";
-            $agency = isset($_POST['agency']) ? $_POST['agency'] : "";
-            $notes = isset($_POST['notes']) ? $_POST['notes'] : "";
+            $group = isset($_POST['resGroup']) ?  $mysqli->real_escape_string($_POST['resGroup']) : "";
+            $fName = isset($_POST['foundUserFNAME']) ?  $mysqli->real_escape_string($_POST['foundUserFNAME']) : "";
+            $lName = isset($_POST['foundUserLNAME']) ?  $mysqli->real_escape_string($_POST['foundUserLNAME']) : "";
+            $radio = isset($_POST['radioNum']) ?  $mysqli->real_escape_string($_POST['radioNum']) : "";
+            $address = isset($_POST['address']) ?  $mysqli->real_escape_string($_POST['address']) : "";
+            $city = isset($_POST['city']) ?  $mysqli->real_escape_string($_POST['city']) : "";
+            $state = isset($_POST['state']) ?  $mysqli->real_escape_string($_POST['state']) : "";
+            $zip = isset($_POST['zip']) ?  $mysqli->real_escape_string($_POST['zip']) : "";
+            $hPhone = isset($_POST['hPhone']) ?  $mysqli->real_escape_string($_POST['hPhone']) : "";
+            $cPhone = isset($_POST['cPhone']) ?  $mysqli->real_escape_string($_POST['cPhone']) : "";
+            $wPhone = isset($_POST['wPhone']) ?  $mysqli->real_escape_string($_POST['wPhone']) : "";
+            $tis = isset($_POST['tis']) ?  $mysqli->real_escape_string($_POST['tis']) : "";
+            $agency = isset($_POST['agency']) ?  $mysqli->real_escape_string($_POST['agency']) : "";
+            $notes = isset($_POST['notes']) ?  $mysqli->real_escape_string($_POST['notes']) : "";
             
             if(empty($fName) || empty($lName) || empty($group)){
                 echo '<br />Must provide all the highlighted items<br /> Did not Save<br />';
-                $saveBtn = false;
+            }
+            else{
+                //Update Fields
+                $myq = "UPDATE `RESERVE`.`RESERVE` SET
+                    `GRP` = ".$group.",
+                    `LNAME` = '".$lName."',
+                    `FNAME` = '".$fName."',
+                    `RADIO` = '".$radio."',
+                    `ADDRESS` = '".$address."',
+                    `CITY` = '".$city."',
+                    `ST` = '".$state."',
+                    `ZIP` = '".$zip."',
+                    `HOMEPH` = '".$hPhone."',
+                    `CELLPH` = '".$cPhone."',
+                    `WORKPH` = '".$wPhone."',
+                    `TIS` = '".$tis."',
+                    `AGENCY` = '".$agency."',
+                    `NOTES` = '".$notes."' 
+                    WHERE `IDNUM` = ".$reserveID;
+                
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result);
+                echo 'Reserve Successfully Updated.<br/>';
             }
         }
         else{
-            $mysqli = connectToSQL($reserveDB = TRUE);
+            
             $myq = "SELECT * FROM `RESERVE` WHERE `IDNUM` = ".$reserveID;
             $result = $mysqli->query($myq);
             SQLerrorCatch($mysqli, $result);
@@ -292,11 +339,11 @@ function reserveDetails($config, $reserveID){
         echo '<tr><td></td><td>Last Name: </td><td><input type="text" name="foundUserLNAME" value="'.$lName.'" /></td></tr>';
         echo '<tr><td></td><td>Group: </td><td><select name="resGroup">
             <option value="">Select Group</option>            
-            <option value="1">Group 1</option>
-            <option value="2">Group 2</option>
-            <option value="3">Group 3</option>
-            <option value="4">Group 4</option>
-            <option value="5">Group 5</option>
+            <option value="1"'; if($group == "1") echo " SELECTED"; echo'>Group 1</option>
+            <option value="2"'; if($group == "2") echo " SELECTED"; echo'>Group 2</option>
+            <option value="3"'; if($group == "3") echo " SELECTED"; echo'>Group 3</option>
+            <option value="4"'; if($group == "4") echo " SELECTED"; echo'>Group 4</option>
+            <option value="5"'; if($group == "5") echo " SELECTED"; echo'>Group 5</option>
             </select></td></tr>';
         echo '<tr><td></td><td>Radio#: </td><td><input type="text" name="radioNum" value="'.$radio.'" /></td></tr>';
         echo '<tr><td></td><td>Address: </td><td><input type="text" name="address" value="'.$address.'" /></td></tr>';
@@ -312,7 +359,7 @@ function reserveDetails($config, $reserveID){
         echo '<tr><td></td><td>Agency: </td><td><input type="text" name="agency" value="'.$agency.'" /></td></tr>';
         echo '<tr><td></td><td>Additional Notes: </td><td><input type="text" name="notes" value="'.$notes.'" /></td></tr><tr><td></td></tr>';
         echo '<tr><td></td><td><input type="submit" name="updateBtn" value="Update and Save" /></td><td>';
-        echo '<input type="submit" name="goBackBtn" value="Back To Reserves" /></td></tr>';
+        echo '<input type="submit" name="delBtn" value="Delete Reserve" /> <input type="submit" name="goBackBtn" value="Back To Reserves" /></td></tr>';
         echo '</table></div>';
     }
 }
