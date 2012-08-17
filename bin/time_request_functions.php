@@ -491,6 +491,9 @@ function displaySubmittedRequests(){
                 break;
             case 99: //Sheriff
                 //custom query goes here
+                $myq = "SELECT *
+                        FROM REQUEST
+                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'"; 
                 break;
             case 100: //full admin, complete raw dump
 
