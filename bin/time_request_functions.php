@@ -11,43 +11,43 @@ function displayLeaveForm($config){
 $mysqli = $config->mysqli;
 
     //check if we're coming from an edit button on the submitted report
-            $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
-            $updatingRequest = isset($_POST['formName']) ?  $_POST['formName'] : false;
-            $findBtn = isset($_POST['findBtn']) ?  true : false;
-            //echo "updatingRequest = $updatingRequest"; //DEBUG
-            
-            if($totalRows && $updatingRequest && !$findBtn) {
-                for($i=0; $i<$totalRows; $i++){
-                    if(isset($_POST['editBtn'.$i]))
-                            $referNum=$_POST['requestID'.$i];
-                }
-                if(!empty($referNum)){
-                    $myq='SELECT REQUEST.IDNUM, TIMETYPEID, BEGTIME, ENDTIME, NOTE, CALLOFF, USEDATE, SUBTYPE,
-                        LNAME, FNAME
-                        FROM REQUEST, EMPLOYEE
-                        WHERE EMPLOYEE.IDNUM=REQUEST.IDNUM
-                        AND REFER='.$referNum;
-                    $result = $mysqli->query($myq);
-                    SQLerrorCatch($mysqli, $result);
-                    $row = $result->fetch_assoc();
-                    //set posts to pre-fill form from record we want to edit
-                    $_POST['referNum']= $referNum;
-                    $_POST['type'] = $row['TIMETYPEID'];   
-                    $_POST['ID'] = $row['IDNUM'];
-                    $_POST['beg1'] = substr($row['BEGTIME'],0,2);
-                    $_POST['beg2'] = substr($row['BEGTIME'],3,2);
-                    $_POST['end1'] = substr($row['ENDTIME'],0,2);
-                    $_POST['end2'] = substr($row['ENDTIME'],3,2);
-                    $_POST['comment'] = $row['NOTE'];
-                    $_POST['calloff'] = $row['CALLOFF'];
-                    $_POST['usedate'] = $row['USEDATE'];
-                    $_POST['subtype'] = $row['SUBTYPE'];
-                    $foundUserFNAME = $row['FNAME'];
-                    $foundUserLNAME = $row['LNAME'];
-                    $foundUserID = $row['IDNUM'];
-                    //var_dump($_POST);
-                }
-            } 
+    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
+    $updatingRequest = isset($_POST['formName']) ?  $_POST['formName'] : false;
+    $findBtn = isset($_POST['findBtn']) ?  true : false;
+    //echo "updatingRequest = $updatingRequest"; //DEBUG
+
+    if($totalRows && $updatingRequest && !$findBtn) {
+        for($i=0; $i<$totalRows; $i++){
+            if(isset($_POST['editBtn'.$i]))
+                    $referNum=$_POST['requestID'.$i];
+        }
+        if(!empty($referNum)){
+            $myq='SELECT REQUEST.IDNUM, TIMETYPEID, BEGTIME, ENDTIME, NOTE, CALLOFF, USEDATE, SUBTYPE,
+                LNAME, FNAME
+                FROM REQUEST, EMPLOYEE
+                WHERE EMPLOYEE.IDNUM=REQUEST.IDNUM
+                AND REFER='.$referNum;
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+            $row = $result->fetch_assoc();
+            //set posts to pre-fill form from record we want to edit
+            $_POST['referNum']= $referNum;
+            $_POST['type'] = $row['TIMETYPEID'];   
+            $_POST['ID'] = $row['IDNUM'];
+            $_POST['beg1'] = substr($row['BEGTIME'],0,2);
+            $_POST['beg2'] = substr($row['BEGTIME'],3,2);
+            $_POST['end1'] = substr($row['ENDTIME'],0,2);
+            $_POST['end2'] = substr($row['ENDTIME'],3,2);
+            $_POST['comment'] = $row['NOTE'];
+            $_POST['calloff'] = $row['CALLOFF'];
+            $_POST['usedate'] = $row['USEDATE'];
+            $_POST['subtype'] = $row['SUBTYPE'];
+            $foundUserFNAME = $row['FNAME'];
+            $foundUserLNAME = $row['LNAME'];
+            $foundUserID = $row['IDNUM'];
+            //var_dump($_POST);
+        }
+    } 
             
 //Get all passed variables
     $postID = isset($_POST['ID']) ? $_POST['ID'] : $_SESSION['userIDnum'];
@@ -65,6 +65,10 @@ $mysqli = $config->mysqli;
         $postEnding = $postEnd1.$postEnd2;
     else
         $postEnding = false;
+    if($postBegin>=$postEnding){
+        $postBegin = false;
+        $postEnding = false;
+    }
     $type = isset($_POST['type']) ? $mysqli->real_escape_string($_POST['type']) : false;
     $comment = isset($_POST['comment']) ? $mysqli->real_escape_string($_POST['comment']) : false;
     $calloff = isset($_POST['calloff']) ? $_POST['calloff'] : 'NO';
