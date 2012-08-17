@@ -118,7 +118,7 @@ function displayContent($wts_content, $config){
         }
         if($wts_content->subReqCal){
             ?>
-            <div class="post"><?php viewClandar($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <div class="post"><?php reportsCal($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
     }

@@ -75,6 +75,7 @@ require_once 'bin/wts_alerts.php';
 
 //Report functions
 require_once 'bin/wts_reports.php';
+require_once 'bin/wts_calendar.php';
 
 function popUpMessage($message){
 	?>
