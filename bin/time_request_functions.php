@@ -79,11 +79,11 @@ $mysqli = $config->mysqli;
         Else
             $isDateUse = true;
     $subtype = isset($_POST['subtype']) ? $mysqli->real_escape_string($_POST['subtype']) : 'NONE';
-
+    
 
 //Submit Button Pressed.  Add record to the database
 if (isset($_POST['submit']) || isset($_POST['update'])) {
-    
+
 
     $ID = $mysqli->real_escape_string(strtoupper($postID));
     $usedate = new DateTime($mysqli->real_escape_string($postUseDate));
@@ -127,22 +127,61 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
         if(!empty($postEnding) || !empty($postBegin)){
             //query to insert the record. loops until number of days is reached
             if(!isset($_POST['update'])){
+                $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
+                $noBtn = isset($_POST['noBtn']) ? true : false;
+                
                 for($i=0; $i <= $daysOff; $i++){
-                    $myq="INSERT INTO REQUEST (IDNUM, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
-                            VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
-                                    '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
-                    //echo $myq; //DEBUG
-                    $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
+                    //Check if useDate is already submitted
+                    $myq ="SELECT `REFER` , `TIMETYPEID` , `USEDATE` , `ENDTIME` , `BEGTIME` , `SUBTYPE`
+                        FROM `REQUEST`
+                        WHERE `TIMETYPEID` LIKE '".$type."'
+                        AND `USEDATE` = '".$usedate->format('Y-m-d')."'";
                     $result = $mysqli->query($myq);
+                    SQLerrorCatch($mysqli, $result);
+                    if($result->num_rows > 0 && !$confirmBtn && !$noBtn){
+                        $refNums = "";
+                        while($row = $result->fetch_assoc()) {
+                             $refNums .= $row['REFER'].', ';
+                        }
 
-                    //show SQL error msg if query failed
-                    if (SQLerrorCatch($mysqli, $result)) {
-                        echo 'Request not accepted.';
+                        popUpMessage('<div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
+                            You already submitted for this type of request on '.$usedate->format('Y-m-d').'<br/>
+                            Please see Reference Numbers: <br/>'.$refNums. '<br/><br/><h4>Are you sure you want to submit another?</h4>
+                                <input type="submit" name="confirmBtn" value="Yes" /> <input type="submit" name="noBtn" value="No" />
+                                <input type="hidden" name="type" value="'.$type.'" />
+                                <input type="hidden" name="subtype" value="'.$subtype.'" />
+                                <input type="hidden" name="ID" value="'.$postID .'" />
+                                <input type="hidden" name="usedate" value="'.$postUseDate.'" />
+                                <input type="hidden" name="thrudate" value="'.$postThruDate.'" />
+                                <input type="hidden" name="beg1" value="'.$postBeg1.'" />
+                                <input type="hidden" name="beg2" value="'.$postBeg2.'" />
+                                <input type="hidden" name="end1" value="'.$postEnd1.'" />
+                                <input type="hidden" name="end2" value="'.$postEnd2.'" />
+                                <input type="hidden" name="comment" value="'.$comment.'" />
+                                <input type="hidden" name="calloff" value="'.$calloff.'" />
+                                <input type="hidden" name="submit" value="true" />
+                                </form></div>');
                     }
-                    else {
-                        echo '<h3>Request accepted. The reference number for this request is <b>' 
-                            . $mysqli->insert_id . '</b>.</h3>';
+                    else if($noBtn){
+                        echo 'Canceled Submitting Request.';
                     }
+                    else{
+                        $myq="INSERT INTO REQUEST (IDNUM, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
+                                VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
+                                        '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
+                        //echo $myq; //DEBUG
+                        $usedate->modify("+1 day"); //add one more day for the next iteration if multiple days off
+                        $result = $mysqli->query($myq);
+
+                        //show SQL error msg if query failed
+                        if (SQLerrorCatch($mysqli, $result)) {
+                            echo 'Request not accepted.';
+                        }
+                        else {
+                            echo '<h3>Request accepted. The reference number for this request is <b>' 
+                                . $mysqli->insert_id . '</b>.</h3>';
+                        }
+                    } //end validation check
                 }//end for loop
             }
         }//end blank start or end time
@@ -211,7 +250,7 @@ else{
                 echo '<input type="hidden" name="end1" value="'.$postEnd1.'" />';
                 echo '<input type="hidden" name="end2" value="'.$postEnd2.'" />';
                 echo '<input type="hidden" name="comment" value="'.$comment.'" />';
-                echo '<input type="hidden" name="calloff" value="'.$_POST['calloff'].'" />';
+                echo '<input type="hidden" name="calloff" value="'.$calloff.'" />';
                 
                 //Get additional search inputs
                 $searchUser = isset($_POST['searchUser']) ? $_POST['searchUser'] : '';
