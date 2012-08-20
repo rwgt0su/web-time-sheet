@@ -65,9 +65,11 @@ $mysqli = $config->mysqli;
         $postEnding = $postEnd1.$postEnd2;
     else
         $postEnding = false;
-    if($postBegin>=$postEnding){
-        $postBegin = false;
-        $postEnding = false;
+    if(!isset($_POST['shift'])){
+        if($postBegin>=$postEnding){
+            $postBegin = false;
+            $postEnding = false;
+        }
     }
     $type = isset($_POST['type']) ? $mysqli->real_escape_string($_POST['type']) : false;
     $comment = isset($_POST['comment']) ? $mysqli->real_escape_string($_POST['comment']) : false;
@@ -150,6 +152,7 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                                 <input type="submit" name="confirmBtn" value="Yes" /> <input type="submit" name="noBtn" value="No" />
                                 <input type="hidden" name="type" value="'.$type.'" />
                                 <input type="hidden" name="subtype" value="'.$subtype.'" />
+                                <input type="hidden" name="shift" value="'.$shiftLength.'" />
                                 <input type="hidden" name="ID" value="'.$postID .'" />
                                 <input type="hidden" name="usedate" value="'.$postUseDate.'" />
                                 <input type="hidden" name="thrudate" value="'.$postThruDate.'" />
