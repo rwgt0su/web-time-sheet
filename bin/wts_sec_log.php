@@ -314,13 +314,20 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     $addSecLog = isset($_POST['addSecLog']) ? true : false;
     $logoutSecLog = isset($_POST['logoutSecLog']) ? true : false;
     $updateSecLog = isset($_POST['updateSecLog']) ? true : false;
+    $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
     
     $mysqli = $config->mysqli;
+    $mysqliReserve = connectToSQL($reserveDB = TRUE);
     
     if($addSecLog){
         //get passed values
-        $deputy = isset($_POST['deputy']) ? $mysqli->real_escape_string(strtoupper($_POST['deputy'])) : false;
-        $radioNum = isset($_POST['radioNum']) ? $mysqli->real_escape_string(strtoupper($_POST['radioNum'])) : '';
+        if($num_deputies > 0){
+            for($i=0;$i<$num_deputies;$i++){
+                $deputyID[$i] = isset($_POST['deputyID'.$i]) ? $mysqli->real_escape_string(strtoupper($_POST['deputyID'.$i])) : false;
+                $radioNum[$i] = isset($_POST['radioNum'.$i]) ? $mysqli->real_escape_string(strtoupper($_POST['radioNum'.$i])) : '';
+                $isReserve[$i] = isset($_POST['isReserve'.$i]) ? '1' : '0';
+            }
+        }
         $address = isset($_POST['address']) ? $mysqli->real_escape_string(strtoupper($_POST['address'])) : '';
         $city = isset($_POST['city']) ? $mysqli->real_escape_string(strtoupper($_POST['city'])) : '';
         $phone = isset($_POST['phone']) ? $mysqli->real_escape_string($_POST['phone']) : '';
@@ -331,36 +338,35 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $shiftEnd2 = !empty($_POST['shiftEnd2']) ? $mysqli->real_escape_string($_POST['shiftEnd2']) : '00';
         $shiftEnd = $shiftEnd1.$shiftEnd2."00";
         $dress = isset($_POST['dress']) ? $mysqli->real_escape_string($_POST['dress']) : '';
-        $isReserve = isset($_POST['isReserve']) ? '1' : '0';
         
         //add to database
-        if(!empty($deputy)){
-            $myq = "INSERT INTO `SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
-                `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
-                `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
-                `SUP_TIME` ,`SUP_IP`, IS_RESERVE) VALUES (
-                NULL , '".$deputy."', '".$radioNum."', NOW(), '".$_SESSION['userIDnum']."', NOW(), INET_ATON('".$_SERVER['REMOTE_ADDR']."'), 
-                    '".$address."', '".$city."', '".$phone."', '".Date('Y-m-d', strtotime($_POST['dateSelect']))."', 
-                    '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', '',".$isReserve."
-                );";
-            $result = $mysqli->query($myq);
-            if(!SQLerrorCatch($mysqli, $result)) {
-                $secLogID = $mysqli->insert_id;      
-                echo '<h2>Results</h2>Successfully Added Secondary Employment Log, Reference Number: '.$secLogID.'<br /><br />';
-                $isEditing = true;
+        echo '<h2>Results</h2>';
+        if($num_deputies>0){
+            for($i=0;$i<$num_deputies;$i++){
+                $myq = "INSERT INTO `SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
+                    `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
+                    `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
+                    `SUP_TIME` ,`SUP_IP`, IS_RESERVE) VALUES (
+                    NULL , '".$deputyID[$i]."', '".$radioNum[$i]."', NOW(), '".$_SESSION['userIDnum']."', NOW(), INET_ATON('".$_SERVER['REMOTE_ADDR']."'), 
+                        '".$address."', '".$city."', '".$phone."', '".Date('Y-m-d', strtotime($_POST['dateSelect']))."', 
+                        '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', '',".$isReserve[$i]."
+                    );";
+                $result = $mysqli->query($myq);
+                if(!SQLerrorCatch($mysqli, $result)) {
+                    $secLogID = $mysqli->insert_id;      
+                    echo 'Successfully Added Secondary Employment Log, Reference Number: '.$secLogID.'<br />';
+                    $isEditing = true;
+                }
+                else
+                    echo 'Failed to add Secondary Employment Log, try again.<br />';
             }
-            else
-                echo '<h2>Results</h2>Failed to add Secondary Employment Log, try again.<br /><Br />';
         }
         else{
-            echo '<h2>Results</h2>Must select a user.<br /><Br />';
+            echo 'Must select a user.<br />';
         }
-        
-        
+        echo '<br />';
+
         //display results and get secLogID just added
-        
-        
-        
     }
     if($logoutSecLog){
         $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] : '';
@@ -494,7 +500,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         }
     }
     if(!$isEditing && !isset($_POST['goBtn'])){
-        $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] :'' ;
+        $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] :$_SESSION['userIDnum'] ;
         $radioNum = isset($_POST['radioNum']) ? $_POST['radioNum']:'';
         $address = isset($_POST['address']) ? $_POST['address'] : '';
         $city = isset($_POST['city']) ? $_POST['city'] : '';
@@ -505,7 +511,46 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $shiftEnd2 = isset($_POST['shiftEnd2']) ? $_POST['shiftEnd2'] : '';
         $dress = isset($_POST['dress']) ? $_POST['dress']: '';
         $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : '' ;
-        $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : '';
+
+        //debug
+        //var_dump($_POST);
+        //Show previously added deputies
+        $deputyCount=0;
+        if($num_deputies > 0){
+            for($i=0;$i<$num_deputies;$i++){
+                if(!isset($_POST['removeDeputyBtn'.$i])){
+                    $deputyID[$i] = isset($_POST['deputyID'.$i]) ? $mysqli->real_escape_string(strtoupper($_POST['deputyID'.$i])) : '';
+                    $isReserve[$i] = isset($_POST['isReserve'.$i]) ? true : false;
+
+                    //get this user's information
+                    if($isReserve[$i]){
+                        $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM RESERVE WHERE IDNUM='.$deputyID[$i];
+                        $result = $mysqliReserve->query($myq);
+                        SQLerrorCatch($mysqliReserve, $result);
+                        $row = $result->fetch_assoc();
+                    }
+                    else{
+                        $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$deputyID[$i];
+                        $result = $mysqli->query($myq);
+                        SQLerrorCatch($mysqli, $result);
+                        $row = $result->fetch_assoc();
+                    }  
+                    if($i==0)
+                        $phone = $row['CELLPH'];
+                    echo 'Deputy: <input type="hidden" name="deputyID'.$deputyCount.'" value="'.$deputyID[$i].'" />';
+                    if($isReserve[$i]==1)
+                        echo '<input type="hidden" name="isReserve'.$deputyCount.'" value="true" />';
+                    echo $row['LNAME'] . ', ' . $row['FNAME'];
+                    echo ';  Radio#: <input type="hidden" name="radioNum'.$deputyCount.'" value="'.$row['RADIO'].'" />'.$row['RADIO'];
+                    echo '<input type="submit" name="removeDeputyBtn'.$deputyCount.'" value="Remove" />';
+                    echo '<br/>';
+                    $deputyCount++;
+                }
+            }//End for loop of previously added deputies
+        }//End check for multiple deputies
+        
+        //Get added Deputy
+        $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
         $foundUserFNAME = '';
         $foundUserLNAME = '';
         $foundUserName = '';
@@ -520,37 +565,47 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                     $foundUserID = $_POST['foundUserID'.$i];
                     
                     if(isset($_POST['isReserve'.$i]))
-                            echo '<input type="hidden" name="isReserve" value="true" />';
+                            $foundUserIsReserve = true;
+                    else
+                        $foundUserIsReserve = false;
                     break;
                 }//end if
             }//end for
         }
+        if(empty($foundUserID) && $num_deputies == 0){
+            $foundUserID = $_SESSION['userIDnum'];
+            $foundUserIsReserve = false;
+        }
         if(!empty($foundUserID)){
-            //get the selected user's radio and cell #s to pre-fill form
-            $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$foundUserID;         
-        }
-        else{
-            //get #s on the logged in user if no lookup was done
-            $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$_SESSION['userIDnum'];
-        }
-        $result = $mysqli->query($myq);
-        SQLerrorCatch($mysqli, $result);
-        $row = $result->fetch_assoc();
-            
-        $radioNum = $row['RADIO'];   
-        $phone = $row['CELLPH'];
-        
-            
-        echo 'Deputy: <input type="hidden" name="deputy" value="'.$foundUserID.'" />';
-        if(!empty($foundUserID))
-            echo $foundUserLNAME . ', ' . $foundUserFNAME;
-        else
+            if($foundUserIsReserve){
+                $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM RESERVE WHERE IDNUM='.$foundUserID;
+                $result = $mysqliReserve->query($myq);
+                SQLerrorCatch($mysqliReserve, $result);
+            }
+            else{
+                $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$foundUserID;
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result);
+            }
+
+            $row = $result->fetch_assoc();
+            if($deputyCount==0)
+                $phone = $row['CELLPH'];
+            echo 'Deputy: <input type="hidden" name="deputyID'.$deputyCount.'" value="'.$foundUserID.'" />';
+            if($foundUserIsReserve)
+                echo '<input type="hidden" name="isReserve'.$deputyCount.'" value="true" />';
             echo $row['LNAME'] . ', ' . $row['FNAME'];
-        
+            echo ';  Radio#: <input type="hidden" name="radioNum'.$deputyCount.'" value="'.$row['RADIO'].'" />'.$row['RADIO'];
+            echo '<input type="submit" name="removeDeputyBtn'.$deputyCount.'" value="Remove" />';
+            echo '<br/>';
+            $deputyCount++;
+        }
+        echo 'Add Deputy: ';
         displayUserLookup($config);
-        echo '<br/>';
-            echo 'Radio#: <input type="text" name="radioNum" value="'.$radioNum.'" /><br/>
-            Site Name or Address: <input type="text" name="address" value="'.$address.'" /><br/>
+        echo '<br />';
+        echo '<input type="hidden" name="num_deputies" value="'.$deputyCount.'" />';
+            
+        echo 'Site Name or Address: <input type="text" name="address" value="'.$address.'" /><br/>
             City/Twp: <input type="text" name="city" value="'.$city.'" /><br/>
             Contact#: <input type="text" name="phone" value="'.$phone.'" /><br/>
             Shift Start Time: ';
