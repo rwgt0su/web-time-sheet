@@ -214,8 +214,6 @@ function displayUserLookup($config) {
             echo '<input type="hidden" name="type" value="' . $_POST['type'] . '" />';
         } else if ($formName == 'secLog') {
             $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] :'' ;
-            $deputy = isset($_POST['deputy']) ? $_POST['deputy']:'';
-            $radioNum = isset($_POST['radioNum']) ? $_POST['radioNum']:'';
             $address = isset($_POST['address']) ? $_POST['address'] : '';
             $city = isset($_POST['city']) ? $_POST['city'] : '';
             $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
@@ -225,10 +223,25 @@ function displayUserLookup($config) {
             $shiftEnd2 = isset($_POST['shiftEnd2']) ? $_POST['shiftEnd2'] : '';
             $dress = isset($_POST['dress']) ? $_POST['dress']: '';
             $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : '' ;
+            $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
+            
+            if($num_deputies > 0){
+                $i=0;
+                for($i;$i<$num_deputies;$i++){
+                    $deputyID[$i] = isset($_POST['deputyID'.$i]) ? $_POST['deputyID'.$i] : false;
+                    $radioNum[$i] = isset($_POST['radioNum'.$i]) ? $_POST['radioNum'.$i] : '';
+                    $isReserve[$i] = isset($_POST['isReserve'.$i]) ? true : false;
+                    
+                    echo '<input type="hidden" name="deputyID'.$i.'" value="' . $deputyID[$i] . '" />';
+                    echo '<input type="hidden" name="radioNum'.$i.'" value="' . $radioNum[$i] . '" />';
+                    if($isReserve[$i]==1)
+                        echo '<input type="hidden" name="isReserve'.$i.'" value="true" />';
+                }
+                echo '<input type="hidden" name="num_deputies" value="'.$i.'" />';
+            }
+            
            
             echo '<input type="hidden" name="secLogID" value="'.$secLogID.'" />';
-            echo '<input type="hidden" name="deputy" value="' . $deputy . '" />';
-            echo '<input type="hidden" name="radioNum" value="' . $radioNum . '" />';
             echo '<input type="hidden" name="address" value="' . $address . '" />';
             echo '<input type="hidden" name="city" value="' . $city . '" />';
             echo '<input type="hidden" name="phone" value="' . $phone . '" />';
@@ -297,7 +310,7 @@ function displayUserLookup($config) {
         }//end lookup button pressed     
     }//end search or lookup button pressed
     else //lookup button not pressed, show button to get to lookup page
-        echo '<button type="button"  name="searchBtn" value="Lookup Users" onClick="this.form.action=' . "'?userLookup=true'" . ';this.form.submit()" >Lookup User</button>';
+        echo '<button type="button"  name="searchBtn" value="Lookup Employee" onClick="this.form.action=' . "'?userLookup=true'" . ';this.form.submit()" >Lookup Employee</button>';
 }
 
 ?>
