@@ -456,8 +456,9 @@ function displaySubmittedRequests(){
     ?>
     <p><a href="<?php echo $_SERVER['REQUEST_URI'].'&cust=true'; ?>">Use Custom Date Range</a></br>
     <?php 
+    echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
     if (isset($_GET['cust'])) {
-        echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
+        
         echo "<p> Start";
         if ( isset($_POST['start']) && isset($_POST['end']) ) {
             displayDateSelect('start', 'date_1', $_POST['start'],false,false);   
@@ -469,7 +470,51 @@ function displaySubmittedRequests(){
             echo "End";
             displayDateSelect('end', 'date_2',false,false,true);
         }
-        echo "<input type='submit' value='Go' /></p></form>";
+        echo "<input type='submit' value='Go' /></p>";
+    }
+        if($admin >= 25){
+            echo '<div align="center">
+            Show Submitted Requests for the following division: 
+            <select name="divisionID" onchange="this.form.submit()">';
+
+            if(isset($_POST['divisionID'])){
+                $myDivID = $_POST['divisionID'];
+            }
+            else{
+                if($admin >= 50){
+                    $myDivID = "All"; 
+                }
+                else{
+                    $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
+                    $myDivResult = $mysqli->query($mydivq);
+                    SQLerrorCatch($mysqli, $myDivResult);
+                    $temp = $myDivResult->fetch_assoc();
+                    $myDivID = $temp['DIVISIONID'];
+                }
+            }
+
+            $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
+            $allDivResult = $mysqli->query($alldivq);
+            SQLerrorCatch($mysqli, $allDivResult);
+            while($Divrow = $allDivResult->fetch_assoc()) {
+                echo '<option value="'.$Divrow['DIVISIONID'].'"';
+                if($Divrow['DIVISIONID']==$myDivID)
+                    echo ' SELECTED ';
+                echo '>'.$Divrow['DESCR'].'</option>';
+            }
+            if($admin >= 25){
+                if(isset($_POST['divisionID'])){
+                    if($divisionID == "All")
+                        echo '<option value="All" SELECTED>All</option>';
+                    else
+                        echo '<option value="All">All</option>';
+                }
+                else
+                    echo '<option value="All">All</option>';
+            }
+            echo '</select></div>';
+    }
+        echo "</form>";
         //overwrite current period date variables with 
         //those provided by user
         if ( isset($_POST['start']) && isset($_POST['end']) ) {
@@ -477,7 +522,7 @@ function displaySubmittedRequests(){
             $endDate =  new DateTime( $_POST['end'] );
             ?> <h3><center>Gain/Use Requests for <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3> <?php
         }
-    }
+    
     else {
     ?>
     <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
@@ -590,48 +635,7 @@ function displaySubmittedRequests(){
     //open form
     ?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> 
     <?php 
-    if($admin >= 25){
-        echo '<div align="center">
-        Show Submitted Requests for the following division: 
-        <select name="divisionID" onchange="this.form.submit()">';
 
-        if(isset($_POST['divisionID'])){
-            $myDivID = $_POST['divisionID'];
-        }
-        else{
-            if($admin >= 50){
-                $myDivID = "All"; 
-            }
-            else{
-                $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
-                $myDivResult = $mysqli->query($mydivq);
-                SQLerrorCatch($mysqli, $myDivResult);
-                $temp = $myDivResult->fetch_assoc();
-                $myDivID = $temp['DIVISIONID'];
-            }
-        }
-
-        $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
-        $allDivResult = $mysqli->query($alldivq);
-        SQLerrorCatch($mysqli, $allDivResult);
-        while($Divrow = $allDivResult->fetch_assoc()) {
-            echo '<option value="'.$Divrow['DIVISIONID'].'"';
-            if($Divrow['DIVISIONID']==$myDivID)
-                echo ' SELECTED ';
-            echo '>'.$Divrow['DESCR'].'</option>';
-        }
-        if($admin >= 25){
-            if(isset($_POST['divisionID'])){
-                if($divisionID == "All")
-                    echo '<option value="All" SELECTED>All</option>';
-                else
-                    echo '<option value="All">All</option>';
-            }
-            else
-                echo '<option value="All">All</option>';
-        }
-        echo '</select></div>';
-    }
     echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
             <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
                 <div id="wrapper">';
@@ -945,20 +949,34 @@ function displayRequestLookup($config) {
         }
             
         $mysqli = $config->mysqli;
-        $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
-                        ENDTIME 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
-                    FROM REQUEST R
-                    INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
-                    LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
-                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
-                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
-                    AND REQ.LNAME LIKE '%".$lname."%'";
+        //query for all time requests if no date selected
+        if( !empty($_POST['start']) && !empty($_POST['end']))
+            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+                            ENDTIME 'End', HOURS 'Hrs',
+                            T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                        FROM REQUEST R
+                        INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
+                        LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                        LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        AND REQ.LNAME LIKE '%".$lname."%'";
+        
+        else
+            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+                            ENDTIME 'End', HOURS 'Hrs',
+                            T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                        FROM REQUEST R
+                        INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
+                        LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                        LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY                  
+                        WHERE REQ.LNAME LIKE '%".$lname."%'";
         //popUpMessage($myq); //DEBUG
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
         resultTable($mysqli, $result);
+        echo "<a href='".$_SERVER['REQUEST_URI']."'>Back to Search</a>";
         
         
     }
@@ -971,10 +989,11 @@ function displayRequestLookup($config) {
         
         <p>Search by last name:
             
-            <input type="text" name="lname" value="<?php echo $foundUserLNAME; ?>" /><?php displayUserLookup($config); ?></p>
+            <input type="text" name="lname" value="<?php echo $foundUserLNAME; ?>" /> or <?php displayUserLookup($config); ?></p>
         <p>Date range: From <?php   displayDateSelect('start','date_1'); ?>
             to <?php   displayDateSelect('end','date_2'); ?></p>
-
+        <p>(Leave date range blank to show requests for all time.)</p>
+        
         <p><input type="submit" name="Submit" value="Search"></p>
         </form>
         <?php
