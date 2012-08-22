@@ -66,7 +66,7 @@ $mysqli = $config->mysqli;
     else
         $postEnding = false;
     if(!isset($_POST['shift'])){
-        if($postBegin>=$postEnding){
+        if($postBegin==$postEnding){
             $postBegin = false;
             $postEnding = false;
         }
