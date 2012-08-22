@@ -323,6 +323,39 @@ a {
                     font-style: italic;
                     margin: 0 25px 0 0;
                 }
+                
+        .content_highlight .cal {
+            display: block;
+            clear: both;
+        }
+
+            .content_highlight .ca table {
+                border: 2px solid #cccccc;
+
+            }
+
+            .content_highlight .cal table td {
+                border: 1px solid #cccccc;
+                padding: 4px;
+            }
+
+            .content_highlight .cal table tr {
+                border: 1px solid #cccccc;
+            }
+            
+                .content_highlight .cal table table {
+                    border: none;
+                }
+
+                .content_highlight .cal table table td {
+                    border: none;
+                    padding: 4px;
+                    vertical-align: top;
+                }
+
+                .content_highlight .cal table table tr {
+                    border: none;
+                } 
 
 .footer_container {
     width: auto;
