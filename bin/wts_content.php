@@ -121,6 +121,7 @@ function displayContent($wts_content, $config){
             <div class="post"><?php reportsCal($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        myAlerts($config, $wts_content); 
     }
     else{
         if($wts_content->isSearching){
@@ -129,7 +130,7 @@ function displayContent($wts_content, $config){
             <?php
         }
     }
-    myAlerts($config, $wts_content); 
+    
          
 }
 
