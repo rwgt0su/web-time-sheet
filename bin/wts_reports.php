@@ -10,6 +10,7 @@ function displayReportMenu($config){
         echo "<h2>Supervisor Menu</h2>";
         echo '<li><a href="?submittedRequests=true">Submitted Requests by Division and by Dates or Pay Period</a></li>';
         echo '<li><a href="?subReqCal=true">Submitted Requests Calendar</a></li>';
+        echo '<li><a href="?lookup=true">Submitted Request by Employee by Date</a></li>';
         echo '</ul>';
     }
 }
