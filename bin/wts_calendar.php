@@ -94,6 +94,7 @@ function viewClandar($config, $month, $year){
             $myq = "SELECT `REFER` , `IDNUM` , `TIMETYPEID` , `USEDATE` , `STATUS`
                 FROM `REQUEST`
                 WHERE `TIMETYPEID` = 'SK' 
+                AND `STATUS` = 'APPROVED'
                 AND USEDATE = '".$year."-".$month."-".$day_num."'";
             //popUpMessage($myq); //DEBUG
             $result = $mysqli->query($myq);
@@ -105,6 +106,7 @@ function viewClandar($config, $month, $year){
             $myq = "SELECT `REFER` , `IDNUM` , `TIMETYPEID` , `USEDATE` , `STATUS`
                 FROM `REQUEST`
                 WHERE `TIMETYPEID` = 'PR' 
+                AND `STATUS` = 'APPROVED'
                 AND USEDATE = '".$year."-".$month."-".$day_num."'";
             //popUpMessage($myq); //DEBUG
             $result = $mysqli->query($myq);
@@ -116,6 +118,7 @@ function viewClandar($config, $month, $year){
             $myq = "SELECT `REFER` , `IDNUM` , `TIMETYPEID` , `USEDATE` , `STATUS`
                 FROM `REQUEST`
                 WHERE `TIMETYPEID` = 'VA' 
+                AND `STATUS` = 'APPROVED'
                 AND USEDATE = '".$year."-".$month."-".$day_num."'";
             //popUpMessage($myq); //DEBUG
             $result = $mysqli->query($myq);
