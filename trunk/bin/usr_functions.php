@@ -357,8 +357,8 @@ function displayUpdateProfile($config){
         $wphone = isset($_POST['wphone']) ? $mysqli->real_escape_string($_POST['wphone']) : false;
         $dob = isset($_POST['dob']) ? $mysqli->real_escape_string($_POST['dob']) : false;
         $emergency = isset($_POST['emergency']) ? $mysqli->real_escape_string($_POST['emergency']) : false;
+        $postAminLvl = isset($_POST['adminLvl']) ? $mysqli->real_escape_string($_POST['adminLvl']) : "0";
         
-        //popUpMessage("Hit Update"); //DEBUG
         if($config->adminLvl >= 50){
             $myq = "UPDATE `EMPLOYEE` SET 
                 `MUNIS` = '".$munisID."',
@@ -376,6 +376,7 @@ function displayUpdateProfile($config){
                 WORKPH = '".$wphone."',
                 DOB = '".Date('Y-m-d', strtotime($dob))."',
                 EMERGCON = '".$emergency."',
+                ADMINLVL = '".$postAminLvl."',
                 IS_VERIFY = 1,
                 AUDITID = '".$_SESSION['userIDnum']."',
                 AUDIT_TIME = NOW(),
@@ -441,6 +442,7 @@ function displayUpdateProfile($config){
         $wphone = $resultAssoc['WORKPH'];
         $dob = $resultAssoc['DOB'];
         $emergency = $resultAssoc['EMERGCON'];
+        $adminLvl = $resultAssoc['ADMINLVL'];
         
     
     $username = strtoupper($_SESSION['userName']);
@@ -501,33 +503,34 @@ function displayUpdateProfile($config){
                     }
                     
                     if($config->adminLvl >= 50){
-                    ?>
-                    <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", "date_1", $hireDate, $required=true); ?></td></tr>
-                    <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
-                    <tr><td >Address: </td><td><textarea rows="3" cols="40" name="address" <?php if(!$address) showInputBoxError(); ?> ><?php echo $address; ?></textarea></td></tr>
-                    <tr><td>Home Phone: </td><td><input name="hphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$hphone.'"'; ?> /></td></tr>
-                    <tr><td>Cell Phone: </td><td><input name="cphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$cphone.'"'; ?> /></td></tr>
-                    <tr><td>Work Phone: </td><td><input name="wphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$wphone.'"'; ?> /></td></tr>
-                    <tr><td>Date of Birth: </td><td><?php displayDateSelect("dob", "date_2", $dob, $required=true); ?></td></tr>
-                   
-                    <tr><td>Emergency Contact: </td><td><textarea rows="2" cols="40" name="emergency" <?php if(!$emergency) showInputBoxError(); ?> ><?php echo $emergency; ?></textarea></td></tr>
-                    
-                    <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
-                    <?php
+                        ?>
+                        <tr><td>Hire Date: </td><td><?php displayDateSelect("hireDate", "date_1", $hireDate, $required=true); ?></td></tr>
+                        <tr><td>Radio Number: </td><td><input name="radioID" type="text" <?php if(!$radioID) showInputBoxError(); else echo 'value="'.$radioID.'"'; ?> /></td></tr>
+                        <tr><td >Address: </td><td><textarea rows="3" cols="40" name="address" <?php if(!$address) showInputBoxError(); ?> ><?php echo $address; ?></textarea></td></tr>
+                        <tr><td>Home Phone: </td><td><input name="hphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$hphone.'"'; ?> /></td></tr>
+                        <tr><td>Cell Phone: </td><td><input name="cphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$cphone.'"'; ?> /></td></tr>
+                        <tr><td>Work Phone: </td><td><input name="wphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$wphone.'"'; ?> /></td></tr>
+                        <tr><td>Date of Birth: </td><td><?php displayDateSelect("dob", "date_2", $dob, $required=true); ?></td></tr>
+
+                        <tr><td>Emergency Contact: </td><td><textarea rows="2" cols="40" name="emergency" <?php if(!$emergency) showInputBoxError(); ?> ><?php echo $emergency; ?></textarea></td></tr>
+                        <tr><td>Admin Level:</td><td><?php selectAdminLevel($config, $adminLvl); ?></td></tr>
+                        <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
+                        <?php
                     }
                     else{
                       ?><tr><td>Hire Date: </td><td><?php echo $hireDate; ?></td></tr>
-                    <tr><td>Radio Number: </td><td> <?php echo $radioID; ?> </td></tr>
-                    <tr><td>Address: </td><td> <?php echo $address; ?> </td></tr>
-                    <tr><td>Home Phone: </td><td> <?php echo $hphone; ?> </td></tr>
-                    <tr><td>Cell Phone: </td><td> <?php echo $cphone; ?> </td></tr>
-                    <tr><td>Work Phone: </td><td> <?php echo $wphone; ?> </td></tr>
-                    <tr><td>Date of Birth: </td><td><?php echo $dob; ?></td></tr>
-                    
-                    <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr> 
-                    
-                    <tr><td></td><td><input type="submit" name="updateBtn" value="Update Profile" /></td></tr>
-                    <?php }
+                        <tr><td>Radio Number: </td><td> <?php echo $radioID; ?> </td></tr>
+                        <tr><td>Address: </td><td> <?php echo $address; ?> </td></tr>
+                        <tr><td>Home Phone: </td><td> <?php echo $hphone; ?> </td></tr>
+                        <tr><td>Cell Phone: </td><td> <?php echo $cphone; ?> </td></tr>
+                        <tr><td>Work Phone: </td><td> <?php echo $wphone; ?> </td></tr>
+                        <tr><td>Date of Birth: </td><td><?php echo $dob; ?></td></tr>
+
+                        <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr> 
+
+                        <tr><td></td><td><?php if($_SESSION['userIDnum']==$foundUserID) echo '<input type="submit" name="updateBtn" value="Update Profile" />'; ?></td></tr>
+                        <?php 
+                    }
                     ?>
                 </table>
             </div><div class="clear"></div>
@@ -855,5 +858,21 @@ function displayUserVerify($config){
     else{
         echo 'Unauthorized Access'; 
     }
+}
+function selectAdminLevel($config, $adminLvl="0"){
+    $mysqli = $config->mysqli;
+    $myq = "SELECT * FROM `ADMINLVL`";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    
+    echo '<select name="adminLvl">';
+    while($row = $result->fetch_assoc()) {
+        echo '<option value="'.$row['IDNUM'].'"';
+        if(strcmp($adminLvl, $row['IDNUM'])==0){
+            echo ' selected="selected"';
+        }
+        echo '>'.$row['DESCR'].'</option>';
+    }
+    echo '</select>';
 }
 ?>
