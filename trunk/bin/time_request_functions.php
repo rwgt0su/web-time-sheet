@@ -49,7 +49,7 @@ $mysqli = $config->mysqli;
         }
     } 
             
-//Get all passed variables
+    //Get all passed variables
     $postID = isset($_POST['ID']) ? $_POST['ID'] : $_SESSION['userIDnum'];
     $postThruDate = isset($_POST['thrudate']) ? $_POST['thrudate'] : false;
     $shiftLength = isset($_POST['shift']) ? $_POST['shift'] : '';
@@ -134,9 +134,10 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                 
                 for($i=0; $i <= $daysOff; $i++){
                     //Check if useDate is already submitted
-                    $myq ="SELECT `REFER` , `TIMETYPEID` , `USEDATE` , `ENDTIME` , `BEGTIME` , `SUBTYPE`
+                    $myq ="SELECT `REFER` , `IDNUM`, `TIMETYPEID` , `USEDATE` , `ENDTIME` , `BEGTIME` , `SUBTYPE`
                         FROM `REQUEST`
                         WHERE `TIMETYPEID` LIKE '".$type."'
+                        AND `IDNUM` = '".$ID."'
                         AND `USEDATE` = '".$usedate->format('Y-m-d')."'";
                     $result = $mysqli->query($myq);
                     SQLerrorCatch($mysqli, $result);
@@ -153,7 +154,7 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                                 <input type="hidden" name="type" value="'.$type.'" />
                                 <input type="hidden" name="subtype" value="'.$subtype.'" />
                                 <input type="hidden" name="shift" value="'.$shiftLength.'" />
-                                <input type="hidden" name="ID" value="'.$postID .'" />
+                                <input type="hidden" name="ID" value="'.$ID .'" />
                                 <input type="hidden" name="usedate" value="'.$postUseDate.'" />
                                 <input type="hidden" name="thrudate" value="'.$postThruDate.'" />
                                 <input type="hidden" name="beg1" value="'.$postBeg1.'" />
@@ -327,11 +328,11 @@ else{
                     $isCallOff = "";
                     if(isset($_POST['calloff'])){
                         $isCallOff = "CHECKED ";
-                        echo '<input type="submit" name="searchBtn" id="jsearchBtn" value="Lookup Employee" />';
                     }
                     echo '<input type="checkbox" id="calloff" name="calloff" 
-                        value="YES" '.$isCallOff.'onclick=\'addLookupButton("leave");\' />
-                            Check If filling out for another employee (ie. REPORT OFF)<br/>';
+                        value="YES" '.$isCallOff;
+                    //echo 'onclick=\'addLookupButton("leave");\'';
+                    echo ' /> Call Off (ie. REPORT OFF)<br/>';
                     echo "Employee: ";
                     //user ID passed from search
                     if($totalRows > 0) { 
@@ -339,32 +340,39 @@ else{
                     }
                     else{
                         //dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
-                        echo $_SESSION['userName']."<input type='hidden' name='ID' value='".$_SESSION['userIDnum']."'>";
+                        $myq = "SELECT `IDNUM` , `LNAME` , `FNAME` 
+                            FROM `EMPLOYEE`
+                            WHERE `IDNUM` = ".$postID;
+                        $result = $mysqli->query($myq);
+                        SQLerrorCatch($mysqli, $result);
+                        $row = $result->fetch_assoc(); 
+                        echo $row['LNAME'].', '.$row['FNAME']."<input type='hidden' name='ID' value='".$postID."'>";
                     }
+                    echo ' <input type="submit" name="searchBtn" value="Lookup Employee" />';
                     ?>
                     <script language="JavaScript" type="text/javascript">   
                     function addLookupButton(formName) {
-                        var _form = document.getElementById(formName);
-                        var _calloff = document.getElementById('calloff');
-                        if(_calloff.checked){
-                            if(document.getElementById('jsearchBtn')){}
-                            else{
-                                var _search = document.createElement('input');
-                                _search.type = "submit";
-                                _search.name = "searchBtn";
-                                _search.value = "Lookup Employee";
-                                _search.id = "jsearchBtn";
-                                _search.onclick = function(){_form.submit()};
-                                //_form.appendChild(_search);
-                                _form.insertBefore(_search, _calloff);
-                            }   
-                        }
-                        else{
-                            if(document.getElementById('jsearchBtn')){
-                                var _oldSearch = document.getElementById('jsearchBtn');
-                                _form.removeChild(_oldSearch);
-                            }
-                        }
+//                        var _form = document.getElementById(formName);
+//                        var _calloff = document.getElementById('calloff');
+//                        if(_calloff.checked){
+//                            if(document.getElementById('jsearchBtn')){}
+//                            else{
+//                                var _search = document.createElement('input');
+//                                _search.type = "submit";
+//                                _search.name = "searchBtn";
+//                                _search.value = "Lookup Employee";
+//                                _search.id = "jsearchBtn";
+//                                _search.onclick = function(){_form.submit()};
+//                                //_form.appendChild(_search);
+//                                _form.insertBefore(_search, _calloff);
+//                            }   
+//                        }
+//                        else{
+//                            if(document.getElementById('jsearchBtn')){
+//                                var _oldSearch = document.getElementById('jsearchBtn');
+//                                _form.removeChild(_oldSearch);
+//                            }
+//                        }
                     }
                     </script>
                     <?php
