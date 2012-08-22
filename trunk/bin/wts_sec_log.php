@@ -243,9 +243,14 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 if(!$isApprove)
                     $theTable[$x][0] = '<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
                         <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
-                else
-                    $theTable[$x][0] = 'Ref# '.$row['IDNUM'].'<input type="checkbox" name="secLogApproved'.$x.'" value="true" />
-                        <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
+                else{
+                    if((strcmp($row['SUP_TIME'], "00/00/00 0000") == 0))
+                        $theTable[$x][0] = 'Ref# '.$row['IDNUM'].'<input type="checkbox" name="secLogApproved'.$x.'" value="true" />
+                            <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
+                    else{
+                        $theTable[$x][0] = 'Ref# '.$row['IDNUM'];
+                    }
+                }
                 $theTable[$x][1] = $row['DEPUTYID'];
                 $theTable[$x][2] = $row['RADIO'];
                 $theTable[$x][3] = $row['TIMEIN'];
