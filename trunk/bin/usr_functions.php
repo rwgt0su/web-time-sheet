@@ -861,7 +861,7 @@ function displayUserVerify($config){
 }
 function selectAdminLevel($config, $adminLvl="0"){
     $mysqli = $config->mysqli;
-    $myq = "SELECT * FROM `ADMINLVL`";
+    $myq = "SELECT * FROM `ADMINLVL` ORDER BY IDNUM";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     
