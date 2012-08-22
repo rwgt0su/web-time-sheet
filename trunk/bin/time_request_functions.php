@@ -512,7 +512,7 @@ function displaySubmittedRequests(){
             }
             if($admin >= 25){
                 if(isset($_POST['divisionID'])){
-                    if($divisionID == "All")
+                    if($myDivID == "All")
                         echo '<option value="All" SELECTED>All</option>';
                     else
                         echo '<option value="All">All</option>';
