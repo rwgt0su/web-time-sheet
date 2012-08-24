@@ -88,7 +88,7 @@ function hrPayrolReportByEmployee($config){
         $viewBtn = isset($_POST['viewDetailsBtn']) ? true : false;
         if($viewBtn){
             $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
-                    DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', 
+                    DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', STATUS 'Status',
                         DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
@@ -117,8 +117,9 @@ function hrPayrolReportByEmployee($config){
             $theTable[$x][8] = "Subtype";
             $theTable[$x][9] = "Call Off";
             $theTable[$x][10] = "Comment";
-            $theTable[$x][11] = 'ApprovedBy';
-            $theTable[$x][12] = 'Reason';
+            $theTable[$x][11] = 'Status';
+            $theTable[$x][12] = 'ApprovedBy';
+            $theTable[$x][13] = 'Reason';
             
             while($row = $result->fetch_assoc()) {
                 $x++;
@@ -133,8 +134,9 @@ function hrPayrolReportByEmployee($config){
                 $theTable[$x][8] = $row['Subtype'];
                 $theTable[$x][9] = $row['Calloff'];
                 $theTable[$x][10] = $row['Comment'];
-                $theTable[$x][11] = $row['ApprovedBy'];
-                $theTable[$x][12] = $row['Reason'];
+                $theTable[$x][11] = $row['Status'];
+                $theTable[$x][12] = $row['ApprovedBy'];
+                $theTable[$x][13] = $row['Reason'];
             }
             showSortableTable($theTable, 1);
         }
