@@ -84,9 +84,11 @@ function hrPayrolReportByEmployee($config){
         <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
         <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
         <h3><center>Time Gained/Used in pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
+        
         <?php
         $viewBtn = isset($_POST['viewDetailsBtn']) ? true : false;
         if($viewBtn){
+            echo '<div align="center"><a href="'.$_SERVER['REQUEST_URI'].'">Back</a></div>';
             $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
                     DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', STATUS 'Status',
                         DATE_FORMAT(BEGTIME,'%H%i') 'Start',
@@ -139,6 +141,60 @@ function hrPayrolReportByEmployee($config){
                 $theTable[$x][13] = $row['Reason'];
             }
             showSortableTable($theTable, 1);
+            
+            //Show Hour Adjustment Table
+            $totalsTable = array(array());
+            $x = 0;
+
+            $totalTable[$x][0] = "Type";
+            $totalTable[$x][1] = "Hours Gained/Used";
+
+            
+            $myq = "SELECT HOURS 'Hrs', T.DESCR 'Type', R.TIMETYPEID 'timeType'
+                    FROM REQUEST R
+                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+                    AND R.IDNUM='".$_POST['empID']."'
+                    AND STATUS='APPROVED'
+                    ORDER BY R.TIMETYPEID
+                    ";
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+            $lastTimeType = '';
+            while($row = $result->fetch_assoc()) {
+                if(strcmp($row['timeType'], $lastTimeType)==0){
+                    $totalTable[$x][1] += $row['Hrs'];
+                }
+                else{
+                    $x++;
+                    $lastTimeType = $row['timeType'];
+                    $totalTable[$x][0] = $row['Type'];
+                    $totalTable[$x][1] = $row['Hrs'];
+                }
+            }
+        echo '<div id="wrapper">';
+            
+        $echo = '<table class="sortable">
+                <tr>';
+        for($y=0;$y<sizeof($totalTable[0]);$y++){
+            $echo .= '<th>'.$totalTable[0][$y].'</th>';
+        }
+        $echo .= '</tr>
+            ';
+        $x=1;
+        for($x;$x<sizeof($totalTable);$x++){
+            $echo .= '<tr>';
+            for($y=0;$y<sizeof($totalTable[$x]);$y++){
+                $echo .= '<td>'.$totalTable[$x][$y].'</td>';
+            }
+            $echo .= '</tr>
+                ';
+        }
+        $echo .= '</table></div>';
+        echo $echo;
+            
+            
+            
         }
         else{
             $myq = "SELECT REFER, MUNIS, LNAME,FNAME,R.IDNUM

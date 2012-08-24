@@ -270,7 +270,7 @@ function showTimeSelector($inputName, $input1, $input2, $required=true){
         }
         echo '</select>';
 }
-function showSortableTable($table, $rowToSort){
+function showSortableTable($table, $rowToSort, $tableID = "sorter"){
     
     //two dim array is $table.  Place any html code within any cell
     //do not pass this with a form
@@ -279,7 +279,7 @@ function showSortableTable($table, $rowToSort){
         <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
             <div id="wrapper">';
             
-        $echo = '<table class="sortable" id="sorter">
+        $echo = '<table class="sortable" id="'.$tableID.'">
                 <tr>';
         for($y=0;$y<sizeof($table[0]);$y++){
             $echo .= '<th>'.$table[0][$y].'</th>';
@@ -298,8 +298,8 @@ function showSortableTable($table, $rowToSort){
         $echo = '<input type="hidden" name="totalRows" value="'.$x.'" />'.$echo;
         $echo .= '</table></div>
             <script type="text/javascript">
-                var sorter=new table.sorter("sorter");
-                sorter.init("sorter",'.$rowToSort.');
+                var sorter=new table.sorter("'.$tableID.'");
+                sorter.init("'.$tableID.'",'.$rowToSort.');
             </script>';
         echo $echo;
 }
