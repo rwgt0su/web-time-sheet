@@ -23,6 +23,7 @@ Class wts_content {
     public $isReports;
     public $isApprovedUseReport;
     public $subReqCal;
+    public $hrEmpRep;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -49,6 +50,7 @@ Class wts_content {
         $this->isReports = isset($_GET['reports']) ? $_GET['reports'] : false;
         $this->isApprovedUseReport = isset($_GET['approvedUse']) ? $_GET['approvedUse'] : false;
         $this->subReqCal = isset($_GET['subReqCal']) ? $_GET['subReqCal'] : false;
+        $this->hrEmpRep = isset($_GET['hrEmpRep']) ? $_GET['hrEmpRep'] : false;
         
         
         if(empty($_GET)){

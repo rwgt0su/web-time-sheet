@@ -121,6 +121,12 @@ function displayContent($wts_content, $config){
             <div class="post"><?php reportsCal($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->hrEmpRep){
+            ?>
+            <div class="post"><?php hrPayrolReportByEmployee($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        
         myAlerts($config, $wts_content); 
     }
     else{
