@@ -11,9 +11,8 @@ function displayReportMenu($config){
         echo '<li><a href="?submittedRequests=true">Submitted Requests by Division and by Dates or Pay Period</a></li>';
         echo '<li><a href="?subReqCal=true">Submitted Requests Calendar</a></li>';
         echo '<li><a href="?lookup=true">Submitted Request by Employee by Date</a></li>';
-        if($config->adminLvl >= 50){
-            echo '<li><a href="?hrEmpRep=true">Approved and Denied Requests by Employee by Payperiod</a></li>';
-        }
+        echo '<li><a href="?hrEmpRep=true">Approved and Denied Requests by Employee by Payperiod</a></li>';
+        echo '<li><a href="?sickEmpRep=true">Sick Request Reports by Date </a></li>';
         echo '</ul>';
     }
 }
@@ -30,6 +29,7 @@ function hrPayrolReportByEmployee($config){
     //what pay period are we currently in?
     $mysqli = $config->mysqli;
     
+    //what pay period are we currently in?
     $payPeriodQuery = "SELECT * FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
     $ppResult = $mysqli->query($payPeriodQuery);
     $ppArray = $ppResult->fetch_assoc();
@@ -64,22 +64,30 @@ function hrPayrolReportByEmployee($config){
     ?>
     <p><a href="<?php echo $_SERVER['REQUEST_URI'].'&cust=true'; ?>">Use Custom Date Range</a></br>
     <?php 
-    if (isset($_GET['cust']) && !isset($_POST['cancelBtn'])) {
-        echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
+    echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
+    if (isset($_GET['cust'])) {
+        
         echo "<p> Start";
-        displayDateSelect('start', 'date_1');   
-        echo "End";
-        displayDateSelect('end', 'date_2');
-        echo "<input type='submit' value='Go' /><input type='submit' name='cancelBtn' value='Cancel' /></p></form>";
+        if ( isset($_POST['start']) && isset($_POST['end']) ) {
+            displayDateSelect('start', 'date_1', $_POST['start'],false,false);   
+            echo "End";
+            displayDateSelect('end', 'date_2',$_POST['end'],false,false);
+        }
+        else{
+            displayDateSelect('start', 'date_1', false,false,true);   
+            echo "End";
+            displayDateSelect('end', 'date_2',false,false,true);
+        }
+        echo "<input type='submit' value='Go' /></p>";
+    }
         //overwrite current period date variables with 
         //those provided by user
         if ( isset($_POST['start']) && isset($_POST['end']) ) {
             $startDate =  new DateTime( $_POST['start'] );
             $endDate =  new DateTime( $_POST['end'] );
-            ?> <h3><center>Time Gained/Used from <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3> <?php
         }
-    }
-    else {
+    
+
         ?>
         <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
         <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
@@ -242,7 +250,7 @@ function hrPayrolReportByEmployee($config){
             echo 'number of rows: '.$x;
             showSortableTable($theTable, 1);
         }
-    }
+
     //show a print button. printed look defined by print.css
     echo '<a href="javascript:window.print()">Print</a>';
     
