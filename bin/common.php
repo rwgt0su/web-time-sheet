@@ -284,14 +284,16 @@ function showSortableTable($table, $rowToSort){
         for($y=0;$y<sizeof($table[0]);$y++){
             $echo .= '<th>'.$table[0][$y].'</th>';
         }
-        $echo .= '</tr>';
+        $echo .= '</tr>
+            ';
         $x=1;
         for($x;$x<sizeof($table);$x++){
             $echo .= '<tr>';
             for($y=0;$y<sizeof($table[$x]);$y++){
                 $echo .= '<td>'.$table[$x][$y].'</td>';
             }
-            $echo .= '</tr>';
+            $echo .= '</tr>
+                ';
         }
         $echo = '<input type="hidden" name="totalRows" value="'.$x.'" />'.$echo;
         $echo .= '</table></div>
