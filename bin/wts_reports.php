@@ -97,112 +97,8 @@ function hrPayrolReportByEmployee($config){
         $viewBtn = isset($_POST['viewDetailsBtn']) ? true : false;
         if($viewBtn){
             echo '<div align="center"><a href="'.$_SERVER['REQUEST_URI'].'">Back</a></div>';
-            $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
-                    DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', STATUS 'Status',
-                        DATE_FORMAT(BEGTIME,'%H%i') 'Start',
-                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
-                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
-                    FROM REQUEST
-                    LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
-                    LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
-                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
-                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
-                    AND REQ.IDNUM='".$_POST['empID']."'
-                    AND (STATUS='APPROVED' OR STATUS='DENIED')
-                    ";
-            $result = $mysqli->query($myq);
-            SQLerrorCatch($mysqli, $result);
-            
-            $theTable = array(array());
-            $x = 0;
-            $theTable[$x][0] = "Ref #";
-            $theTable[$x][1] = "Munis #";
-            $theTable[$x][2] = "Employee";
-            $theTable[$x][3] = "Date of Use";
-            $theTable[$x][4] = "Start Time";
-            $theTable[$x][5] = "End Time";
-            $theTable[$x][6] = "Hours";
-            $theTable[$x][7] = "Type";
-            $theTable[$x][8] = "Subtype";
-            $theTable[$x][9] = "Call Off";
-            $theTable[$x][10] = "Comment";
-            $theTable[$x][11] = 'Status';
-            $theTable[$x][12] = 'ApprovedBy';
-            $theTable[$x][13] = 'Reason';
-            
-            while($row = $result->fetch_assoc()) {
-                $x++;
-                $theTable[$x][0] = $row['RefNo'];
-                $theTable[$x][1] = $row['Munis'];
-                $theTable[$x][2] = $row['Name'];
-                $theTable[$x][3] = $row['Used'];
-                $theTable[$x][4] = $row['Start'];
-                $theTable[$x][5] = $row['End'];
-                $theTable[$x][6] = $row['Hrs'];
-                $theTable[$x][7] = $row['Type'];
-                $theTable[$x][8] = $row['Subtype'];
-                $theTable[$x][9] = $row['Calloff'];
-                $theTable[$x][10] = $row['Comment'];
-                $theTable[$x][11] = $row['Status'];
-                $theTable[$x][12] = $row['ApprovedBy'];
-                $theTable[$x][13] = $row['Reason'];
-            }
-            showSortableTable($theTable, 1);
-            
-            //Show Hour Adjustment Table
-            $totalsTable = array(array());
-            $x = 0;
-
-            $totalTable[$x][0] = "Type";
-            $totalTable[$x][1] = "Hours Gained/Used";
-
-            
-            $myq = "SELECT HOURS 'Hrs', T.DESCR 'Type', R.TIMETYPEID 'timeType'
-                    FROM REQUEST R
-                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID
-                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
-                    AND R.IDNUM='".$_POST['empID']."'
-                    AND STATUS='APPROVED'
-                    ORDER BY R.TIMETYPEID
-                    ";
-            $result = $mysqli->query($myq);
-            SQLerrorCatch($mysqli, $result);
-            $lastTimeType = '';
-            while($row = $result->fetch_assoc()) {
-                if(strcmp($row['timeType'], $lastTimeType)==0){
-                    $totalTable[$x][1] += $row['Hrs'];
-                }
-                else{
-                    $x++;
-                    $lastTimeType = $row['timeType'];
-                    $totalTable[$x][0] = $row['Type'];
-                    $totalTable[$x][1] = $row['Hrs'];
-                }
-            }
-        echo '<div id="wrapper">';
-            
-        $echo = '<table class="sortable">
-                <tr>';
-        for($y=0;$y<sizeof($totalTable[0]);$y++){
-            $echo .= '<th>'.$totalTable[0][$y].'</th>';
-        }
-        $echo .= '</tr>
-            ';
-        $x=1;
-        for($x;$x<sizeof($totalTable);$x++){
-            $echo .= '<tr>';
-            for($y=0;$y<sizeof($totalTable[$x]);$y++){
-                $echo .= '<td>'.$totalTable[$x][$y].'</td>';
-            }
-            $echo .= '</tr>
-                ';
-        }
-        $echo .= '</table></div>';
-        echo $echo;
-            
-            
-            
+            $empID = isset($_POST['empID']) ? $_POST['empID'] : '';
+            empTimeReportByPay($config, $startDate, $endDate, $empID);
         }
         else{
             $myq = "SELECT REFER, MUNIS, LNAME,FNAME,R.IDNUM
@@ -254,5 +150,153 @@ function hrPayrolReportByEmployee($config){
     //show a print button. printed look defined by print.css
     echo '<a href="javascript:window.print()">Print</a>';
     
+}
+
+function empTimeReportByPay($config, $startDate, $endDate, $empID){
+    $mysqli = $config->mysqli;
+    $refNo = '';
+    //Was Approve Button Pressed
+    if(isset($_POST['totalRows'])){
+        $totalRows = $_POST['totalRows'];
+        for($i=0;$i<=$totalRows;$i++){
+            if(isset($_POST['hrApprove'.$i])){
+                $refNo = $_POST['refNo'.$i];
+                break;
+            }
+        }
+    }
+    if(!empty($refNo)){
+        $myq = "UPDATE REQUEST SET `TSTAMP` = NOW( ) ,
+            `HRAPP_IS` = '1',
+            `HRAPP_ID` = '".$_SESSION['userIDnum']."',
+            `HRAPP_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."'),
+            `HRAPP_TIME` = NOW( ) WHERE `REQUEST`.`REFER` =".$refNo;
+         $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+    }
+    
+    $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
+                DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', STATUS 'Status',
+                    DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                    DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                    T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
+                    APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
+                FROM REQUEST
+                LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
+                LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
+                LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.HRAPP_ID
+                INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
+                WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+                AND REQ.IDNUM='".$empID."'
+                AND (STATUS='APPROVED' OR STATUS='DENIED')
+                ";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+
+        $theTable = array(array());
+        $x = 0;
+        $y = 0;
+        if($config->adminLvl >=50){
+            echo '<form method="POST">';
+            $theTable[$x][$y] = "HR Approve"; $y++;
+        }
+        $theTable[$x][$y] = "Ref #"; $y++;
+        $theTable[$x][$y] = "Munis #"; $y++;
+        $theTable[$x][$y] = "Employee"; $y++;
+        $theTable[$x][$y] = "Date of Use"; $y++;
+        $theTable[$x][$y] = "Start Time"; $y++;
+        $theTable[$x][$y] = "End Time"; $y++;
+        $theTable[$x][$y] = "Hours"; $y++;
+        $theTable[$x][$y] = "Type"; $y++;
+        $theTable[$x][$y] = "Subtype"; $y++;
+        $theTable[$x][$y] = "Call Off"; $y++;
+        $theTable[$x][$y] = "Comment"; $y++;
+        $theTable[$x][$y] = 'Status'; $y++;
+        $theTable[$x][$y] = 'ApprovedBy'; $y++;
+        $theTable[$x][$y] = 'Reason'; $y++;
+
+        while($row = $result->fetch_assoc()) {
+            $x++;
+            $y=0;
+            if($config->adminLvl >=50){
+                if(!$row['HR_Approved'])
+                    $theTable[$x][$y] = '<input type="submit" name="hrApprove'.$x.'" value="Approve" />';
+                else
+                    $theTable[$x][$y] = 'Approved';
+                $y++;
+            }
+            $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
+            $theTable[$x][$y] = $row['Munis']; $y++;
+            $theTable[$x][$y] = $row['Name']; $y++;
+            $theTable[$x][$y] = $row['Used']; $y++;
+            $theTable[$x][$y] = $row['Start']; $y++;
+            $theTable[$x][$y] = $row['End']; $y++;
+            $theTable[$x][$y] = $row['Hrs']; $y++;
+            $theTable[$x][$y] = $row['Type']; $y++;
+            $theTable[$x][$y] = $row['Subtype']; $y++;
+            $theTable[$x][$y] = $row['Calloff']; $y++;
+            $theTable[$x][$y] = $row['Comment']; $y++;
+            $theTable[$x][$y] = $row['Status']; $y++;
+            $theTable[$x][$y] = $row['ApprovedBy']; $y++;
+            $theTable[$x][$y] = $row['Reason']; $y++;
+        }
+        showSortableTable($theTable, 1);
+        echo '<input type="hidden" name="totalRows" value="'.$x.'" />
+              <input type="hidden" value="View" name="viewDetailsBtn">
+              <input type="hidden" value="'.$empID.'" name="empID">';
+        echo '</form>';
+        //Show Hour Adjustment Table
+        $totalsTable = array(array());
+        $x = 0;
+
+        $totalTable[$x][0] = "Type";
+        $totalTable[$x][1] = "Hours Gained/Used";
+
+
+        $myq = "SELECT HOURS 'Hrs', T.DESCR 'Type', R.TIMETYPEID 'timeType', HRAPP_IS 'HRApproved'
+                FROM REQUEST R
+                INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID
+                WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+                AND R.IDNUM='".$empID."'
+                AND STATUS='APPROVED'
+                ORDER BY R.TIMETYPEID
+                ";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $lastTimeType = '';
+        while($row = $result->fetch_assoc()) {
+            if($row['HRApproved']){
+                if(strcmp($row['timeType'], $lastTimeType)==0){
+                    $totalTable[$x][1] += $row['Hrs'];
+                }
+                else{
+                    $x++;
+                    $lastTimeType = $row['timeType'];
+                    $totalTable[$x][0] = $row['Type'];
+                    $totalTable[$x][1] = $row['Hrs'];
+                }
+            }
+        }
+    echo '<div id="wrapper">';
+
+    $echo = '<table class="sortable">
+            <tr>';
+    for($y=0;$y<sizeof($totalTable[0]);$y++){
+        $echo .= '<th>'.$totalTable[0][$y].'</th>';
+    }
+    $echo .= '</tr>
+        ';
+    $x=1;
+    for($x;$x<sizeof($totalTable);$x++){
+        $echo .= '<tr>';
+        for($y=0;$y<sizeof($totalTable[$x]);$y++){
+            $echo .= '<td>'.$totalTable[$x][$y].'</td>';
+        }
+        $echo .= '</tr>
+            ';
+    }
+    $echo .= '</table></div>';
+    echo $echo;
+
 }
 ?>

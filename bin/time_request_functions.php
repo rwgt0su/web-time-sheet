@@ -548,7 +548,7 @@ function displaySubmittedRequests(){
                             DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                            APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved' 
                         FROM REQUEST
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
@@ -563,7 +563,7 @@ function displaySubmittedRequests(){
                             DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                            APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'  
                         FROM REQUEST R
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
@@ -580,7 +580,7 @@ function displaySubmittedRequests(){
                             DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                            APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
                         FROM REQUEST R
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
@@ -608,7 +608,7 @@ function displaySubmittedRequests(){
                             DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                            APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
                         FROM REQUEST R
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
@@ -621,7 +621,7 @@ function displaySubmittedRequests(){
                             DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                            APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
                         FROM REQUEST R
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
@@ -649,9 +649,9 @@ function displaySubmittedRequests(){
                 <div id="wrapper">';
 
     echo '<table class="sortable" id="sorter"><tr>';
-            //get field info
-    if($admin>0)
-        echo '<th>Edit</th><th>Delete</th>';   
+            //get field info  
+    if($admin>=25)
+        echo '<th>Edit</th><th>Delete</th>';
 
     for($y=0; $finfo = $result->fetch_field();$y++) {
         //assign field names as table header (row 0)
@@ -686,13 +686,22 @@ function displaySubmittedRequests(){
                     }
                 }
                 else{
+                    //Do not allow supervisors to edit once HR approves
                     //edit button that redirects to request page
-                    if($y==0)
-                    echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
-                        <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+                    if($y==0){
+                        if(!$resultArray['isHRApproved'])
+                            echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                                <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+                        else
+                            echo '<td></td>';
+                    }
                     //delete button
-                    else if($y==1)
-                        echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
+                    else if($y==1){
+                        if(!$resultArray['isHRApproved'])
+                            echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
+                        else
+                            echo '<td></td>';
+                    }
                     else //load results
                         echo '<td>'. $resultArray[$y-2].'</td>';
                 }//end if EXPUNGED
@@ -1294,7 +1303,7 @@ function displayMySubmittedRequests($config){
  * different views according to admin level
  */
 
-$mysqli = connectToSQL();
+$mysqli = $config->mysqli;
 $admin = $config->adminLvl;
 
 //what pay period are we currently in?
@@ -1369,7 +1378,7 @@ else {
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                        APR.LNAME 'ApprovedBy', REASON 'Reason' 
+                        APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'HRApproved' 
                     FROM REQUEST
                     LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
                     INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
@@ -1377,102 +1386,110 @@ else {
                     " AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
                     ORDER BY REFER";
     
-$result = $mysqli->query($myq);
-SQLerrorCatch($mysqli, $result);
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
 
-$fieldCount = $result->field_count;
-//load array for table
-//$theTable = array(array());
+    $fieldCount = $result->field_count;
+    //load array for table
+    //$theTable = array(array());
 
-//open form
-?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> 
-<?php 
+    //open form
+    ?> <form name="submittedRequests" method="POST"> <input type="hidden" name="formName" value="submittedRequests"/> 
+    <?php 
 
-echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
-        <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
-            <div id="wrapper">';
+    echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
+            <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
+                <div id="wrapper">';
 
-echo '<table class="sortable" id="sorter"><tr>';
-        //get field info
+    echo '<table class="sortable" id="sorter"><tr>';
+            //get field info
 
-$echo = '';
-for($y=0; $finfo = $result->fetch_field();$y++) {
-    //assign field names as table header (row 0)
+    $echo = '';
+    for($y=0; $finfo = $result->fetch_field();$y++) {
+        //assign field names as table header (row 0)
 
-    $echo .= '<th>'. $finfo->name.'</th>';
-}
-$echo .= '</tr>';
-if($admin < 25){
-        $echo = '<th>Edit</th>'.$echo;
-}
-else{
-    $echo = '<th>Edit</th><th>Delete</th>'.$echo;
-
-}
-
-for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
-    $leaveStatus = isset($resultArray['Status']) ? $resultArray['Status'] : '';
-    $leaveSTATUS = isset($resultArray['STATUS']) ? $resultArray['STATUS'] : '';
-    
-    if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'){
-        $echo .= '<tr style="text-decoration:line-through" >';
+        $echo .= '<th>'. $finfo->name.'</th>';
     }
-    else
-        $echo .= '<tr >';
-    
-    if($admin>0){
-        for($y=0; $y<$fieldCount+2; $y++){ //field loop    
-            //edit button that redirects to request page
-            if($y==0)
-            $echo .= '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
-                  <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
-            //delete button
-            else if($y==1)
-                $echo .='<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
-            else //load results
-                $echo .= '<td>'. $resultArray[$y-2].'</td>';
-            
+    $echo .= '</tr>';
+    if($admin < 25){
+            $echo = '<th>Edit</th>'.$echo;
+    }
+    else{
+        $echo = '<th>Edit</th><th>Delete</th>'.$echo;
+
+    }
+
+    for($x=1; $resultArray = $result->fetch_array(MYSQLI_BOTH); $x++) { //record loop
+        $leaveStatus = isset($resultArray['Status']) ? $resultArray['Status'] : '';
+        $leaveSTATUS = isset($resultArray['STATUS']) ? $resultArray['STATUS'] : '';
+
+        if($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'){
+            $echo .= '<tr style="text-decoration:line-through" >';
         }
-    } //end admin table
-    else { //no edit capabilities
-        if($leaveStatus=='PENDING' || $leaveSTATUS=='PENDING')
-                $echo .= '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
-                    <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
         else
-            $echo .= '<td></td>';
-        for($y=0; $y<$fieldCount; $y++){ //field loop 
-            //load results
-            $echo .= '<td>'. $resultArray[$y].'</td>';        
+            $echo .= '<tr >';
+
+        if($admin>0){
+            for($y=0; $y<$fieldCount+2; $y++){ //field loop    
+                //edit button that redirects to request page
+                if($y==0){
+                    if(!$resultArray['HRApproved'] && !($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'))
+                        $echo .= '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                            <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+                    else
+                        $echo .= '<td></td>';
+                }
+                //delete button
+                else if($y==1){
+                    if(!$resultArray['HRApproved'] && !($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'))
+                        $echo .='<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
+                    else
+                        $echo .= '<td></td>';
+                }
+                else //load results
+                    $echo .= '<td>'. $resultArray[$y-2].'</td>';
+
+            }
+        } //end admin table
+        else { //no edit capabilities
+            if($leaveStatus=='PENDING' || $leaveSTATUS=='PENDING' && !($leaveStatus=='EXPUNGED' || $leaveSTATUS=='EXPUNGED'))
+                    $echo .= '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
+                        <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+            else
+                $echo .= '<td></td>';
+            for($y=0; $y<$fieldCount; $y++){ //field loop 
+                //load results
+                $echo .= '<td>'. $resultArray[$y].'</td>';        
+            }
         }
-    }
-}//end array loading
-
-      
-        $echo .=   '<input type="hidden" name="totalRows" value="'.$x.'" />';
-        $echo .=  '</tr>';
-        $echo .=  '</table></form></div>
-            <script type="text/javascript">
-                var sorter=new table.sorter("sorter");
-                sorter.init("sorter",2);
-            </script>';
-        echo $echo;
-
-//check if we're deleting a record
-for($i=0; $i<$x; $i++){
-    if(isset($_POST['deleteBtn'.$i])){
-        $refToDelete = $_POST['deleteBtn'.$i];
-        //procede w delete
-        expungeRequest($mysqli, $refToDelete, false, $deleteIndex=$i, $totalRows=$x);
-    }
-}//end of deleteBtn checking loop
+    }//end array loading
 
 
+            $echo .=   '<input type="hidden" name="totalRows" value="'.$x.'" />';
+            $echo .=  '</tr>';
+            $echo .=  '</table></form></div>
+                <script type="text/javascript">
+                    var sorter=new table.sorter("sorter");
+                    sorter.init("sorter",2);
+                </script>';
+            echo $echo;
 
-//showSortableTable($theTable, 0);
+    //check if we're deleting a record
+    for($i=0; $i<$x; $i++){
+        if(isset($_POST['deleteBtn'.$i])){
+            $refToDelete = $_POST['deleteBtn'.$i];
+            //procede w delete
+            expungeRequest($mysqli, $refToDelete, false, $deleteIndex=$i, $totalRows=$x);
+        }
+    }//end of deleteBtn checking loop
 
-//build table
-//resultTable($mysqli, $result);
-//show a print button. printed look defined by print.css
-echo '<a href="javascript:window.print()">Print</a>';
+
+
+    //showSortableTable($theTable, 0);
+
+    //build table
+    //resultTable($mysqli, $result);
+    //show a print button. printed look defined by print.css
+    echo '<a href="javascript:window.print()">Print</a>';
 } //end displaySubmittedRequests()
 ?>
