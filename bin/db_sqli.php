@@ -228,7 +228,13 @@ function SQLerrorCatch($mysqli, $result) {
         }
         catch (Exception $e) {
             $message = $e->getMessage();
-            popUpMessage($message);
+            $dbgTrace = debug_backtrace();
+            $dbgMsg .= "<table><tr><th>Debug backtrace begin:</th></tr>";
+            foreach($dbgTrace as $dbgIndex => $dbgInfo) {
+                $dbgMsg .= '<tr width=300><td>'.$dbgInfo['file'].' (line '.$dbgInfo['line'].') -> '.$dbgInfo['function'].'</td></tr>';
+            }
+            $dbgMsg .= "<tr><td> </td></tr><tr><th>Debug backtrace end</th></tr></table>";
+            popUpMessage($dbgMsg.'<br/><br/> '.$message, "Error Message");
             return true;
         }
     return false;
