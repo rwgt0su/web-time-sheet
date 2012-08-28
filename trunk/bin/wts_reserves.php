@@ -2,7 +2,7 @@
 
 function displayReserves($config){
     echo '<h3>Reserves Manager</h3>';
-    if($config->adminLvl > 75){
+    if($config->adminLvl >= 75){
         //get passed variables
         $addBtn = isset($_POST['addBtn']) ? true : false;
         $editSelect = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
@@ -102,7 +102,7 @@ function reservesTable($config){
     }
     
     $mysqli = connectToSQL($reserveDB = TRUE);
-    if($config->adminLvl > 75)
+    if($config->adminLvl >= 75)
         $myq = "SELECT *  FROM `RESERVE`";
     else
         $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5";
@@ -110,7 +110,7 @@ function reservesTable($config){
     SQLerrorCatch($mysqli, $result);
     $totalRows = $result->num_rows;
     
-    if($config->adminLvl > 75)
+    if($config->adminLvl >= 75)
         $myq = "SELECT *  FROM `RESERVE` ORDER BY `RESERVE`.`RADIO` ASC LIMIT ".$prevNum.",  ".$limit;
     else
         $myq = "SELECT *  FROM `RESERVE` WHERE `GRP` != 5 ORDER BY `RESERVE`.`RADIO` ASC LIMIT ".$prevNum.",  ".$limit;
@@ -178,7 +178,7 @@ function reservesTable($config){
     showSortableTable($theTable, 4);
 }
 function showAddReserve($config){
-    if($config->adminLvl >75){
+    if($config->adminLvl >=75){
         $mysqli = connectToSQL($reserveDB = TRUE);
         $saveBtn = isset($_POST['saveBtn']) ? true : false;
         if($saveBtn){
@@ -268,7 +268,7 @@ function showAddReserve($config){
 function reserveDetails($config, $reserveID){
     $mysqli = connectToSQL($reserveDB = TRUE);
     echo 'Details for: ' . $reserveID . '<input type="hidden" name="reserveID" value="'.$reserveID.'" />';
-    if($config->adminLvl >75){
+    if($config->adminLvl >= 75){
         $updateBtn = isset($_POST['updateBtn']) ? true : false;
         
         if($updateBtn){
