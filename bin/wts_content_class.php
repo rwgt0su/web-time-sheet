@@ -24,6 +24,7 @@ Class wts_content {
     public $isApprovedUseReport;
     public $subReqCal;
     public $hrEmpRep;
+    public $isSickRep;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -51,6 +52,7 @@ Class wts_content {
         $this->isApprovedUseReport = isset($_GET['approvedUse']) ? $_GET['approvedUse'] : false;
         $this->subReqCal = isset($_GET['subReqCal']) ? $_GET['subReqCal'] : false;
         $this->hrEmpRep = isset($_GET['hrEmpRep']) ? $_GET['hrEmpRep'] : false;
+        $this->isSickRep = isset($_GET['sickEmpRep']) ? $_GET['sickEmpRep'] : false;
         
         
         if(empty($_GET)){

@@ -126,6 +126,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php hrPayrolReportByEmployee($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isSickRep){
+            ?>
+            <div class="post"><?php sickReport($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
         
         myAlerts($config, $wts_content); 
     }

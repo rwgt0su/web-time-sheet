@@ -11,6 +11,7 @@ Class Config {
         public $ldap_MCO_server;
         public $ldap_MCO_domain;
         public $ldap_MCO_OU;
+        public $installYear;
 
 	public function Config(){
 		$this->mysqli = connectToSQL();
@@ -36,6 +37,9 @@ Class Config {
 			}
                         if (strcmp($row['Variable'], "ldap_user_pass") == 0){
 				$this->ldapPass = $row['Value'];
+			}
+                        if (strcmp($row['Variable'], "install_year") == 0){
+				$this->installYear = $row['Value'];
 			}
 		}
                 //Prepare for Mahoning County Domain Migration
