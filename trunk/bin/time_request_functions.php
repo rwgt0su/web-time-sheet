@@ -590,15 +590,31 @@ function displaySubmittedRequests(){
                 break;
             case 99: //Sheriff
                 //custom query goes here
-                $myq = "SELECT *
-                        FROM REQUEST
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'"; 
+                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                            DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                            T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
+                        FROM REQUEST R
+                        INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                        LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                        INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
+                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        ORDER BY REFER";
                 break;
             case 100: //full admin, complete raw dump
 
-                $myq = "SELECT *
-                        FROM REQUEST
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'"; 
+                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                            DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                            T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
+                            APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
+                        FROM REQUEST R
+                        INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
+                        LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
+                        INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
+                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        ORDER BY REFER";
                 break;
     } //end switch
     $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
