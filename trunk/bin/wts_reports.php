@@ -299,4 +299,125 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
     echo $echo;
 
 }
+function sickReport($config){
+    echo '<h3>Employee Sick Reports</h3>';
+    if($config->adminLvl >=25){
+        //Get variables
+        $repYear = isset($_POST['repYear']) ? $_POST['repYear'] : $config->installYear;
+        
+       //Select year
+        echo '<form method=POST>';
+        echo 'Report Year: <select name="repYear" onchange="this.form.submit()">';
+        for($i=$config->installYear;$i<=date('Y'); $i++){
+            echo '<option value="'.$i.'"';
+            if($repYear == $i)
+                echo ' SELECTED';
+            echo '>'.$i.'</option>';
+        }
+        echo '</select><br/>';
+        
+        
+        $startDate = new DateTime($repYear.'-01-01');
+        $endDate = new DateTime($repYear.'-12-31');
+        
+        $mysqli = $config->mysqli;
+        
+        if(isset($_POST['viewDetailsBtn'])){
+            $empID = $_POST['empID'];
+            empTimeReportByPay($config, $startDate, $endDate, $empID);
+            
+        }
+        else{
+            $isApproveStatus = isset($_POST['approvedStatus']) ? true : false;
+                if(!isset($_POST['clicked']))
+                    $isApproveStatus = true;
+            $isPendingStatus = isset($_POST['pendingStatus']) ? true : false;
+            
+            echo '<div align=right><form method=POST><input type="hidden" name="clicked" value="true" />';
+            
+            //Status = approved
+            echo '<input onChange="this.form.submit()" type="checkbox" value="true" name="approvedStatus"';
+            if($isApproveStatus)
+                echo ' CHECKED';
+            echo ' />Status: Approved<Br/>';
+                       
+            //status = pending
+            echo '<input onChange="this.form.submit()" type="checkbox" value="true" name="pendingStatus"';
+            if($isPendingStatus)
+                echo ' CHECKED';
+            echo ' />Status: Pending<br/>';
+            
+            echo '</form></div>';
+                        
+            $status = '';
+            if($isApproveStatus && $isPendingStatus)
+                $status = "AND (STATUS = 'APPROVED' OR STATUS = 'PENDING')";
+            else if($isApproveStatus)
+                $status = "AND STATUS = 'APPROVED'";
+            else if($isPendingStatus)
+                $status = "AND STATUS = 'PENDING'";
+            else
+                $status = "AND STATUS=''";
+            
+                
+            $myq = "SELECT REFER 'RefNo', REQ.IDNUM 'REQID', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
+                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', STATUS 'Status',
+                        DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                        DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                        T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
+                        HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
+                    FROM REQUEST
+                    LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
+                    LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.IDNUM
+                    INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
+                    WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+                    AND (REQUEST.TIMETYPEID='SK' OR SUBTYPE='8')
+                    ".$status."
+                    ";
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+
+            $theTable = array(array());
+            $x = 0;
+            $theTable[$x][0] = "View";
+            $theTable[$x][1] = "Munis #";
+            $theTable[$x][2] = "Employee";
+            $theTable[$x][3] = "Number of Sick Requests";
+
+            $lastUser = '';
+            $lastUserRow = 0;
+            $recordCounter = 0;
+
+            while($row = $result->fetch_assoc()) {
+                if(strcmp($lastUser, $row['Name'])==0){
+                    $recordCounter++;
+                    $theTable[$x][3] = $recordCounter;
+                }
+                else{
+                    $x++;
+                    $recordCounter = 1;
+                    $lastUser = $row['Name'];
+
+                    $theTable[$x][0] = '<form method="POST">
+                        <input type="submit" name="viewDetailsBtn" value="View" />
+                        <input type="hidden" name="empID" value="'.$row['REQID'].'" />
+                        </form>';
+                    $theTable[$x][1] = $row['Munis'];
+                    $theTable[$x][2] = $lastUser;
+                    $theTable[$x][3] = $recordCounter;
+
+                }
+
+
+            }//end While loop
+            echo 'number of rows: '.$x;
+            showSortableTable($theTable, 1);
+        }
+
+        
+    }
+    else{
+        echo 'Access Denied';
+    }
+}
 ?>

@@ -692,12 +692,15 @@ function displaySubmittedRequests(){
                         if(!$resultArray['isHRApproved'])
                             echo '<td><input type="submit"  name="editBtn'.$x.'" value="Edit" onClick="this.form.action=' . "'?leave=true'" . '" />
                                 <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
+                        else if($admin>=50)
+                            echo '<td><input type="submit"  name="editBtn'.$x.'" value="Modify Approval" onClick="this.form.action=' . "'?leave=true'" . '" />
+                                <input type="hidden" name="requestID'.$x.'" value="'.$resultArray[0].'" /></td>';
                         else
                             echo '<td></td>';
                     }
                     //delete button
                     else if($y==1){
-                        if(!$resultArray['isHRApproved'])
+                        if(!$resultArray['isHRApproved'] || $admin>=50)
                             echo '<td><button type="submit"  name="deleteBtn'.$x.'" value="'.$resultArray[0].'" onClick="this.form.action=' . $_SERVER['REQUEST_URI'] . ';this.form.submit()" >Delete</button></td>';
                         else
                             echo '<td></td>';
