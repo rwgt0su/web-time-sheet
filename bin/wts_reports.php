@@ -98,6 +98,7 @@ function hrPayrolReportByEmployee($config){
         if($viewBtn){
             echo '<div align="center"><a href="'.$_SERVER['REQUEST_URI'].'">Back</a></div>';
             $empID = isset($_POST['empID']) ? $_POST['empID'] : '';
+            echo '<form method="POST">';
             empTimeReportByPay($config, $startDate, $endDate, $empID);
         }
         else{
@@ -197,12 +198,9 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
         $x = 0;
         $y = 0;
         if($config->adminLvl >=50){
-            echo '<form method="POST">';
             $theTable[$x][$y] = "HR Approve"; $y++;
         }
         $theTable[$x][$y] = "Ref #"; $y++;
-        $theTable[$x][$y] = "Munis #"; $y++;
-        $theTable[$x][$y] = "Employee"; $y++;
         $theTable[$x][$y] = "Date of Use"; $y++;
         $theTable[$x][$y] = "Start Time"; $y++;
         $theTable[$x][$y] = "End Time"; $y++;
@@ -226,8 +224,8 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
                 $y++;
             }
             $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
-            $theTable[$x][$y] = $row['Munis']; $y++;
-            $theTable[$x][$y] = $row['Name']; $y++;
+            $empMunis = $row['Munis'];
+            $empName = $row['Name'];
             $theTable[$x][$y] = $row['Used']; $y++;
             $theTable[$x][$y] = $row['Start']; $y++;
             $theTable[$x][$y] = $row['End']; $y++;
@@ -240,6 +238,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
             $theTable[$x][$y] = $row['ApprovedBy']; $y++;
             $theTable[$x][$y] = $row['Reason']; $y++;
         }
+        echo '<div align="center"><h3>Employee: '.$empName.'</h3>Munis# '.$empMunis.'</div>';
         showSortableTable($theTable, 1);
         echo '<input type="hidden" name="totalRows" value="'.$x.'" />
               <input type="hidden" value="View" name="viewDetailsBtn">
@@ -297,37 +296,85 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
     }
     $echo .= '</table></div>';
     echo $echo;
+    echo '<a href="javascript:window.print()">Print</a>';
 
 }
 function sickReport($config){
     echo '<h3>Employee Sick Reports</h3>';
     if($config->adminLvl >=25){
+        $mysqli = $config->mysqli;
         //Get variables
         $repYear = isset($_POST['repYear']) ? $_POST['repYear'] : $config->installYear;
         
        //Select year
         echo '<form method=POST>';
-        echo 'Report Year: <select name="repYear" onchange="this.form.submit()">';
+        echo '</div><div class="login"><table><tr><td>Report Year: <select name="repYear" onchange="this.form.submit()">';
         for($i=$config->installYear;$i<=date('Y'); $i++){
             echo '<option value="'.$i.'"';
             if($repYear == $i)
                 echo ' SELECTED';
             echo '>'.$i.'</option>';
         }
-        echo '</select><br/>';
-        
+        echo '</select></td>';                
         
         $startDate = new DateTime($repYear.'-01-01');
         $endDate = new DateTime($repYear.'-12-31');
         
-        $mysqli = $config->mysqli;
-        
-        if(isset($_POST['viewDetailsBtn'])){
+        if(isset($_POST['viewDetailsBtn']) && !isset($_POST['backBtn'])){
             $empID = $_POST['empID'];
+            echo '<td width=470 align=right><input type="submit" name="backBtn" value="Back to List" />
+                    <input type="hidden" name="viewDetailsBtn" value="true" />
+                    <input type="hidden" name="empID" value="'.$empID.'" />
+                    </td></tr></table></div><div class="post">';
             empTimeReportByPay($config, $startDate, $endDate, $empID);
+            echo '</form>';
             
         }
         else{
+            if($config->adminLvl >= 25){
+                echo '<td width=470 align=right>Choose a Division:
+                <select name="divisionID" onchange="this.form.submit()">';
+
+                if(isset($_POST['divisionID'])){
+                    $myDivID = $_POST['divisionID'];
+                }
+                else{
+                    if($config->adminLvl >= 50){
+                        $myDivID = "All"; 
+                    }
+                    else{
+                        $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
+                        $myDivResult = $mysqli->query($mydivq);
+                        SQLerrorCatch($mysqli, $myDivResult);
+                        $temp = $myDivResult->fetch_assoc();
+                        $myDivID = $temp['DIVISIONID'];
+                    }
+                }
+
+                $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
+                $allDivResult = $mysqli->query($alldivq);
+                SQLerrorCatch($mysqli, $allDivResult);
+                while($Divrow = $allDivResult->fetch_assoc()) {
+                    echo '<option value="'.$Divrow['DIVISIONID'].'"';
+                    if($Divrow['DIVISIONID']==$myDivID)
+                        echo ' SELECTED ';
+                    echo '>'.$Divrow['DESCR'].'</option>';
+                }
+                if($config->adminLvl >= 25){
+                    if(isset($_POST['divisionID'])){
+                        if($myDivID == "All")
+                            echo '<option value="All" SELECTED>All</option>';
+                        else
+                            echo '<option value="All">All</option>';
+                    }
+                    else if($myDivID == "All")
+                        echo '<option value="All" SELECTED>All</option>';
+                    else
+                        echo '<option value="All">All</option>';
+                }
+                echo '</select></td>';
+            }
+            echo '</tr></table>';
             $isApproveStatus = isset($_POST['approvedStatus']) ? true : false;
                 if(!isset($_POST['clicked']))
                     $isApproveStatus = true;
@@ -347,8 +394,13 @@ function sickReport($config){
                 echo ' CHECKED';
             echo ' />Status: Pending<br/>';
             
-            echo '</form></div>';
-                        
+            echo '</form></div></div><div class="post">';
+              
+            if($myDivID == "All")
+                $myDivID = "";
+            else
+                $myDivID = "AND REQ.DIVISIONID='".$myDivID."'";
+            
             $status = '';
             if($isApproveStatus && $isPendingStatus)
                 $status = "AND (STATUS = 'APPROVED' OR STATUS = 'PENDING')";
@@ -359,7 +411,7 @@ function sickReport($config){
             else
                 $status = "AND STATUS=''";
             
-                
+   
             $myq = "SELECT REFER 'RefNo', REQ.IDNUM 'REQID', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
                         DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', STATUS 'Status',
                         DATE_FORMAT(BEGTIME,'%H%i') 'Start',
@@ -372,6 +424,7 @@ function sickReport($config){
                     INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
                     WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
                     AND (REQUEST.TIMETYPEID='SK' OR SUBTYPE='8')
+                    ".$myDivID."
                     ".$status."
                     ";
             $result = $mysqli->query($myq);
