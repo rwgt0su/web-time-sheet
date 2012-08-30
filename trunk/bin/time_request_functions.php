@@ -845,7 +845,7 @@ function displayLeaveApproval(){
 
         if(strcmp($divisionID, "All") == 0){
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
-                            DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                            DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
                             DATE_FORMAT(USEDATE,'%b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', NOTE 'Comment', STATUS 'Status'                         
@@ -857,7 +857,7 @@ function displayLeaveApproval(){
         }
         else{
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
-                            DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
+                            DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
                             DATE_FORMAT(USEDATE,'%b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', NOTE 'Comment', STATUS 'Status'                         
