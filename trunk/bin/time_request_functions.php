@@ -547,8 +547,8 @@ function displaySubmittedRequests(){
         switch($admin) { //switch to show different users different reports
             case 0: //normal user, list only user's own reqs
 
-            $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+            $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved' 
@@ -562,8 +562,8 @@ function displaySubmittedRequests(){
                 break;
 
             case 25: //supervisor, list by division
-                $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'  
@@ -579,8 +579,8 @@ function displaySubmittedRequests(){
                         ORDER BY REFER";
                 break;
             case 50: //HR
-                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
@@ -593,8 +593,8 @@ function displaySubmittedRequests(){
                 break;
             case 99: //Sheriff
                 //custom query goes here
-                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
@@ -607,8 +607,8 @@ function displaySubmittedRequests(){
                 break;
             case 100: //full admin, complete raw dump
 
-                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                $myq = "SELECT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
@@ -623,8 +623,8 @@ function displaySubmittedRequests(){
     $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
     if(isset($_POST['divisionID'])){
         if($divisionID == "All"){
-            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
@@ -636,8 +636,8 @@ function displaySubmittedRequests(){
                         ORDER BY REFER";
         }
         else{
-            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                            DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                             DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'isHRApproved'   
@@ -991,7 +991,8 @@ function displayRequestLookup($config) {
         $mysqli = $config->mysqli;
         //query for all time requests if no date selected
         if( !empty($_POST['start']) && !empty($_POST['end']))
-            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%a %b %d %Y') 'Requested',
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', BEGTIME 'Start',
                             ENDTIME 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason' 
@@ -1003,7 +1004,8 @@ function displayRequestLookup($config) {
                         AND REQ.LNAME LIKE '%".$lname."%'";
         
         else
-            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', REQDATE 'Requested', USEDATE 'Used', BEGTIME 'Start',
+            $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%a %b %d %Y') 'Requested',
+                            DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', BEGTIME 'Start',
                             ENDTIME 'End', HOURS 'Hrs',
                             T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                             APR.LNAME 'ApprovedBy', REASON 'Reason' 
@@ -1403,8 +1405,8 @@ else {
 <?php
 
 
-        $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                        DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+        $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
+                        DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                         DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                         T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
                         APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'HRApproved' 
