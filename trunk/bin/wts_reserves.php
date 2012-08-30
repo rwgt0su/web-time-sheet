@@ -44,6 +44,7 @@ function displayReserves($config){
                 
                 $result = $mysqli->query($myq);
                 SQLerrorCatch($mysqli, $result);
+                addLog($config, 'Reserve with ID '.$reserveID.' Deleted');
                 $reserveID = false;
                 echo 'Reserve Successfully Removed.<br/>';
             }
@@ -222,7 +223,9 @@ function showAddReserve($config){
                     );";
                 $result = $mysqli->query($myq);
                 SQLerrorCatch($mysqli, $result);
-                echo 'Successfully Saved Reserve with ID: '.$mysqli->insert_id. '<br />';
+                $reserveAddedID = $mysqli->insert_id;
+                addLog($config, 'Reserve ID '.$secLogID.' Added');
+                echo 'Successfully Saved Reserve with ID: '.$reserveAddedID. '<br />';
                 reserveDetails($config, $mysqli->insert_id);
             }
         }
@@ -311,6 +314,7 @@ function reserveDetails($config, $reserveID){
                 
                 $result = $mysqli->query($myq);
                 SQLerrorCatch($mysqli, $result);
+                addLog($config, 'Reserve with ID '.$reserveID.' Updated');
                 echo 'Reserve Successfully Updated.<br/>';
             }
         }
