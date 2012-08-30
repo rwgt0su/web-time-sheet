@@ -182,8 +182,10 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                             echo 'Request not accepted.';
                         }
                         else {
+                            $refInsert = $mysqli->insert_id;
+                            addLog($config, 'New Time Request Submitted with Ref# '.$refInsert);
                             echo '<h3>Request accepted. The reference number for this request is <b>' 
-                                . $mysqli->insert_id . '</b>.</h3>';
+                                .$refInsert. '</b>.</h3>';
                         }
                     } //end validation check
                 }//end for loop
@@ -212,6 +214,7 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                     echo 'Error: Request not updated.';
                 }
                 else {
+                    addLog($config, 'Updated Time Request with Ref# '.$_POST['referNum']);
                     echo '<h3>Request updated successfully.</h3>';
                 }
     }//end of "is update button pressed?"
@@ -871,7 +874,7 @@ function displayLeaveApproval(){
 
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
-                if (isset($_POST['approveBtn'])) {
+        if (isset($_POST['approveBtn'])) {
             for ($j=0; $result->num_rows > $j; $j++) {
                 $row = $result->fetch_row();
                 $refs[$j] = $row[0]; //save ref # in an array
@@ -885,6 +888,7 @@ function displayLeaveApproval(){
                                     WHERE REFER='$refs[$j]'";
                     //echo $approveQuery; //DEBUG
                     $approveResult = $mysqli->query($approveQuery);
+                    addLog($config, 'Approved Time Request with Ref# '.$refs[$j]);
                     if(!SQLerrorCatch($mysqli, $approveResult))
                             echo "<h3>Change Saved.</h3>";
                     
@@ -1274,6 +1278,9 @@ function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false
         $result = $mysqli->query($myq);
     
         if(!SQLerrorCatch($mysqli, $result)){
+            $configNew = new Config();
+            $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
+            addLog($configNew, 'UnExpunged Time Request with Ref# '.$referNum);
             popUpMessage ('Request '.$referNum.' Has been placed back into PENDING State. 
                     <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
                     <input type="submit" value="OK" />
@@ -1291,6 +1298,9 @@ function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false
             $result = $mysqli->query($myq);
 
             if(!SQLerrorCatch($mysqli, $result)){
+                $configNew = new Config();
+                $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
+                addLog($configNew, 'Expunged Time Request with Ref# '.$referNum);
                 popUpMessage ('Request '.$referNum.' expunged. 
                             <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
                             <input type="submit" value="OK" />
