@@ -239,4 +239,15 @@ function SQLerrorCatch($mysqli, $result) {
         }
     return false;
 }
+function mergeEmployeeDB(){
+    $myq= "UPDATE EMPLOYEE AS TARGET
+    LEFT JOIN EMP_MERGE AS SOURCE
+    ON (TARGET.LNAME=SOURCE.LNAME AND TARGET.FNAME=SOURCE.FNAME)
+    SET TARGET.RADIO=SOURCE.RADIO,
+    TARGET.ADDRESS=SOURCE.ADDRESS,
+    TARGET.HOMEPH=SOURCE.HPHONE,
+    TARGET.CELLPH=SOURCE.CPHONE";
+    
+}
+
 ?>
