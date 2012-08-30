@@ -177,7 +177,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
     }
     
     $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
-                DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', STATUS 'Status',
+                DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', STATUS 'Status',
                     DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                     DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                     T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
