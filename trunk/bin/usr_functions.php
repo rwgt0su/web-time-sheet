@@ -186,6 +186,9 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
                         $validUser = true;
+                        $configNew = new Config();
+                        $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
+                        addLog($configNew, 'Logged in to system');
                         echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['REQUEST_URI'].'" />';
                     }
                     else
@@ -214,6 +217,9 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                     $_SESSION['isLDAP'] = false;
                     $_SESSION['timeout'] = time();
                     $validUser = true;
+                    $configNew = new Config();
+                    $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
+                    addLog($configNew, 'Logged in to system');
                     echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'" />';
                 }
             }
@@ -281,6 +287,9 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
                         $validUser = true;
+                        $configNew = new Config();
+                        $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
+                        addLog($configNew, 'Logged in to system');
                         echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['PHP_SELF'].'?updateProfile=true" />';
                     }
                     else{
@@ -304,21 +313,22 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
 	
     return $errorText;
 }
-function logoutUser($message){
-        unset($_SESSION['userIDnum']);
-	unset($_SESSION['validUser']);
-	unset($_SESSION['userName']);
-	unset($_SESSION['admin']);
-        unset($_SESSION['timeout']);
-        unset($_SESSION['isLDAP']);
-        unset($_SESSION['lastLogin']);
+function logoutUser($config, $message){
+    addLog($config, 'Logged off the system');
+    unset($_SESSION['userIDnum']);
+    unset($_SESSION['validUser']);
+    unset($_SESSION['userName']);
+    unset($_SESSION['admin']);
+    unset($_SESSION['timeout']);
+    unset($_SESSION['isLDAP']);
+    unset($_SESSION['lastLogin']);
+
+    myAlertsLogout();
         
-        myAlertsLogout();
-        
-	session_destroy(); 
-        
-        echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
-        echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
+    session_destroy(); 
+
+    echo '<meta http-equiv="refresh" content="1;url='.$_SERVER['PHP_SELF'].'" />';
+    echo '<div class="post">'.$message.'<div class="clear"></div></div><div class="divider"></div>';
 }
 function displayUpdateProfile($config){
     //Get pass search results
