@@ -44,7 +44,7 @@ function displayContent($wts_content, $config){
             <?php
         }
         if($wts_content->isLogout()){
-            logoutUser("You have logged out");
+            logoutUser($config, "You have logged out");
         }
         if($wts_content->isSearching){
             ?>
@@ -129,6 +129,11 @@ function displayContent($wts_content, $config){
         if($wts_content->isSickRep){
             ?>
             <div class="post"><?php sickReport($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+        if($wts_content->isEventLogs){
+            ?>
+            <div class="post"><?php displayLogs($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
         

@@ -25,6 +25,7 @@ Class wts_content {
     public $subReqCal;
     public $hrEmpRep;
     public $isSickRep;
+    public $isEventLogs;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -53,6 +54,7 @@ Class wts_content {
         $this->subReqCal = isset($_GET['subReqCal']) ? $_GET['subReqCal'] : false;
         $this->hrEmpRep = isset($_GET['hrEmpRep']) ? $_GET['hrEmpRep'] : false;
         $this->isSickRep = isset($_GET['sickEmpRep']) ? $_GET['sickEmpRep'] : false;
+        $this->isEventLogs = isset($_GET['eventLogs']) ? $_GET['eventLogs'] : false;
         
         
         if(empty($_GET)){
