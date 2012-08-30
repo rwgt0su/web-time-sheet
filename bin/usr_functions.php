@@ -169,7 +169,8 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $errorText .= " and Valid password ";
                         
                         //Set Last Login
-                        $_SESSION['lastLogin'] = $resultAssoc['LASTLOGIN'];
+                        $lastLogin = new DateTime($resultAssoc['LASTLOGIN']);
+                        $_SESSION['lastLogin'] = $lastLogin->format('m-d-Y H:i:s');
                         //Update last login
                         $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT(`EMPLOYEE`.`ID` USING utf8) = '".strtoupper($user)."' LIMIT 1;";
                         $mysqli = connectToSQL();
