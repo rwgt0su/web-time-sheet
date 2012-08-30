@@ -126,6 +126,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                         WHERE SECLOG.IDNUM = ".$secLogID;
                 $result = $mysqli->query($myq);
                 SQLerrorCatch($mysqli, $result);
+                addLog($config, 'Secondary Log #'.$secLogID.' approved');
                 echo 'Log #'.$secLogID.' approved.<br />';
             }
         }
@@ -358,7 +359,8 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                     );";
                 $result = $mysqli->query($myq);
                 if(!SQLerrorCatch($mysqli, $result)) {
-                    $secLogID = $mysqli->insert_id;      
+                    $secLogID = $mysqli->insert_id;  
+                    addLog($config, 'Secondary Log #'.$secLogID.' Added');
                     echo 'Successfully Added Secondary Employment Log, Reference Number: '.$secLogID.'<br />';
                     $isEditing = true;
                 }
@@ -380,8 +382,10 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
             `AUDIT_OUT_ID` = '".$_SESSION['userIDnum']."', `AUDIT_OUT_TIME` = NOW( ) ,
             `AUDIT_OUT_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE `SECLOG`.`IDNUM` = ".$secLogID." LIMIT 1 ;";
         $result = $mysqli->query($myq);
-        if(!SQLerrorCatch($mysqli, $result))
+        if(!SQLerrorCatch($mysqli, $result)){
                 echo '<h2>Results</h2>Successfully Logged Out Reference Number: '.$secLogID.'<br /><br />';
+                addLog($config, 'Secondary Log #'.$secLogID.' Logged Out');
+        }
         else
             echo '<h2>Results</h2>Failed to logout Secondary Employment Log, try again.<br /><Br />';  
         $isEditing = true;
@@ -409,8 +413,10 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                     DRESS = '".$dress."' 
                 WHERE IDNUM =".$secLogID;
         $result = $mysqli->query($myq);
-        if(!SQLerrorCatch($mysqli, $result))
+        if(!SQLerrorCatch($mysqli, $result)){
                 echo '<h2>Results</h2>Successfully Updated Log #'.$secLogID.'<br /><br />';
+                addLog($config, 'Secondary Log #'.$secLogID.' Modified');
+        }
         else
             echo '<h2>Results</h2>Failed to update Secondary Employment Log, try again.<br /><Br />';
         
