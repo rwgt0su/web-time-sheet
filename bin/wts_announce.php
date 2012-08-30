@@ -98,6 +98,7 @@ function displayAdminAnnounce($config){
                 if (!$result) 
                     throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
                 else{
+                    addLog($config, 'Announcement Updated with title '.$editorTitle);
                     echo '<h3>Successful Save</h3>';
                 }
             }
@@ -143,6 +144,7 @@ function displayAdminAnnounce($config){
                 if (!$result) 
                     throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
                 else{
+                    addLog($config, 'Announcement Added with title '.$editorTitle);
                     echo '<h3>Successful Save</h3>';
                 }
             }
