@@ -1,19 +1,19 @@
 <?php    
 function displayUserMenu($config){	
 	if (isset($_GET['ChangeBtn'])){
-            if(isValidUser())
+            if(isValidUser($config))
 		displayPassChange(false, false);
 	}
 	else if (isset($_GET['AddUserBtn'])){
-            if(isValidUser())
+            if(isValidUser($config))
 		displayPassChange(true, true);
 	}
 	else if (isset($_GET['EditUserBtn'])){
-            if(isValidUser())
+            if(isValidUser($config))
 		displayPassChange(true, false);
 	}
 	else if (isset($_GET['DelUserBtn'])){
-            if(isValidUser())
+            if(isValidUser($config))
 		displayDelUser($config);
 	}
         else if (isset($_GET['DispUsers'])){
