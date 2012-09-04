@@ -170,7 +170,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         
                         //Set Last Login
                         $lastLogin = new DateTime($resultAssoc['LASTLOGIN']);
-                        $_SESSION['lastLogin'] = $lastLogin->format('m-d-Y H:i:s');
+                        $_SESSION['lastLogin'] = $lastLogin->format('m-d-Y H:i');
                         //Update last login
                         $myq = "UPDATE `PAYROLL`.`EMPLOYEE` SET `LASTLOGIN` = NOW() WHERE CONVERT(`EMPLOYEE`.`ID` USING utf8) = '".strtoupper($user)."' LIMIT 1;";
                         $mysqli = connectToSQL();
@@ -702,7 +702,7 @@ function displayLogout(){
         
 }
 function displayLogin($config){
-    if (!isValidUser()){
+    if (!isValidUser($config)){
         $error = '0';
         $noPass = false;
         $noUser = false;

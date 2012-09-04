@@ -1,7 +1,7 @@
 <?php
 
 function myAlerts($config){
-    if(isValidUser()){
+    if(isValidUser($config)){
         //popUpMessage('You have an Alert! <a href="?approve=true">Go To Request</a>');
     }
     if($config->adminLvl >=50){
