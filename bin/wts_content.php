@@ -17,7 +17,7 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayAbout($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
-    if(isValidUser()){
+    if(isValidUser($config)){
         if($wts_content->isAnounceAdmin){
             ?>
             <div class="post"><?php displayAdminAnnounce($config); ?><div class="clear"></div></div><div class="divider"></div>
@@ -35,7 +35,7 @@ function displayContent($wts_content, $config){
         }
         if($wts_content->isLeaveApproval){
             ?>
-            <div class="post"><?php displayLeaveApproval(); ?><div class="clear"></div></div><div class="divider"></div>
+            <div class="post"><?php displayLeaveApproval($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
         if($wts_content->isUserMenu){
