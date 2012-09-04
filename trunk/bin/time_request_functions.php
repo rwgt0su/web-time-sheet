@@ -767,7 +767,7 @@ function displaySubmittedRequests(){
 ?>
 
 <?php
-function displayLeaveApproval(){   
+function displayLeaveApproval($config){   
     /*
     * Form used to approve leave
     * 
@@ -888,7 +888,8 @@ function displayLeaveApproval(){
                                     WHERE REFER='$refs[$j]'";
                     //echo $approveQuery; //DEBUG
                     $approveResult = $mysqli->query($approveQuery);
-                    addLog($config, 'Approved Time Request with Ref# '.$refs[$j]);
+                    $logMsg = 'Approved Time Request with Ref# '.$refs[$j];
+                    addLog($config, $logMsg);
                     if(!SQLerrorCatch($mysqli, $approveResult))
                             echo "<h3>Change Saved.</h3>";
                     

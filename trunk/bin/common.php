@@ -78,6 +78,11 @@ require_once 'bin/wts_reports.php';
 require_once 'bin/wts_calendar.php';
 require_once 'bin/wts_logging.php';
 
+//ShiftBids
+    //Available Shift Opening Bidding
+    require_once 'bin/Modules/ShiftBids/wts_PosBids.php';
+    require_once 'bin/Modules/ShiftBids/wts_positions.php';
+
 function popUpMessage($message, $title="Message"){
 	?>
     <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
@@ -103,7 +108,7 @@ function popUpMessage($message, $title="Message"){
     </div>
     <?php
 }
-function isValidUser(){
+function isValidUser($config){
 	if ((!isset($_SESSION['validUser'])) || ($_SESSION['validUser'] != true)){
                 return false;
 	}
@@ -112,7 +117,7 @@ function isValidUser(){
             if ($_SESSION['timeout'] + ($timeout * 60) < time()) {
                 //User has been inactive for 30 minutes
                 popUpMessage("Your Session has Timed Out. Please log back in");
-                logoutUser("Session Timeout after ".$timeout." Minutes");
+                logoutUser($config, "Session Timeout after ".$timeout." Minutes");
                 return false;
             }
             else
