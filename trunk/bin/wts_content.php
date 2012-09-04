@@ -136,6 +136,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displayLogs($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isOTRep){
+            ?>
+            <div class="post"><?php overtimeReport($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
         
         myAlerts($config, $wts_content); 
     }
