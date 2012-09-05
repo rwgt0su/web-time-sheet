@@ -6,6 +6,7 @@
  */
 
 function displaySecondaryLog($config, $isApprove = false){
+    $mysqli = $config->mysqli;
     if($isApprove)
         echo '<h2>Secondary Employment Daily Logs Approval</h2>';
     else
@@ -29,6 +30,7 @@ function displaySecondaryLog($config, $isApprove = false){
         $showNormal = isset($_POST['showNormal']) ?  true : false;
         $goBtn = isset($_POST['goBtn']) ? true : false;
         $isApprove = isset($_POST['isApprove']) ? true : $isApprove;
+        $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
         
         if($showAll || $showNormal){
             $goBtn = true;
@@ -88,7 +90,52 @@ function displaySecondaryLog($config, $isApprove = false){
         if($addBtn || $logoutSecLog || $updateSecLog){
             showSecLogDetails($config, $secLogID, false);
         }
-        
+                //get group update or logout
+        if($totalRows > 0){
+            $test = isset($_POST['logoutAll']) ? "yes" : "no";
+            for($i=1;$i<$totalRows;$i++){
+                if(isset($_POST['logoutSecLog'.$i]) || isset($_POST['logoutSecLogAll'])){
+                    $secLogID = $_POST['secLogID'.$i];
+                    
+                    logOutSecLog($config, $secLogID);
+                    
+                    $editBtn = true;
+                }
+                else if(isset($_POST['updateSecLog'.$i]) || isset($_POST['updateSecLogAll'])){
+                    //get posted values
+                    $secLogID = $_POST['secLogID'.$i];
+                    $radioNum = isset($_POST['radioNum'.$i]) ? $mysqli->real_escape_string($_POST['radioNum'.$i]) : '';
+                    $address = isset($_POST['address']) ? $mysqli->real_escape_string($_POST['address']) : '';
+                    $city = isset($_POST['city']) ? $mysqli->real_escape_string($_POST['city']) : '';
+                    $phone = isset($_POST['phone']) ? $mysqli->real_escape_string($_POST['phone']) : '';
+                    $shiftStart1 = isset($_POST['shiftStart1']) ? $mysqli->real_escape_string($_POST['shiftStart1']) : '';
+                    $shiftStart2 = isset($_POST['shiftStart2']) ? $mysqli->real_escape_string($_POST['shiftStart2']) : '';
+                    $shiftStart = $shiftStart1.$shiftStart2."00";
+                    $shiftEnd1 = isset($_POST['shiftEnd1']) ? $mysqli->real_escape_string($_POST['shiftEnd1']) : '';
+                    $shiftEnd2 = isset($_POST['shiftEnd2']) ? $mysqli->real_escape_string($_POST['shiftEnd2']) : '';
+                    $shiftEnd = $shiftEnd1.$shiftEnd2."00";
+                    $dress = isset($_POST['dress']) ? $mysqli->real_escape_string($_POST['dress']) : '';
+                    
+                    updateSecLog($config, $secLogID, $radioNum, $address, $city, $phone, $shiftStart1, $shiftStart2, $shiftEnd1, $shiftEnd2, $dress);
+
+                    $editBtn = true;
+                }
+                $box[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
+                if($box[$i]=='true'){
+                $secLogID = $_POST['secLogID'.$i];
+                    $myq = "UPDATE SECLOG 
+                            SET SUP_ID = '".$_SESSION['userIDnum']."',
+                                SUP_TIME = NOW(),
+                                SUP_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."') 
+                            WHERE SECLOG.IDNUM = ".$secLogID;
+                    $result = $mysqli->query($myq);
+                    SQLerrorCatch($mysqli, $result);
+                    addLog($config, 'Secondary Log #'.$secLogID.' approved');
+                    echo 'Log #'.$secLogID.' approved.<br />';
+                     showSecLog($config, $dateSelect, false, $isApprove=true);
+                }
+            }
+        }
         if($editBtn){
             if($config->adminLvl < 25){
                 //Non supervisor Log details
@@ -110,32 +157,12 @@ function displaySecondaryLog($config, $isApprove = false){
 function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     $mysqli = $config->mysqli;
     $app = isset($_POST['isApprove']) ? true : $isApprove;
-     
-             
-    //Get Approved Checkboxes
-    $approveBtn = isset($_POST['approveBtn']) ? true : false;
-    if($approveBtn) {
-        for($i=0;$i<=$_POST['totalRows'];$i++) {
-            $box[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
-            if($box[$i]=='true'){
-            $secLogID = $_POST['secLogID'.$i];
-                $myq = "UPDATE SECLOG 
-                        SET SUP_ID = '".$_SESSION['userIDnum']."',
-                            SUP_TIME = NOW(),
-                            SUP_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."') 
-                        WHERE SECLOG.IDNUM = ".$secLogID;
-                $result = $mysqli->query($myq);
-                SQLerrorCatch($mysqli, $result);
-                addLog($config, 'Secondary Log #'.$secLogID.' approved');
-                echo 'Log #'.$secLogID.' approved.<br />';
-            }
-        }
-    }
-        
+   
     /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
       depending on the value of SECLOG.IS_RESERVE */
     if(!$isApprove){
-        $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+        $myq =  "SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, 
+                    TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -152,7 +179,8 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
 
                 UNION
 
-                SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO,
+                    TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -166,10 +194,10 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
                 WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
                 AND S.IS_RESERVE=1
-                ORDER BY IDNUM";
+                ORDER BY 'gpID'";
     }
     else{
-        $myq =  "SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+        $myq =  "SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -187,7 +215,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
 
                 UNION
 
-                SELECT CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -202,16 +230,16 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
                 AND AUDIT_OUT_ID != ''
                 AND S.IS_RESERVE=1
-                ORDER BY IDNUM";
+                ORDER BY 'gpID'";
         echo '<input type="hidden" name="isApprove" value="true" />';
-        echo '<input type="hidden" name="goBtn" value="true" />';
+        //echo '<input type="hidden" name="goBtn" value="true" />';
     }
 
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     $echo = '';
     $x=0;
-    if($config->adminLvl >= 25){
+    if($config->adminLvl >= 0){
         //resultTable($mysqli, $result, 'false');
         $showAll = isset($_POST['showAll']) ? true : false;
         if($showAll)
@@ -223,52 +251,74 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
             $theTable[$x][0] = "Edit";
         else
             $theTable[$x][0] = "Approve";
-        $theTable[$x][1] = "Deputy";
-        $theTable[$x][2] = "Radio#";
-        $theTable[$x][3] = "Log In";
-        $theTable[$x][4] = "C/Deputy";
-        $theTable[$x][5] = "Site Name/Address";
-        $theTable[$x][6] = "City/Twp";
-        $theTable[$x][7] = "Contact#";
-        $theTable[$x][8] = "Shift Start";
-        $theTable[$x][9] = "Shift End";
-        $theTable[$x][10] = "Dress";
-        $theTable[$x][11] = "Log Off";
-        $theTable[$x][12] = "C/Deputy";
-        $theTable[$x][13] = "Supervisor";
-        $theTable[$x][14] = "Sign Off";
+        $theTable[$x][1] = "# in Group";
+        $theTable[$x][2] = "Deputy";
+        $theTable[$x][3] = "Radio#";
+        $theTable[$x][4] = "Log In";
+        $theTable[$x][5] = "C/Deputy";
+        $theTable[$x][6] = "Site Name/Address";
+        $theTable[$x][7] = "City/Twp";
+        $theTable[$x][8] = "Contact#";
+        $theTable[$x][9] = "Shift Start";
+        $theTable[$x][10] = "Shift End";
+        $theTable[$x][11] = "Dress";
+        if($config->adminLvl >=25){
+            $theTable[$x][12] = "Log Off";
+            $theTable[$x][13] = "C/Deputy";
+            $theTable[$x][14] = "Supervisor";
+            $theTable[$x][15] = "Sign Off";
+        }
 
+        $lastGroupID = '';
+        $groupCounter = 0;
         while($row = $result->fetch_assoc()) {
-            if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll || (strcmp($row['SUP_TIME'], "00/00/00 0000") == 0 && $isApprove)){
-                $x++;
-                if(!$isApprove)
-                    $theTable[$x][0] = '<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
-                        <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
-                else{
-                    if((strcmp($row['SUP_TIME'], "00/00/00 0000") == 0))
-                        $theTable[$x][0] = 'Ref# '.$row['IDNUM'].'<input type="checkbox" name="secLogApproved'.$x.'" value="true" />
+            if($row['gpID'] == $lastGroupID && $lastGroupID != 0){
+                    $gpCountSQL = $config->mysqli;
+                    $gpCountq = "SELECT GPNUM FROM SECLOG WHERE GPNUM='".$row['gpID']."'";
+                    $gpCountresult = $mysqli->query($gpCountq);
+                    SQLerrorCatch($gpCountSQL, $gpCountresult);
+                    $theTable[$x][1] = $gpCountresult->num_rows;
+            }//end if last group ID
+            else{
+                $groupCounter = 1;
+                if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll || (strcmp($row['SUP_TIME'], "00/00/00 0000") == 0 && $isApprove)){
+                    $x++;
+                    if(!$isApprove)
+                        $theTable[$x][0] = '<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
                             <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
                     else{
-                        $theTable[$x][0] = 'Ref# '.$row['IDNUM'];
+                        if((strcmp($row['SUP_TIME'], "00/00/00 0000") == 0))
+                            $theTable[$x][0] = 'Ref# '.$row['IDNUM'].'<input type="submit" name="secLogApproved'.$x.'" value="Approve" />
+                                <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />
+                                    <input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
+               ';
+                        else{
+                            $theTable[$x][0] = 'Ref# '.$row['IDNUM'].'<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
+                            <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
+                        }
                     }
+                    $theTable[$x][1] = $groupCounter;
+                    $theTable[$x][2] = $row['DEPUTYID'];
+                    $theTable[$x][3] = $row['RADIO'];
+                    $theTable[$x][4] = $row['TIMEIN'];
+                    $theTable[$x][5] =$row['AUDIT_IN_ID'];
+                    $theTable[$x][6] =$row['LOCATION'];
+                    $theTable[$x][7] =$row['CITY'];
+                    $theTable[$x][8] =$row['PHONE'];
+                    $theTable[$x][9] =$row['SHIFTSTART'];
+                    $theTable[$x][10] =$row['SHIFTEND'];
+                    $theTable[$x][11] =$row['DRESS'];
+                    if($config->adminLvl >=25){
+                        $theTable[$x][12] =$row['TIMEOUT'];
+                        $theTable[$x][13] =$row['AUDIT_OUT_ID'];
+                        $theTable[$x][14] =$row['SUP_ID'];
+                        $theTable[$x][15] =$row['SUP_TIME'];
+                    }
+                    
+                    $lastGroupID = $row['gpID'];
                 }
-                $theTable[$x][1] = $row['DEPUTYID'];
-                $theTable[$x][2] = $row['RADIO'];
-                $theTable[$x][3] = $row['TIMEIN'];
-                $theTable[$x][4] =$row['AUDIT_IN_ID'];
-                $theTable[$x][5] =$row['LOCATION'];
-                $theTable[$x][6] =$row['CITY'];
-                $theTable[$x][7] =$row['PHONE'];
-                $theTable[$x][8] =$row['SHIFTSTART'];
-                $theTable[$x][9] =$row['SHIFTEND'];
-                $theTable[$x][10] =$row['DRESS'];
-                $theTable[$x][11] =$row['TIMEOUT'];
-                $theTable[$x][12] =$row['AUDIT_OUT_ID'];
-                $theTable[$x][13] =$row['SUP_ID'];
-                $theTable[$x][14] =$row['SUP_TIME'];
-                
             }
-        }
+        }//end while loop
     }
     else{
        $showAll = isset($_POST['showAll']) ? true : false;
@@ -278,15 +328,16 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
             echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
        $theTable = array(array());
         $theTable[$x][0] = "Edit";
-        $theTable[$x][1] = "Deputy";
-        $theTable[$x][2] = "Radio#";
-        $theTable[$x][3] = "Log In";
-        $theTable[$x][4] = "C/Deputy";
-        $theTable[$x][5] = "Site Name/Address";
-        $theTable[$x][6] = "City/Twp";
-        $theTable[$x][7] = "Contact#";
-        $theTable[$x][8] = "Shift Start";
-        $theTable[$x][9] = "Shift End";
+        $theTable[$x][1] = "# in Group";
+        $theTable[$x][2] = "Deputy";
+        $theTable[$x][3] = "Radio#";
+        $theTable[$x][4] = "Log In";
+        $theTable[$x][5] = "C/Deputy";
+        $theTable[$x][6] = "Site Name/Address";
+        $theTable[$x][7] = "City/Twp";
+        $theTable[$x][8] = "Contact#";
+        $theTable[$x][9] = "Shift Start";
+        $theTable[$x][10] = "Shift End";
     
         while($row = $result->fetch_assoc()) {
             if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll ){
@@ -321,6 +372,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     $logoutSecLog = isset($_POST['logoutSecLog']) ? true : false;
     $updateSecLog = isset($_POST['updateSecLog']) ? true : false;
     $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
+    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
     
     $mysqli = $config->mysqli;
     $mysqliReserve = connectToSQL($reserveDB = TRUE);
@@ -344,19 +396,39 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $shiftEnd2 = !empty($_POST['shiftEnd2']) ? $mysqli->real_escape_string($_POST['shiftEnd2']) : '00';
         $shiftEnd = $shiftEnd1.$shiftEnd2."00";
         $dress = isset($_POST['dress']) ? $mysqli->real_escape_string($_POST['dress']) : '';
+        $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
         
         //add to database
         echo '<h2>Results</h2>';
         if($num_deputies>0){
             for($i=0;$i<$num_deputies;$i++){
+                $gpIDq= "SELECT MAX( GPNUM ) 'gpID' FROM SECLOG";
+                $gpResult = $mysqli->query($gpIDq);
+                SQLerrorCatch($mysqli, $gpResult);
+                $row = $gpResult->fetch_assoc();
+                if($gpID != 0){
+                    $groupID = $gpID;
+                }
+                else{
+                    $groupID = 0;
+                    if($num_deputies == 1){
+                        //Set Group ID to 0 or Individual
+                    }
+                    else if($i==0){
+                        $groupID = $row['gpID']+1;
+                    }
+                    else{
+                        $groupID = $row['gpID'];
+                    }
+                }
                 $myq = "INSERT INTO `SECLOG` ( `IDNUM` ,`DEPUTYID` ,`RADIO` ,`TIMEIN` ,`AUDIT_IN_ID` ,
                     `AUDIT_IN_TIME` ,`AUDIT_IN_IP` ,`LOCATION` ,`CITY` ,`PHONE` ,`SHIFTDATE` ,`SHIFTSTART` ,
                     `SHIFTEND` ,`DRESS` ,`TIMEOUT` ,`AUDIT_OUT_ID` ,`AUDIT_OUT_TIME` ,`AUDIT_OUT_IP` ,`SUP_ID` ,
-                    `SUP_TIME` ,`SUP_IP`, IS_RESERVE) VALUES (
+                    `SUP_TIME` ,`SUP_IP`, IS_RESERVE, GPNUM) VALUES (
                     NULL , '".$deputyID[$i]."', '".$radioNum[$i]."', NOW(), '".$_SESSION['userIDnum']."', NOW(), INET_ATON('".$_SERVER['REMOTE_ADDR']."'), 
                         '".$address."', '".$city."', '".$phone."', '".Date('Y-m-d', strtotime($_POST['dateSelect']))."', 
-                        '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', '',".$isReserve[$i]."
-                    );";
+                        '".$shiftStart."', '".$shiftEnd."', '".$dress."', '', '', '', '', '', '', '',".$isReserve[$i].",
+                    '".$groupID."');";
                 $result = $mysqli->query($myq);
                 if(!SQLerrorCatch($mysqli, $result)) {
                     $secLogID = $mysqli->insert_id;  
@@ -377,22 +449,12 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
     }
     if($logoutSecLog){
         $secLogID = isset($_POST['secLogID']) ? $_POST['secLogID'] : '';
-        
-        $myq = "UPDATE `SECLOG` SET `TIMEOUT` = NOW( ) ,
-            `AUDIT_OUT_ID` = '".$_SESSION['userIDnum']."', `AUDIT_OUT_TIME` = NOW( ) ,
-            `AUDIT_OUT_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE `SECLOG`.`IDNUM` = ".$secLogID." LIMIT 1 ;";
-        $result = $mysqli->query($myq);
-        if(!SQLerrorCatch($mysqli, $result)){
-                echo '<h2>Results</h2>Successfully Logged Out Reference Number: '.$secLogID.'<br /><br />';
-                addLog($config, 'Secondary Log #'.$secLogID.' Logged Out');
-        }
-        else
-            echo '<h2>Results</h2>Failed to logout Secondary Employment Log, try again.<br /><Br />';  
+        logOutSecLog($config, $secLogID);
         $isEditing = true;
     }
     
     if($updateSecLog){
-        //get posted values
+        ////get posted values
         $secLogID = isset($_POST['secLogID']) ? $mysqli->real_escape_string($_POST['secLogID']) : '';
         $radioNum = isset($_POST['radioNum']) ? $mysqli->real_escape_string($_POST['radioNum']) : '';
         $address = isset($_POST['address']) ? $mysqli->real_escape_string($_POST['address']) : '';
@@ -405,46 +467,89 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         $shiftEnd2 = isset($_POST['shiftEnd2']) ? $mysqli->real_escape_string($_POST['shiftEnd2']) : '';
         $shiftEnd = $shiftEnd1.$shiftEnd2."00";
         $dress = isset($_POST['dress']) ? $mysqli->real_escape_string($_POST['dress']) : '';
-        
-        $myq = "UPDATE SECLOG 
-                SET RADIO = '".$radioNum."', LOCATION = '".$address."', 
-                    CITY = '".$city."', PHONE ='".$phone."', 
-                    SHIFTSTART = '".$shiftStart."', SHIFTEND = '".$shiftEnd."', 
-                    DRESS = '".$dress."' 
-                WHERE IDNUM =".$secLogID;
-        $result = $mysqli->query($myq);
-        if(!SQLerrorCatch($mysqli, $result)){
-                echo '<h2>Results</h2>Successfully Updated Log #'.$secLogID.'<br /><br />';
-                addLog($config, 'Secondary Log #'.$secLogID.' Modified');
-        }
-        else
-            echo '<h2>Results</h2>Failed to update Secondary Employment Log, try again.<br /><Br />';
-        
+        updateSecLog($config, $secLogID, $radioNum, $address, $city, $phone, $shiftStart1, $shiftStart2, $shiftEnd1, $shiftEnd2, $dress);
         $isEditing = true;
     }
     
     if($isEditing){
-        $mysqli = $config->mysqli;
-        $myq = "SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', S.RADIO, LOCATION, S.CITY, PHONE,
-                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
-                FROM SECLOG S
-                JOIN EMPLOYEE AS SEC ON SEC.IDNUM=S.DEPUTYID
-                WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=0
-                UNION
-                SELECT CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYID', S.RADIO, LOCATION, S.CITY, PHONE,
-                    SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
-                FROM SECLOG S
-                JOIN RESERVE AS SEC ON SEC.IDNUM=S.DEPUTYID
-                WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=1
-                ORDER BY IDNUM";
-        $result = $mysqli->query($myq);
-        SQLerrorCatch($mysqli, $result);
-        $row = $result->fetch_assoc();
-        if($config->adminLvl >= 25){
-            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
-                Deputy: '.$row['DEPUTYNAME'].'<br/>
-                Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" /><br/>
-                Site Name or Address: <input type="text" name="address" value="'.$row['LOCATION'].'" /><br/>
+        if($config->adminLvl >= 0){
+            $mysqli = $config->mysqli;
+            $myq = "SELECT S.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', S.RADIO, LOCATION, S.CITY, PHONE,
+                        SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
+                    FROM SECLOG S
+                    JOIN EMPLOYEE AS SEC ON SEC.IDNUM=S.DEPUTYID
+                    WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=0
+                    UNION
+                    SELECT S.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', S.RADIO, LOCATION, S.CITY, PHONE,
+                        SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
+                    FROM SECLOG S
+                    JOIN RESERVE AS SEC ON SEC.IDNUM=S.DEPUTYID
+                    WHERE S.IDNUM = '".$secLogID."' AND IS_RESERVE=1
+                    ORDER BY IDNUM";
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+            $row = $result->fetch_assoc();
+            if($row['gpID'] != 0){
+                //get all users
+                echo '<div align="center">Group Reference #: '.$row['gpID'].'
+                    <input type="hidden" name="gpID" value="'.$row['gpID'].'" /></div>';
+                $newq = "SELECT S.IDNUM 'refNum', S.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', S.RADIO, LOCATION, S.CITY, PHONE,
+                        SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
+                    FROM SECLOG S
+                    JOIN EMPLOYEE AS SEC ON SEC.IDNUM=S.DEPUTYID
+                    WHERE S.GPNUM = '".$row['gpID']."' AND IS_RESERVE=0
+                    UNION
+                    SELECT S.IDNUM 'refNum', S.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', S.RADIO, LOCATION, S.CITY, PHONE,
+                        SHIFTSTART, SHIFTEND, DRESS, S.IDNUM, S.TIMEOUT
+                    FROM SECLOG S
+                    JOIN RESERVE AS SEC ON SEC.IDNUM=S.DEPUTYID
+                    WHERE S.GPNUM = '".$row['gpID']."' AND IS_RESERVE=1
+                    ORDER BY IDNUM";
+                $newResult = $mysqli->query($newq);
+                SQLerrorCatch($mysqli, $newResult);
+                
+                $x=0;
+                $y=0;
+                $depTable = array(array());
+                $depTable[$x][$y] = "Reference#"; $y++;
+                $depTable[$x][$y] = "Deputy"; $y++;
+                $depTable[$x][$y] = "Radio#"; $y++;
+                $depTable[$x][$y] = "Action"; $y++;
+                
+                $x++;
+                while($newRow = $newResult->fetch_assoc()){
+                    $y=0;
+                    $depTable[$x][$y] = $newRow['refNum'].'
+                        <input type="hidden" name="secLogID'.$x.'" value="'.$newRow['refNum'].'" />'; $y++;
+                    $depTable[$x][$y] = $newRow['DEPUTYNAME']; $y++;
+                    $depTable[$x][$y] = '<input type="text" name="radioNum'.$x.'" value="'.$newRow['RADIO'].'" />'; $y++;
+                    if(strcmp($newRow['TIMEOUT'],"00:00:00")==0){
+                        $depTable[$x][$y] = '<input type="submit" value="Update" name="updateSecLog'.$x.'" />
+                                <input type="submit" value="LogOut" name="logoutSecLog'.$x.'" /><br/>'; $y++;
+                    }
+                    else{
+                        if($config->adminLvl >=25){
+                            $depTable[$x][$y] = '<input type="submit" value="Update" name="updateSecLog'.$x.'" />
+                                Logged Out at '.$newRow['TIMEOUT'];$y++;  
+                        }
+                        else{
+                           $depTable[$x][$y] = 'Logged Out at '.$newRow['TIMEOUT'];$y++;  
+                        }
+                    }
+                    $x++;
+                }
+                showSortableTable($depTable, 1);
+
+            }
+            else{
+                 echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
+                    Deputy: '.$row['DEPUTYNAME'].'<br/>
+                    Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" /><br/>';
+            }
+            echo '<div align="left">Add Deputy: <button type="button"  name="searchBtn" 
+                value="Lookup Employee" onClick="this.form.action=' . "'?userLookup=true'" . ';this.form.submit()" >
+                Lookup Employee</button></div><br/>';
+            echo 'Site Name or Address: <input type="text" name="address" value="'.$row['LOCATION'].'" /><br/>
                 City/Twp: <input type="text" name="city" value="'.$row['CITY'].'" /><br/>
                 Contact#: <input type="text" name="phone" value="'.$row['PHONE'].'" /><br/>
                 Shift Start Time: ';
@@ -469,45 +574,26 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
             echo 'Logged Off Time: ';
             if(strcmp($row['TIMEOUT'],"00:00:00")==0){
                 echo "Not Logged Off Yet<br /><br />";
-                echo '<input type="submit" name="logoutSecLog" value="LogOut" />';
+                if($row['gpID'] != 0){
+                    echo '<input type="submit" name="logoutSecLogAll" value="LogOut All" />';
+                }
+                else{
+                    echo '<input type="submit" name="logoutSecLog" value="LogOut" />';
+                }
             }
             else{
                 echo $row['TIMEOUT'].'<br /><br />';
             }
-            echo '<input type="submit" name="updateSecLog" value="Update" />';
+            if(strcmp($row['TIMEOUT'],"00:00:00")==0 || $config->adminLvl >=25){
+                if($row['gpID'] != 0)
+                    echo '<input type="submit" name="updateSecLogAll" value="Update All" />';
+                else
+                    echo '<input type="submit" name="updateSecLog" value="Update" />';
+            }
             echo '<input type="submit" name="goBtn" value="Back To Logs" />';
         }
         else{
-            echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
-                Deputy: <input type="hidden" name="deputy" value="'.$row['DEPUTYNAME'].'" />'.$row['DEPUTYNAME'].'<br/>
-                Radio#: <input type="hidden" name="radioNum" value="'.$row['RADIO'].'" />'.$row['RADIO'].'<br/>
-                Site Name or Address: <input type="hidden" name="address" value="'.$row['LOCATION'].'" />'.$row['LOCATION'].'<br/>
-                City/Twp: <input type="hidden" name="city" value="'.$row['CITY'].'" />'.$row['CITY'].'<br/>
-                Contact#: <input type="hidden" name="phone" value="'.$row['PHONE'].'" />'.$row['PHONE'].'<br/>
-                Shift Start Time: ';
-                $temp = explode(":", $row['SHIFTSTART']);
-            echo '<input type="hidden" name="shiftStart1" value="'.$temp[0].'" />'.$temp[0].':'.'<input type="hidden" name="shiftStart2" value="'.$temp[1].'" />'.$temp[1];
-            echo ' <br/>
-                Shift End Time: ';
-            $temp = explode(":", $row['SHIFTEND']);
-            echo '<input type="hidden" name="shiftEnd1" value="'.$temp[0].'" />'.$temp[0].':'.'<input type="hidden" name="shiftEnd2" value="'.$temp[1].'" />'.$temp[1];
-            echo '<br/>
-                Dress:<input type="hidden" name="dress" value="'.$row['DRESS'].'" />';
-            if(strcmp($row['DRESS'], "U") ==0)
-                    echo ' Uniform ';
-            if(strcmp($row['DRESS'], "PC") ==0)
-                    echo ' Plain Clothes ';
-            echo '<br/>';
-            echo 'Logged Off Time: ';
-            if(strcmp($row['TIMEOUT'],"00:00:00")==0){
-                echo "Not Logged Off Yet<br /><br />"; 
-                echo '<input type="submit" name="logoutSecLog" value="LogOut" />';
-            }
-            else{
-                echo $row['TIMEOUT'].'<br /><br />';
-            }
-            
-               echo '<input type="submit" name="goBtn" value="Back To Logs" />';
+            echo 'Access Denied';
         }
     }
     if(!$isEditing && !isset($_POST['goBtn'])){
@@ -615,7 +701,9 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
         displayUserLookup($config);
         echo '<br />';
         echo '<input type="hidden" name="num_deputies" value="'.$deputyCount.'" />';
-            
+           
+        $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
+        echo '<input type="hidden" name="gpID" value="'.$gpID.'" />';
         echo 'Site Name or Address: <input type="text" name="address" value="'.$address.'" /><br/>
             City/Twp: <input type="text" name="city" value="'.$city.'" /><br/>
             Contact#: <input type="text" name="phone" value="'.$phone.'" /><br/>
@@ -640,6 +728,42 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
             <input type="submit" name="addSecLog" value="Add" />
             <input type="submit" name="goBtn" value="Cancel" />';
     }
+}
+function logOutSecLog($config, $secLogID){
+    $mysqli = $config->mysqli;
+
+    $myq = "UPDATE `SECLOG` SET `TIMEOUT` = NOW( ) ,
+        `AUDIT_OUT_ID` = '".$_SESSION['userIDnum']."', `AUDIT_OUT_TIME` = NOW( ) ,
+        `AUDIT_OUT_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE `SECLOG`.`IDNUM` = ".$secLogID." LIMIT 1 ;";
+    $result = $mysqli->query($myq);
+    if(!SQLerrorCatch($mysqli, $result)){
+            echo 'Successfully Logged Out Reference Number: '.$secLogID.'<br />';
+            addLog($config, 'Secondary Log #'.$secLogID.' Logged Out');
+    }
+    else
+        echo '<h2>Results</h2>Failed to logout Secondary Employment Log, try again.<br /><Br />';  
+}
+function updateSecLog($config, $secLogID, $radioNum, $address, $city, $phone, $shiftStart1,
+        $shiftStart2,$shiftEnd1,$shiftEnd2,$dress){
+    $mysqli = $config->mysqli;
+
+    $shiftStart = $shiftStart1.$shiftStart2."00";
+    $shiftEnd = $shiftEnd1.$shiftEnd2."00";
+
+    $myq = "UPDATE SECLOG 
+            SET RADIO = '".$radioNum."', LOCATION = '".$address."', 
+                CITY = '".$city."', PHONE ='".$phone."', 
+                SHIFTSTART = '".$shiftStart."', SHIFTEND = '".$shiftEnd."', 
+                DRESS = '".$dress."' 
+            WHERE IDNUM =".$secLogID;
+    $result = $mysqli->query($myq);
+    if(!SQLerrorCatch($mysqli, $result)){
+            echo 'Successfully Updated Log #'.$secLogID.'<br />';
+            addLog($config, 'Secondary Log #'.$secLogID.' Modified');
+    }
+    else
+        echo '<h2>Results</h2>Failed to update Secondary Employment Log, try again.<br /><Br />';
+
 }
 
 ?>
