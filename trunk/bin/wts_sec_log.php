@@ -362,7 +362,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     
     echo $echo;
     if($isApprove)
-        echo '<input type="submit" name="approveBtn" value="Approve Selected Logs" />';
+        echo ' ';
     else
         echo '<input type="submit" name="addBtn" value="New Log In" />';
     
