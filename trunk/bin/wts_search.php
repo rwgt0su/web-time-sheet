@@ -224,6 +224,7 @@ function displayUserLookup($config) {
             $dress = isset($_POST['dress']) ? $_POST['dress']: '';
             $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : '' ;
             $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
+            $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
             
             if($num_deputies > 0){
                 $i=0;
@@ -240,7 +241,7 @@ function displayUserLookup($config) {
                 echo '<input type="hidden" name="num_deputies" value="'.$i.'" />';
             }
             
-           
+            echo '<input type="hidden" name="gpID" value="'.$gpID.'" />';
             echo '<input type="hidden" name="secLogID" value="'.$secLogID.'" />';
             echo '<input type="hidden" name="address" value="' . $address . '" />';
             echo '<input type="hidden" name="city" value="' . $city . '" />';
