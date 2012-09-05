@@ -369,6 +369,7 @@ function displayUpdateProfile($config){
         $dob = isset($_POST['dob']) ? $mysqli->real_escape_string($_POST['dob']) : false;
         $emergency = isset($_POST['emergency']) ? $mysqli->real_escape_string($_POST['emergency']) : false;
         $postAminLvl = isset($_POST['adminLvl']) ? $mysqli->real_escape_string($_POST['adminLvl']) : "0";
+        $email = isset($_POST['empEmail']) ? $mysqli->real_escape_string($_POST['empEmail']) : false;
         
         if($config->adminLvl >= 50){
             $myq = "UPDATE `EMPLOYEE` SET 
@@ -385,6 +386,7 @@ function displayUpdateProfile($config){
                 HOMEPH = '".$hphone."',
                 CELLPH = '".$cphone."',
                 WORKPH = '".$wphone."',
+                EMAIL = '".$email."',
                 DOB = '".Date('Y-m-d', strtotime($dob))."',
                 EMERGCON = '".$emergency."',
                 ADMINLVL = '".$postAminLvl."',
@@ -451,6 +453,7 @@ function displayUpdateProfile($config){
         $hphone = $resultAssoc['HOMEPH'];
         $cphone = $resultAssoc['CELLPH'];
         $wphone = $resultAssoc['WORKPH'];
+        $email = $resultAssoc['EMAIL'];
         $dob = $resultAssoc['DOB'];
         $emergency = $resultAssoc['EMERGCON'];
         $adminLvl = $resultAssoc['ADMINLVL'];
@@ -521,6 +524,7 @@ function displayUpdateProfile($config){
                         <tr><td>Home Phone: </td><td><input name="hphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$hphone.'"'; ?> /></td></tr>
                         <tr><td>Cell Phone: </td><td><input name="cphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$cphone.'"'; ?> /></td></tr>
                         <tr><td>Work Phone: </td><td><input name="wphone" type="text" <?php if(!$hphone && !$cphone && !$wphone) showInputBoxError(); else echo 'value="'.$wphone.'"'; ?> /></td></tr>
+                        <tr><td>Email: </td><td><input size="40" name="empEmail" type="text" <?php if(!$email) showInputBoxError(); else echo 'value="'.$email.'"'; ?> /></td></tr>
                         <tr><td>Date of Birth: </td><td><?php displayDateSelect("dob", "date_2", $dob, $required=true); ?></td></tr>
 
                         <tr><td>Emergency Contact: </td><td><textarea rows="2" cols="40" name="emergency" <?php if(!$emergency) showInputBoxError(); ?> ><?php echo $emergency; ?></textarea></td></tr>
@@ -535,6 +539,7 @@ function displayUpdateProfile($config){
                         <tr><td>Home Phone: </td><td> <?php echo $hphone; ?> </td></tr>
                         <tr><td>Cell Phone: </td><td> <?php echo $cphone; ?> </td></tr>
                         <tr><td>Work Phone: </td><td> <?php echo $wphone; ?> </td></tr>
+                         <tr><td>Email: </td><td><?php echo $email; ?></td></tr>
                         <tr><td>Date of Birth: </td><td><?php echo $dob; ?></td></tr>
 
                         <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr> 
