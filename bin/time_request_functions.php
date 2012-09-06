@@ -977,7 +977,7 @@ function displayRequestLookup($config) {
         }//end for
     }
     
-    if( isValidUser() && (isset($_POST['lname']) || isset($_POST['editBtn'])) ) {
+    if( isValidUser($config) && (isset($_POST['lname']) || isset($_POST['editBtn'])) ) {
         if(isset($_POST['lname'])) {
             $lname = $_SESSION['lname'] = strtoupper( $_POST['lname'] );
             $startDate = $_SESSION['start'] = new DateTime ($_POST['start']);
