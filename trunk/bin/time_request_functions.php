@@ -767,8 +767,30 @@ function displaySubmittedRequests(){
 ?>
 
 <?php
-function displayLeaveApproval($config){   
-    /*
+function displayLeaveApproval($config){ 
+    $mysqli = $config->mysqli;
+    if (isset($_POST['approveBtn'])) {
+        echo '<h3>';
+        for ($j=0; $j < $_POST['totalRows']; $j++) {
+            $refs[$j] = $_POST['refNum'.$j];
+            if (isset($_POST['approve' . $j])) {
+               
+                $approveQuery="UPDATE REQUEST 
+                                SET STATUS='".$_POST['approve'.$j]."',
+                                    REASON='".$mysqli->real_escape_string($_POST['reason' . $j])."',
+                                    APPROVEDBY='".$_SESSION['userIDnum']."' 
+                                WHERE REFER='$refs[$j]'";
+                //echo $approveQuery; //DEBUG
+                $approveResult = $mysqli->query($approveQuery);
+                $logMsg = 'Approved Time Request with Ref# '.$refs[$j];
+                addLog($config, $logMsg);
+                if(!SQLerrorCatch($mysqli, $approveResult))
+                        echo "Approved Reference ".$refs[$j]."<br/>";
+
+            }
+        }
+        echo '</h3><br/>';
+    }/*
     * Form used to approve leave
     * 
     */
@@ -819,25 +841,7 @@ function displayLeaveApproval($config){
         else
             echo '<option value="All">All</option>';
         echo '</select>';
-        /*Shift selection that changes based on the selected division 
-          this still needs work, the menu appears but we need a query*/
-        /*if(isset($_POST['divisionID'])){
-            //echo "post div id = ". $_POST['divisionID']; //DEBUG
-            if($_POST['divisionID']=='All')
-                $shiftQ = "SELECT ABBREV, DESCR, DIVISIONID FROM ASSIGNMENT";  
-            else
-                $shiftQ = "SELECT ABBREV, DESCR, DIVISIONID FROM ASSIGNMENT WHERE DIVISIONID=".$_POST['divisionID']; 
-            
-            $shiftResult = $mysqli->query($shiftQ);
-            SQLerrorCatch($mysqli, $shiftResult);
-            echo '  and shift: <select name="shiftID" onchange="this.form.submit()">';
-            
-            while($shiftRow = $shiftResult->fetch_assoc()){
-                echo '<option value="'.$shiftRow['ABBREV'].'" >'.$shiftRow['DESCR'].'</option>';
-            }
-            echo '<option value="%" selected>All</option>';
-            echo '</select>';
-        }*/
+
         echo    '</div><br />';
         
         //$shift = isset($_POST['shiftID']) ? $_POST['shiftID'] : '%';
@@ -874,28 +878,7 @@ function displayLeaveApproval($config){
 
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
-        if (isset($_POST['approveBtn'])) {
-            for ($j=0; $result->num_rows > $j; $j++) {
-                $row = $result->fetch_row();
-                $refs[$j] = $row[0]; //save ref # in an array
-                $approve = 'approve' . $j;
-                $reason = 'reason' . $j;
-                if (isset($_POST["$approve"])) {
-                    $approveQuery="UPDATE REQUEST 
-                                    SET STATUS='".$_POST["$approve"]."',
-                                        REASON='".$mysqli->real_escape_string($_POST["$reason"])."',
-                                        APPROVEDBY='".$_SESSION['userIDnum']."' 
-                                    WHERE REFER='$refs[$j]'";
-                    //echo $approveQuery; //DEBUG
-                    $approveResult = $mysqli->query($approveQuery);
-                    $logMsg = 'Approved Time Request with Ref# '.$refs[$j];
-                    addLog($config, $logMsg);
-                    if(!SQLerrorCatch($mysqli, $approveResult))
-                            echo "<h3>Change Saved.</h3>";
-                    
-                }
-            }
-        }
+        
         //build table
         //resultTable($mysqli, $result);
         ?>
@@ -928,14 +911,19 @@ function displayLeaveApproval($config){
                 echo "<tr>";
                 //$refs[$rowCount] = $row[0]; //save ref # in an array
                 for ($i = 0; $i < $mysqli->field_count; $i++) {
-                    echo "<td style='white-space: nowrap'>$row[$i]</td>";                                      
+                    echo "<td style='white-space: nowrap'>";
+                    if($i==0)
+                        echo '<input type="hidden" name="refNum'.$rowCount.'" value="'.$row[$i].'" />';
+                    echo "$row[$i]</td>";                                      
                 }
                 echo "</tr>";
-                echo "<td style='white-space: nowrap'></td><td><input type='radio' name='approve$rowCount' value='APPROVED' /> Approved</td> 
+                echo "<td style='white-space: nowrap'></td><td>";
+                echo "<input type='radio' name='approve$rowCount' value='APPROVED' /> Approved</td> 
                         <td style='white-space: nowrap'><input type='radio' name='approve$rowCount' value='DENIED'> Denied</td>
                         <td style='white-space: nowrap' colspan='8'>Reason:<input type='text' name='reason$rowCount' size='50'/></td>";
                 $rowCount++;
             }
+            echo '<input type="hidden" name="totalRows" value="'.$rowCount.'" />';
             ?>
            </table> <p><input type="submit" name="approveBtn" value="Save"></p>
             </form>
