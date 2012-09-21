@@ -41,21 +41,23 @@ function displaySecondaryLog($config, $isApprove = false){
             $goBtn = false;
             $addBtn = false;
         }
-        if(!$dateSelect){
-            echo 'Select Date: ';
-            displayDateSelect("dateSelect", "dateSel",false,false,true,true);
-            echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
-            if($isApprove){
-                echo '<input type="hidden" name="isApprove" value="true" />';
+        if(!$isApprove){
+            if(!$dateSelect){
+                echo 'Select Date: ';
+                displayDateSelect("dateSelect", "dateSel",false,false,true,true);
+                echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
+                if($isApprove){
+                    echo '<input type="hidden" name="isApprove" value="true" />';
+                }
+
             }
-            
-        }
-        else{
-            echo '<h3>Date: '.$dateSelect.'';
-            echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />
-                <input type="submit" name="changeDate" value="Change Date" /></h3>';
-            if($isApprove){
-                echo '<input type="hidden" name="isApprove" value="true" />';
+            else{
+                echo '<h3>Date: '.$dateSelect.'';
+                echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />
+                    <input type="submit" name="changeDate" value="Change Date" /></h3>';
+                if($isApprove){
+                    echo '<input type="hidden" name="isApprove" value="true" />';
+                }
             }
         }
         if(isset($_POST['editRows'])){
@@ -71,20 +73,18 @@ function displaySecondaryLog($config, $isApprove = false){
                 echo '<input type="submit" name="goBtn" value="Back To Logs" />';
             }
         }
-        if($goBtn){
-            if($isApprove){
-                showSecLog($config, $dateSelect, false, $isApprove);
+        if($goBtn){                       
+            if($config->adminLvl < 25){
+                //non supervisor logs
+                showSecLog($config, $dateSelect, false);
             }
             else{
-                if($config->adminLvl < 25){
-                    //non supervisor logs
-                    showSecLog($config, $dateSelect, false);
-                }
-                else{
-                    //supervisor logs
-                    showSecLog($config, $dateSelect, true);
-                }
-            }
+                //supervisor logs
+                showSecLog($config, $dateSelect, true);
+            }           
+        }
+        if($isApprove){
+                showSecLog($config, $dateSelect, false, $isApprove);
         }
         
         if($addBtn || $logoutSecLog || $updateSecLog){
@@ -209,8 +209,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
-                WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."'
-                AND AUDIT_OUT_ID != ''
+                WHERE AUDIT_OUT_ID != ''
                 AND S.IS_RESERVE=0
 
                 UNION
@@ -227,8 +226,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
-                WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
-                AND AUDIT_OUT_ID != ''
+                WHERE AUDIT_OUT_ID != ''
                 AND S.IS_RESERVE=1
                 ORDER BY 'gpID'";
         echo '<input type="hidden" name="isApprove" value="true" />';
@@ -242,10 +240,12 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     if($config->adminLvl >= 0){
         //resultTable($mysqli, $result, 'false');
         $showAll = isset($_POST['showAll']) ? true : false;
-        if($showAll)
-            echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
-        else
-            echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
+        if(!$isApprove){
+            if($showAll)
+                echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
+            else
+                echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
+        }
         $theTable = array(array());
         if(!$isApprove)
             $theTable[$x][0] = "Edit";
