@@ -31,6 +31,7 @@ function displaySecondaryLog($config, $isApprove = false){
         $goBtn = isset($_POST['goBtn']) ? true : false;
         $isApprove = isset($_POST['isApprove']) ? true : $isApprove;
         $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
+        $secLogID = isset($_POST['backToApprove']) ? false : $secLogID ;
         
         if($showAll || $showNormal){
             $goBtn = true;
@@ -66,8 +67,9 @@ function displaySecondaryLog($config, $isApprove = false){
                 if(isset($_POST['secLogRadio'.$i]))
                     $secLogID = $_POST['secLogID'.$i];
             }
-            if(!empty($secLogID))
-                showSecLogDetails($config, $secLogID, true);
+            if(!empty($secLogID)){
+                showSecLogDetails($config, $secLogID, true, $isApprove);
+            }
             else if(!$addBtn && !$showAll && !$showNormal && !$changeDateBtn && !$isApprove){
                 echo 'Error getting Reference Number!<br />';
                 echo '<input type="submit" name="goBtn" value="Back To Logs" />';
@@ -83,7 +85,7 @@ function displaySecondaryLog($config, $isApprove = false){
                 showSecLog($config, $dateSelect, true);
             }           
         }
-        if($isApprove){
+        if($isApprove && empty($secLogID)){
                 showSecLog($config, $dateSelect, false, $isApprove);
         }
         
@@ -92,7 +94,6 @@ function displaySecondaryLog($config, $isApprove = false){
         }
                 //get group update or logout
         if($totalRows > 0){
-            $test = isset($_POST['logoutAll']) ? "yes" : "no";
             for($i=1;$i<$totalRows;$i++){
                 if(isset($_POST['logoutSecLog'.$i]) || isset($_POST['logoutSecLogAll'])){
                     $secLogID = $_POST['secLogID'.$i];
@@ -198,6 +199,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     }
     else{
         $myq =  "SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                    DATE_FORMAT(SHIFTDATE,'%a %b %d %Y') 'Shiftdate', 
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -215,6 +217,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 UNION
 
                 SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                    DATE_FORMAT(SHIFTDATE,'%a %b %d %Y') 'Shiftdate',
                     CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
                     TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
                     DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
@@ -237,6 +240,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     SQLerrorCatch($mysqli, $result);
     $echo = '';
     $x=0;
+    $y=0;
     if($config->adminLvl >= 0){
         //resultTable($mysqli, $result, 'false');
         $showAll = isset($_POST['showAll']) ? true : false;
@@ -247,26 +251,29 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
         }
         $theTable = array(array());
-        if(!$isApprove)
-            $theTable[$x][0] = "Edit";
-        else
-            $theTable[$x][0] = "Approve";
-        $theTable[$x][1] = "# in Group";
-        $theTable[$x][2] = "Deputy";
-        $theTable[$x][3] = "Radio#";
-        $theTable[$x][4] = "Log In";
-        $theTable[$x][5] = "C/Deputy";
-        $theTable[$x][6] = "Site Name/Address";
-        $theTable[$x][7] = "City/Twp";
-        $theTable[$x][8] = "Contact#";
-        $theTable[$x][9] = "Shift Start";
-        $theTable[$x][10] = "Shift End";
-        $theTable[$x][11] = "Dress";
+        if(!$isApprove){
+            $theTable[$x][$y] = "Edit"; $y++;
+        }
+        else{
+            $theTable[$x][$y] = "Approve"; $y++;
+            $theTable[$x][$y] = "ShiftDate"; $y++;
+        }
+        $theTable[$x][$y] = "# in Group"; $y++;
+        $theTable[$x][$y] = "Deputy"; $y++;
+        $theTable[$x][$y] = "Radio#"; $y++;
+        $theTable[$x][$y] = "Log In"; $y++;
+        $theTable[$x][$y] = "C/Deputy"; $y++;
+        $theTable[$x][$y] = "Site Name/Address"; $y++;
+        $theTable[$x][$y] = "City/Twp"; $y++;
+        $theTable[$x][$y] = "Contact#"; $y++;
+        $theTable[$x][$y] = "Shift Start"; $y++;
+        $theTable[$x][$y] = "Shift End"; $y++;
+        $theTable[$x][$y] = "Dress"; $y++;
         if($config->adminLvl >=25){
-            $theTable[$x][12] = "Log Off";
-            $theTable[$x][13] = "C/Deputy";
-            $theTable[$x][14] = "Supervisor";
-            $theTable[$x][15] = "Sign Off";
+            $theTable[$x][$y] = "Log Off"; $y++;
+            $theTable[$x][$y] = "C/Deputy"; $y++;
+            $theTable[$x][$y] = "Supervisor"; $y++;
+            $theTable[$x][$y] = "Sign Off"; $y++;
         }
 
         $lastGroupID = '';
@@ -297,22 +304,26 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                             <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
                         }
                     }
-                    $theTable[$x][1] = $groupCounter;
-                    $theTable[$x][2] = $row['DEPUTYID'];
-                    $theTable[$x][3] = $row['RADIO'];
-                    $theTable[$x][4] = $row['TIMEIN'];
-                    $theTable[$x][5] =$row['AUDIT_IN_ID'];
-                    $theTable[$x][6] =$row['LOCATION'];
-                    $theTable[$x][7] =$row['CITY'];
-                    $theTable[$x][8] =$row['PHONE'];
-                    $theTable[$x][9] =$row['SHIFTSTART'];
-                    $theTable[$x][10] =$row['SHIFTEND'];
-                    $theTable[$x][11] =$row['DRESS'];
+                    $y = 1;
+                    if($isApprove){
+                        $theTable[$x][$y] = $row['Shiftdate']; $y++;
+                    }
+                    $theTable[$x][$y] = $groupCounter; $y++;
+                    $theTable[$x][$y] = $row['DEPUTYID']; $y++;
+                    $theTable[$x][$y] = $row['RADIO']; $y++;
+                    $theTable[$x][$y] = $row['TIMEIN']; $y++;
+                    $theTable[$x][$y] =$row['AUDIT_IN_ID']; $y++;
+                    $theTable[$x][$y] =$row['LOCATION']; $y++;
+                    $theTable[$x][$y] =$row['CITY']; $y++;
+                    $theTable[$x][$y] =$row['PHONE']; $y++;
+                    $theTable[$x][$y] =$row['SHIFTSTART']; $y++;
+                    $theTable[$x][$y] =$row['SHIFTEND']; $y++;
+                    $theTable[$x][$y] =$row['DRESS']; $y++;
                     if($config->adminLvl >=25){
-                        $theTable[$x][12] =$row['TIMEOUT'];
-                        $theTable[$x][13] =$row['AUDIT_OUT_ID'];
-                        $theTable[$x][14] =$row['SUP_ID'];
-                        $theTable[$x][15] =$row['SUP_TIME'];
+                        $theTable[$x][$y] =$row['TIMEOUT']; $y++;
+                        $theTable[$x][$y] =$row['AUDIT_OUT_ID']; $y++;
+                        $theTable[$x][$y] =$row['SUP_ID']; $y++;
+                        $theTable[$x][$y] =$row['SUP_TIME']; $y++;
                     }
                     
                     $lastGroupID = $row['gpID'];
@@ -367,7 +378,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
         echo '<input type="submit" name="addBtn" value="New Log In" />';
     
 }
-function showSecLogDetails($config, $secLogID, $isEditing=false){
+function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=false){
     $addSecLog = isset($_POST['addSecLog']) ? true : false;
     $logoutSecLog = isset($_POST['logoutSecLog']) ? true : false;
     $updateSecLog = isset($_POST['updateSecLog']) ? true : false;
@@ -590,7 +601,10 @@ function showSecLogDetails($config, $secLogID, $isEditing=false){
                 else
                     echo '<input type="submit" name="updateSecLog" value="Update" />';
             }
-            echo '<input type="submit" name="goBtn" value="Back To Logs" />';
+            if($isApprove)
+                echo '<input type="submit" name="backToApprove" value="Back To Approvals" />';
+            else
+                echo '<input type="submit" name="goBtn" value="Back To Logs" />';
         }
         else{
             echo 'Access Denied';
