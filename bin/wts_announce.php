@@ -16,6 +16,7 @@ function displayAnnounce($config){
     }
     if($config->adminLvl == -1){
         $divq = "AND DIVID = '1'";
+        $myDivID = "1";
     }
     else{
         //Show division selection
@@ -56,21 +57,41 @@ function displayAnnounce($config){
         echo '</select></td>';
         echo '<br/><br/><br/></form></div>';
     }
-    
-    //display announcements based on selected division
-    $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH` FROM `NEWS` 
-        WHERE `PUBLISH` = 1 
-        ".$divq."
-        LIMIT 0 , 30 ";
-    $result = $mysqli->query($myq);
+        
+        //display announcements based on selected division
+        $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH` FROM `NEWS` 
+            WHERE `PUBLISH` = 1 
+            ".$divq."
+            LIMIT 0 , 30 ";
+        $result = $mysqli->query($myq);
 
-    SQLerrorCatch($mysqli, $result);
-    $result->data_seek(0);  
-    while ($row = $result->fetch_assoc()) {
-            echo '<div class="post"><h3>' . $row['TITLE'] . '</h3>' . $row['BODY'] . '<div class="clear"></div></div><div class="divider"></div>';
+        SQLerrorCatch($mysqli, $result);
+        $result->data_seek(0);  
+        while ($row = $result->fetch_assoc()) {
+                echo '<div class="post"><h3>' . $row['TITLE'] . '</h3>' . $row['BODY'] . '<div class="clear"></div></div><div class="divider"></div>';
+        }
+        if($result->num_rows < 1)
+            echo '<div class="post"><h3>No Announcements</h3></div><br/>';
+        if($myDivID == "1" || $myDivID == "2"){
+        }
+        else{
+            //display everyone announcements
+            echo '<div class="divider"></div><Br/><div align="center"><h2>Announcements to All Employees</h3></div><br/>';
+            $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH` FROM `NEWS` 
+                WHERE `PUBLISH` = 1 
+                AND DIVID = '1'
+                LIMIT 0 , 30 ";
+            $result2 = $mysqli->query($myq);
+
+            SQLerrorCatch($mysqli, $result2);
+            $result2->data_seek(0);  
+            while ($row = $result2->fetch_assoc()) {
+                    echo '<div class="post"><h3>' . $row['TITLE'] . '</h3>' . $row['BODY'] . '<div class="clear"></div></div><div class="divider"></div>';
+            }
+        }
     }
-}
 function displayAdminAnnounce($config){
+    echo '<div align="center"><h2>Announcement Manager</h3></div> ';
     if($config->adminLvl >= 50 || strcmp(strtoupper($_SESSION['userName']), "SSZEKELY") == 0){
         $editorDisplay = isset($_GET['editAnnounce']) ? $_GET['editAnnounce'] : false;
         
@@ -213,6 +234,11 @@ function displayAdminAnnounce($config){
                 }
             }
         }
+        echo '<div align="center">Note: No Announcement is private to the selected division.<br/>
+        All users may see the announcement if published</div><Br/>';
+    }
+    else{
+        echo 'Access Denied';
     }
 }
 
