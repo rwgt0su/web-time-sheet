@@ -105,7 +105,7 @@ function displayAdminAnnounce($config){
 
             $result->data_seek(0);  
             while ($row = $result->fetch_assoc()) {
-                    echo '<a href="'.$_SERVER['REQUEST_URI'].'&editAnnounce='. $row['SHORTNAME'] . '" >' . $row['TITLE'] . '</a><br /> 
+                    echo '<a href="'.$_SERVER['REQUEST_URI'].'&editAnnounce='. $row['IDNUM'] . '" >' . $row['TITLE'] . '</a><br /> 
                         Published: '.$row['TSTAMP'].' <br />by '.$row['AUDITID'].'<br /><br />';
             }
             ?>
@@ -116,6 +116,7 @@ function displayAdminAnnounce($config){
         }
         if(isset($_GET['editAnnounce'])){
             //User attempting to edit, get passed form fields
+            $editorID = isset($_POST['editorID']) ? $_POST['editorID'] : $_GET['editAnnounce'];
             $editorTitle = isset($_POST['editorTitle']) ? $_POST['editorTitle'] : '';
             $editorShort = isset($_POST['editorShort']) ? $_POST['editorShort'] : '';
             $editorDivID= isset($_POST['editorDivID']) ? $_POST['editorDivID'] : '';
@@ -128,26 +129,25 @@ function displayAdminAnnounce($config){
             if (!isset($_POST['editorOldShort'])) {
                 //no valid announcement was passed so get data within SQL
                 $mysqli = connectToSQL();
-                $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH`, `DIVID`  FROM `NEWS` WHERE `SHORTNAME` = 
-                    CONVERT( _utf8 '".$editorDisplay."' USING latin1 ) COLLATE latin1_swedish_ci";
+                $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH`, `DIVID`  FROM `NEWS` 
+                    WHERE `IDNUM` = '".$editorID."'";
                 $result = $mysqli->query($myq);
-                if (!$result) 
-                    throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
+                SQLerrorCatch($mysqli, $result);
 
                 $result->data_seek(0);  
-                while ($row = $result->fetch_assoc()) {
-                        $editorTitle = $row['TITLE'];
-                        $editorShort = $row['SHORTNAME'];
-                        $editorDivID = $row['DIVID'];
-                        $editorPublish = $row['PUBLISH'];
-                        $editorData = $row['BODY'];
-                }
+                $row = $result->fetch_assoc();
+                $editorTitle = $row['TITLE'];
+                $editorShort = $row['SHORTNAME'];
+                $editorDivID = $row['DIVID'];
+                $editorPublish = $row['PUBLISH'];
+                $editorData = $row['BODY'];
             }
             ?>
             <a href="<?php echo $_SERVER['PHP_SELF']; ?>?isAnounceAdmin=true" >Back</a>
             <script type="text/javascript" src="ckeditor/ckeditor.js"></script>
             <form action ="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post">
                 <p>
+                <?php echo '<input type="hidden" name="editorID" value="'.$editorID.'" />'; ?>
                 Announcement Title: <input type="text" name="editorTitle" value="<?php if (isset($editorTitle)) echo $editorTitle; ?>"/><br /><br />
                 Short Name: <?php if (isset($editorShort)) echo $editorShort; ?><br /><br />
                 Publish to Division: <?php displayDivisionID("editorDivID", $editorDivID, $showAllOpt=true) ?><br/><Br/>
@@ -176,11 +176,9 @@ function displayAdminAnnounce($config){
                     `TSTAMP` = NOW( ),
                     `AUDITID` = '".strtoupper($_SESSION['userName'])."',
                     `IP` = 'INET_ATON(\'".$_SERVER['REMOTE_ADDR']."\')' 
-                    WHERE CONVERT( `NEWS`.`SHORTNAME` USING utf8 ) = '".$editorOldShort."' LIMIT 1 ;";
+                    WHERE IDNUM= '".$editorID."' LIMIT 1 ;";
                 $result = $mysqli->query($myq);
-                if (!$result) 
-                    throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-                else{
+                if(!SQLerrorCatch($mysqli, $result)){
                     addLog($config, 'Announcement Updated with title '.$editorTitle);
                     echo '<h3>Successful Save</h3>';
                 }
