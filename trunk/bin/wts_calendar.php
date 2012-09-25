@@ -28,13 +28,19 @@ function viewClandar($config, $month, $year){
 	//Here we find out what day of the week the first day of the month falls on
 	$day_of_first_day = date('w', mktime(0, 0, 0, $month, 1, $year));
 
+        $myDivID = "";
+        if(isset($_POST['divisionID'])){
+            $myDivID = $_POST['divisionID'];
+        }
 	// Navigation for the monthly calender view
         $Prenavigation = "<form action=\"".$_SERVER['REQUEST_URI']."\" method=\"post\"><input type=\"hidden\" name=\"mon\" value=\"$prev_month\">
         <input type=\"hidden\" name=\"year\" value=\"$year\">
+        <input type=\"hidden\" name=\"divisionID\" value=\"$myDivID\">
         <input type=\"submit\" value=\"<< ".$dtFirstDay."\" /></form>";
 
         $Nextnavigation = "<form action=\"".$_SERVER['REQUEST_URI']."\" method=\"POST\"><input type=\"hidden\" name=\"mon\" value=\"$next_month\">
         <input type=\"hidden\" name=\"year\" value=\"$year\">
+        <input type=\"hidden\" name=\"divisionID\" value=\"$myDivID\">
         <input type=\"submit\" value=\"".$dtLastDay." >>\" /></form>";
 
         $mysqli = $config->mysqli;
