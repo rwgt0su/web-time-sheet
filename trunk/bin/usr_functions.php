@@ -576,7 +576,7 @@ function displayRanks($selectName, $selected=false){
 
     echo '</select>';
 }
-function displayDivisionID($selectName, $selected=false){
+function displayDivisionID($selectName, $selected=false, $showAllOpt=false){
     $mysqli = connectToSQL();
     $myq = "SELECT * FROM `DIVISION` WHERE 1";
     $result = $mysqli->query($myq);
@@ -592,6 +592,17 @@ function displayDivisionID($selectName, $selected=false){
         if (strcmp($selected, $row['DIVISIONID']) == 0)
             echo " selected ";
         echo '>'.$row['DESCR'].'</option>';
+    }
+    if($showAllOpt){
+        echo '<option value="1"';
+        if (strcmp($selected, "1") == 0)
+            echo ' SELECTED ';
+        echo '>Everyone</option>';
+        
+        echo '<option value="2"';
+        if (strcmp($selected, "2") == 0)
+            echo ' SELECTED ';
+        echo '>ALL</option>';
     }
 
     echo '</select>';
