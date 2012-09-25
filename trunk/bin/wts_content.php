@@ -172,7 +172,23 @@ function displayAbout($config){
     <p>This is a Sheriff's Office Computer System and is the property of the Mahoning County Sheriff's Office / Mahoning County Board of Commissioners. 
         It is for authorized use only. Users (authorized or unauthorized) have no explicit or implicit expectation of privacy. Any or all uses of this
         system and all files on this system may be intercepted, monitored, recorded, copied, audited, inspected, and disclosed to authorized site and
-        law enforcement personnel, as well as authorized officials of other agencies.</p>
+        law enforcement personnel, as well as authorized officials of other agencies.</p><Br/>
+    
     <?php
+    $sub_req_url="http://code.google.com/p/web-time-sheet/source/list";
+    $ch = curl_init($sub_req_url);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+
+    $content = curl_exec($ch);
+    curl_close($ch);
+    $temp = explode('id="resultstable"', $content);
+    echo '<div class="divider"></div><Br/><table id="resultstable"';
+    $display = strip_tags($temp[1], '<table><tr><td><th>');
+    $display = explode('</table>', $display);
+    echo $display[0].'</table>';
+    
+    echo '<a href="http://code.google.com/p/web-time-sheet/source/list">See full list of revisions</a>';
 }
 ?>
