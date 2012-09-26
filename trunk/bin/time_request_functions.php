@@ -8,7 +8,7 @@
 <?php
 function displayLeaveForm($config){
   
-$mysqli = $config->mysqli;
+    $mysqli = $config->mysqli;
 
     //check if we're coming from an edit button on the submitted report
     $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
@@ -310,7 +310,10 @@ else{
                         }//end if
                     }//end for
                 }
-                echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
+                //echo "<p><h3>Type of Request: </h3>" . $typeDescr['DESCR'] . "</p>";
+                echo "<p><h3>Type of Request: </h3>"; 
+                selectTimeType($config, "type", $type);
+                echo "</p>";
                 //subtype choice
                 echo "Subtype: ";
                 $myq = "SELECT NAME FROM SUBTYPE";
@@ -403,7 +406,9 @@ else{
                 </br>
                 <p>Comment: <textarea rows="3" cols="40" name="comment" ><?php echo $comment; ?></textarea></p>
                 <?php if($updatingRequest==='submittedRequests')
-                    echo '<p><input type="submit" name="update" value="Update Request"></p>';
+                    echo '<p><input type="hidden" name="formName" value="submittedRequests" />
+                        <input type="submit" name="update" value="Update Request">
+                        <INPUT TYPE="button" value="Back to My Requests" onClick="parent.location=\'wts_index.php?myReq=true\'"></p>';
                 else
                     echo '<p><input type="submit" name="submit" value="Submit for Approval"></p>';
                 ?>
@@ -1512,4 +1517,28 @@ else {
     //show a print button. printed look defined by print.css
     echo '<a href="javascript:window.print()">Print</a>';
 } //end displaySubmittedRequests()
+
+function selectTimeType($config, $inputName, $selected=false, $onChangeSubmit=false){
+    //assumes to be part of a form
+    //provides a drop down selection for time type.
+    $mysqli = $config->mysqli;
+    if($onChangeSubmit)
+        echo '<select name="'.$inputName.'" onchange="this.form.submit()">';
+    else
+        echo '<select name="'.$inputName.'" >';
+    
+    $myq = "SELECT TIMETYPEID, DESCR FROM TIMETYPE";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    
+    while($row = $result->fetch_assoc()){
+        if($row['TIMETYPEID'] == $selected)
+            echo '<option value="'.$row['TIMETYPEID'].'" SELECTED>'.$row['DESCR'].'</option>';
+        else
+            echo '<option value="'.$row['TIMETYPEID'].'">'.$row['DESCR'].'</option>';
+        
+    }
+    
+    echo '</select>';
+}
 ?>
