@@ -5,9 +5,9 @@
  * and open the template in the editor.
  */
 
-function displaySecondaryLog($config, $isApprove = false){
+function displaySecondaryLog($config, $isApprovePage = false){
     $mysqli = $config->mysqli;
-    if($isApprove)
+    if($isApprovePage)
         echo '<h2>Secondary Employment Daily Logs Approval</h2>';
     else
         echo '<h2>Secondary Employment Daily Logs</h2>';
@@ -29,7 +29,7 @@ function displaySecondaryLog($config, $isApprove = false){
         $showAll = isset($_POST['showAll']) ? true : false;
         $showNormal = isset($_POST['showNormal']) ?  true : false;
         $goBtn = isset($_POST['goBtn']) ? true : false;
-        $isApprove = isset($_POST['isApprove']) ? true : $isApprove;
+        $isApprovePage = isset($_GET['secApprove']) ? true : $isApprovePage;
         $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
         $secLogID = isset($_POST['backToApprove']) ? false : $secLogID ;
         
@@ -42,35 +42,31 @@ function displaySecondaryLog($config, $isApprove = false){
             $goBtn = false;
             $addBtn = false;
         }
-        if(!$isApprove){
+        if(!$isApprovePage){
             if(!$dateSelect){
                 echo 'Select Date: ';
                 displayDateSelect("dateSelect", "dateSel",false,false,true,true);
                 echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
-                if($isApprove){
-                    echo '<input type="hidden" name="isApprove" value="true" />';
-                }
-
             }
             else{
                 echo '<h3>Date: '.$dateSelect.'';
                 echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />
                     <input type="submit" name="changeDate" value="Change Date" /></h3>';
-                if($isApprove){
-                    echo '<input type="hidden" name="isApprove" value="true" />';
-                }
             }
         }
         if(isset($_POST['editRows'])){
             //popUpMessage($_POST['secLogRadio1']);
+            $foundEditBtn = false;
             for ($i=0; $i <= $editSelect; $i++){
-                if(isset($_POST['secLogRadio'.$i]))
+                if(isset($_POST['secLogRadio'.$i])){
                     $secLogID = $_POST['secLogID'.$i];
+                    $foundEditBtn = true;
+                }
             }
-            if(!empty($secLogID)){
-                showSecLogDetails($config, $secLogID, true, $isApprove);
+            if($foundEditBtn){
+                showSecLogDetails($config, $secLogID, true, $isApprovePage); 
             }
-            else if(!$addBtn && !$showAll && !$showNormal && !$changeDateBtn && !$isApprove){
+            else if(!$addBtn && !$showAll && !$showNormal && !$changeDateBtn && !$isApprovePage){
                 echo 'Error getting Reference Number!<br />';
                 echo '<input type="submit" name="goBtn" value="Back To Logs" />';
             }
@@ -84,20 +80,17 @@ function displaySecondaryLog($config, $isApprove = false){
                 //supervisor logs
                 showSecLog($config, $dateSelect, true);
             }           
-        }
-        if($isApprove && empty($secLogID)){
-                showSecLog($config, $dateSelect, false, $isApprove);
-        }
-        
-        if($addBtn || $logoutSecLog || $updateSecLog){
-            showSecLogDetails($config, $secLogID, false);
+        }        
+        if($addBtn){
+            showSecLogDetails($config, $secLogID);
         }
                 //get group update or logout
         if($totalRows > 0){
+            $approveBtn = array();
             for($i=1;$i<$totalRows;$i++){
                 if(isset($_POST['logoutSecLog'.$i]) || isset($_POST['logoutSecLogAll'])){
                     $secLogID = $_POST['secLogID'.$i];
-                    
+        
                     logOutSecLog($config, $secLogID);
                     
                     $editBtn = true;
@@ -121,26 +114,58 @@ function displaySecondaryLog($config, $isApprove = false){
 
                     $editBtn = true;
                 }
-                $box[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
-                if($box[$i]=='true'){
-                $secLogID = $_POST['secLogID'.$i];
-                    $myq = "UPDATE SECLOG 
-                            SET SUP_ID = '".$_SESSION['userIDnum']."',
-                                SUP_TIME = NOW(),
-                                SUP_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."') 
-                            WHERE SECLOG.IDNUM = ".$secLogID;
-                    $result = $mysqli->query($myq);
+                $approveBtn[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
+                if($approveBtn[$i]){
+                    $secLogID = $_POST['secLogID'.$i];
+                    //get group ID from selected approval
+                    $groupIDQ = "SELECT GPNUM FROM SECLOG WHERE IDNUM = ".$secLogID;
+                    $result = $mysqli->query($groupIDQ);
                     SQLerrorCatch($mysqli, $result);
-                    addLog($config, 'Secondary Log #'.$secLogID.' approved');
-                    echo 'Log #'.$secLogID.' approved.<br />';
-                     showSecLog($config, $dateSelect, false, $isApprove=true);
+                    $row = $result->fetch_assoc();
+                    if($row['GPNUM'] != "0"){
+                        //Group Approval required
+                        //get all group memebers references
+                        $myq = "SELECT IDNUM 
+                            FROM SECLOG
+                            WHERE GPNUM = ".$row['GPNUM'].";";
+                        $result = $mysqli->query($myq);
+                        SQLerrorCatch($mysqli, $result);
+                        while($row = $result->fetch_assoc()){
+                            //approve each member of group
+                            $updateQ = "UPDATE SECLOG 
+                                    SET SUP_ID = '".$_SESSION['userIDnum']."',
+                                        SUP_TIME = NOW(),
+                                        SUP_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."') 
+                                    WHERE SECLOG.IDNUM = ".$row['IDNUM'];
+                            $resultUpdate = $mysqli->query($updateQ);
+                            SQLerrorCatch($mysqli, $resultUpdate);
+                            addLog($config, 'Secondary Employment  Log #'.$row['IDNUM'].' approved');
+                            echo 'Secondary Employment Log #'.$secLogID.' approved.<br />';
+                        }
+                    }
+                    else{
+                        //approve non group secLog
+                        $updateQ = "UPDATE SECLOG 
+                                SET SUP_ID = '".$_SESSION['userIDnum']."',
+                                    SUP_TIME = NOW(),
+                                    SUP_IP = INET_ATON('".$_SERVER['REMOTE_ADDR']."') 
+                                WHERE SECLOG.IDNUM = ".$secLogID;
+                        $resultUpdate = $mysqli->query($updateQ);
+                        SQLerrorCatch($mysqli, $resultUpdate);
+                        addLog($config, 'Secondary Employment Log #'.$secLogID.' approved');
+                        echo 'Secondary Employment Log #'.$secLogID.' approved.<br />';
+                    }
+                    showSecLog($config, $dateSelect, false, $isApprovePage=true);
                 }
             }
         }
-        if($editBtn){
-            if($config->adminLvl < 25){
+        if($isApprovePage && empty($secLogID)){
+            showSecLog($config, $dateSelect, false, $isApprovePage);
+        }
+        if($editBtn || $updateSecLog || $logoutSecLog){
+            if($config->adminLvl <= 25){
                 //Non supervisor Log details
-                showSecLogDetails($config, $secLogID, false);
+                showSecLogDetails($config, $secLogID, true, $isApprovePage);
             }
             else{
                 //Supervisor Log Details
@@ -157,7 +182,7 @@ function displaySecondaryLog($config, $isApprove = false){
 
 function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     $mysqli = $config->mysqli;
-    $app = isset($_POST['isApprove']) ? true : $isApprove;
+    $isApprove = isset($_POST['isApprove']) ? true : $isApprove;
    
     /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
       depending on the value of SECLOG.IS_RESERVE */
@@ -284,7 +309,8 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                     $gpCountq = "SELECT GPNUM FROM SECLOG WHERE GPNUM='".$row['gpID']."'";
                     $gpCountresult = $mysqli->query($gpCountq);
                     SQLerrorCatch($gpCountSQL, $gpCountresult);
-                    $theTable[$x][1] = $gpCountresult->num_rows;
+                    $theTable[$x][0] .= ', '.$row['IDNUM'];
+                    $theTable[$x][2] = $gpCountresult->num_rows;
             }//end if last group ID
             else{
                 $groupCounter = 1;
@@ -295,10 +321,10 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                             <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
                     else{
                         if((strcmp($row['SUP_TIME'], "00/00/00 0000") == 0))
-                            $theTable[$x][0] = 'Ref# '.$row['IDNUM'].'<input type="submit" name="secLogApproved'.$x.'" value="Approve" />
+                            $theTable[$x][0] = '<input type="submit" name="secLogApproved'.$x.'" value="Approve" />
                                 <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />
                                     <input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
-               ';
+                                    Ref# '.$row['IDNUM'];
                         else{
                             $theTable[$x][0] = 'Ref# '.$row['IDNUM'].'<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
                             <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
