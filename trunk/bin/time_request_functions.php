@@ -13,7 +13,9 @@ function displayLeaveForm($config){
     //check if we're coming from an edit button on the submitted report
     $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : false;
     $updatingRequest = isset($_POST['formName']) ?  $_POST['formName'] : false;
+    $updatingRequest = isset($_POST['duplicateBtn']) ?  "duplicateRequest" : $updatingRequest;
     $findBtn = isset($_POST['findBtn']) ?  true : false;
+    $requestAccepted = false;
     //echo "updatingRequest = $updatingRequest"; //DEBUG
 
     if($totalRows && $updatingRequest && !$findBtn) {
@@ -186,6 +188,7 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                             addLog($config, 'New Time Request Submitted with Ref# '.$refInsert);
                             echo '<h3>Request accepted. The reference number for this request is <b>' 
                                 .$refInsert. '</b>.</h3>';
+                            $requestAccepted = true;
                         }
                     } //end validation check
                 }//end for loop
@@ -405,9 +408,10 @@ else{
 
                 </br>
                 <p>Comment: <textarea rows="3" cols="40" name="comment" ><?php echo $comment; ?></textarea></p>
-                <?php if($updatingRequest==='submittedRequests')
+                <?php if($updatingRequest==='submittedRequests' || $requestAccepted)
                     echo '<p><input type="hidden" name="formName" value="submittedRequests" />
                         <input type="submit" name="update" value="Update Request">
+                        <input type="submit" name="duplicateBtn" value="Duplicate Request" />
                         <INPUT TYPE="button" value="Back to My Requests" onClick="parent.location=\'wts_index.php?myReq=true\'"></p>';
                 else
                     echo '<p><input type="submit" name="submit" value="Submit for Approval"></p>';
