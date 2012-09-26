@@ -229,7 +229,7 @@ function SQLerrorCatch($mysqli, $result) {
         catch (Exception $e) {
             $message = $e->getMessage();
             $dbgTrace = debug_backtrace();
-            $dbgMsg .= "<table><tr><th>Debug backtrace begin:</th></tr>";
+            $dbgMsg = "<table><tr><th>Debug backtrace begin:</th></tr>";
             foreach($dbgTrace as $dbgIndex => $dbgInfo) {
                 $dbgMsg .= '<tr width=300><td>'.$dbgInfo['file'].' (line '.$dbgInfo['line'].') -> '.$dbgInfo['function'].'</td></tr>';
             }
