@@ -183,7 +183,7 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
       depending on the value of SECLOG.IS_RESERVE */
     if(!$isApprove){
         $myq =  "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
-                    R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
+                    INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
                     DATE_FORMAT(R.AUDIT_IN_TS,'%m/%d/%y %H%i') 'checkIn', 
@@ -194,13 +194,14 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGOUT ON R.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
+                LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 WHERE AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'
                 AND R.IS_RESERVE=0
 
                 UNION
 
                 SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
-                    R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
+                    INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
                     DATE_FORMAT(R.AUDIT_IN_TS,'%m/%d/%y %H%i') 'checkIn', 
@@ -211,6 +212,7 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGOUT ON R.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
+                LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 WHERE AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
@@ -218,7 +220,7 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
     else{
         //Querey used for approvals.  
         $myq =  "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
-                    R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
+                    INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
                     DATE_FORMAT(R.AUDIT_IN_TS,'%m/%d/%y %H%i') 'checkIn', 
@@ -229,13 +231,14 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGOUT ON R.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
+                LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 WHERE AUDIT_IN_ID != ''
                 AND R.IS_RESERVE=0
 
                 UNION
 
                 SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
-                    R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
+                    INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
                     DATE_FORMAT(R.AUDIT_IN_TS,'%m/%d/%y %H%i') 'checkIn', 
@@ -246,6 +249,7 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGOUT ON R.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
+                LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 WHERE AUDIT_IN_ID != ''
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
@@ -275,9 +279,10 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
         else{
             $theTable[$x][$y] = "Approve"; $y++;
         }
+        $theTable[$x][$y] = "Radio#"; $y++;
         $theTable[$x][$y] = "# in Group"; $y++;
         $theTable[$x][$y] = "Deputy"; $y++;
-        $theTable[$x][$y] = "Radio#"; $y++;
+        $theTable[$x][$y] = "Radio Call#"; $y++;
         $theTable[$x][$y] = "Type"; $y++;
         $theTable[$x][$y] = "OUT_Time"; $y++;
         $theTable[$x][$y] = "OUT_Out_By"; $y++;
@@ -321,6 +326,7 @@ function showRadioLog($config, $dateSelect, $radioLogID, $isApprove=false){
                     }
                     $y = 1;
                     
+                    $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                     $theTable[$x][$y] = $groupCounter; $y++;
                     $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                     $theTable[$x][$y] = $row['RADIO_CALLNUM']; $y++;
@@ -467,13 +473,15 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
                 echo '<div align="center">Group Reference #: '.$row['gpID'].'
                     <input type="hidden" name="gpID" value="'.$row['gpID'].'" /></div>';
                 
-                $newq = "SELECT R.REFNUM 'refNum', R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                $newq = "SELECT R.REFNUM 'refNum', R.GPNUM 'gpID', 
+                        CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
                         R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
                     FROM WTS_RADIOLOG R
                     JOIN EMPLOYEE AS SEC ON SEC.IDNUM=R.DEPUTYID
                     WHERE R.GPNUM = '".$row['gpID']."' AND IS_RESERVE=0
                     UNION
-                    SELECT R.REFNUM 'refNum', R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                    SELECT R.REFNUM 'refNum', R.GPNUM 'gpID', 
+                        CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
                         R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
                     FROM WTS_RADIOLOG R
                     JOIN RESERVE AS SEC ON SEC.IDNUM=R.DEPUTYID
