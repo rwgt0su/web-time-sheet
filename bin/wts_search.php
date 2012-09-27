@@ -253,7 +253,37 @@ function displayUserLookup($config) {
             echo '<input type="hidden" name="dress" value="' . $dress . '" />';
             echo '<input type="hidden" name="dateSelect" value="' . $dateSelect . '" />';
             echo '<input type="hidden" name="addBtn" value="true" />';
-        } 
+        }
+        else if ($formName == 'radioLog') {
+            $radioLogID = isset($_POST['radioLogID']) ? $_POST['radioLogID'] :'' ;
+            $radioID = isset($_POST['radioID']) ? $_POST['radioID'] : '';
+            $radioCallNum = isset($_POST['radioCallNum']) ? $_POST['radioCallNum'] : '';
+            $checkOutType = isset($_POST['checkOutType']) ? $_POST['checkOutType'] : '';
+            $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
+            $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
+            
+            if($num_deputies > 0){
+                $i=0;
+                for($i;$i<$num_deputies;$i++){
+                    $deputyID[$i] = isset($_POST['deputyID'.$i]) ? $_POST['deputyID'.$i] : false;
+                    $radioNum[$i] = isset($_POST['radioNum'.$i]) ? $_POST['radioNum'.$i] : '';
+                    $isReserve[$i] = isset($_POST['isReserve'.$i]) ? true : false;
+                    
+                    echo '<input type="hidden" name="deputyID'.$i.'" value="' . $deputyID[$i] . '" />';
+                    echo '<input type="hidden" name="radioNum'.$i.'" value="' . $radioNum[$i] . '" />';
+                    if($isReserve[$i]==1)
+                        echo '<input type="hidden" name="isReserve'.$i.'" value="true" />';
+                }
+                echo '<input type="hidden" name="num_deputies" value="'.$i.'" />';
+            }
+            
+            echo '<input type="hidden" name="gpID" value="'.$gpID.'" />';
+            echo '<input type="hidden" name="radioLogID" value="'.$radioLogID.'" />';
+            echo '<input type="hidden" name="radioID" value="'.$radioID.'" />';
+            echo '<input type="hidden" name="radioCallNum" value="'.$radioCallNum.'" />';
+            echo '<input type="hidden" name="checkOutType" value="'.$checkOutType.'" />';
+            echo '<input type="hidden" name="addBtn" value="true" />';
+        }
         $mysqli = $config->mysqli;
         //Get additional search inputs
         $searchUser = isset($_POST['searchUser']) ? $mysqli->real_escape_string($_POST['searchUser']) : '';

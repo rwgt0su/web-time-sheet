@@ -64,8 +64,11 @@ require_once 'bin/wts_search.php';
 //Time gain/use (leave) request functions
 require_once 'bin/time_request_functions.php';
 
-//Secondary Log Conent
-require_once 'bin/wts_sec_log.php';
+//WTS Logs
+    //Secondary Employment Logs
+    require_once 'bin/Modules/Logs/wts_sec_log.php';
+    //Radio Checkout Logs
+    require_once 'bin/Modules/Logs/wts_radio_log.php';
 
 //reserve employee management
 require_once 'bin/wts_reserves.php';
@@ -82,7 +85,7 @@ require_once 'bin/wts_logging.php';
     //Available Shift Opening Bidding
     require_once 'bin/Modules/ShiftBids/wts_PosBids.php';
     require_once 'bin/Modules/ShiftBids/wts_positions.php';
-
+    
 function popUpMessage($message, $title="Message"){
 	?>
     <link type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
