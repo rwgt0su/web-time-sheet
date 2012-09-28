@@ -279,13 +279,12 @@ function showTimeSelector($inputName, $input1, $input2, $required=true){
         }
         echo '</select>';
 }
-function showSortableTable($table, $rowToSort, $tableID = "sorter"){
+function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowToSortNext = ''){
     
     //two dim array is $table.  Place any html code within any cell
     //do not pass this with a form
     //creates hidden input for FormName and totalRows in the table.
-        echo '<link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
-        <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
+        echo '
             <div id="wrapper">';
             
         $echo = '<table class="sortable" id="'.$tableID.'">
@@ -307,8 +306,8 @@ function showSortableTable($table, $rowToSort, $tableID = "sorter"){
         $echo = '<input type="hidden" name="totalRows" value="'.$x.'" />'.$echo;
         $echo .= '</table></div>
             <script type="text/javascript">
-                var sorter=new table.sorter("'.$tableID.'");
-                sorter.init("'.$tableID.'",'.$rowToSort.');
+                var '.$tableID.'=new table.sorter("'.$tableID.'");
+                '.$tableID.'.init("'.$tableID.'",'.$rowToSort.');
             </script>';
         echo $echo;
 }
