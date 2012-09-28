@@ -45,7 +45,7 @@ function displayRadioLog($config, $isApprovePage = false){
                 $goBtn = false;
                 $addBtn = false;
             }
-            if(!$isApprovePage){
+            if(!$isApprovePage && !isset($_POST['exchangeLogID'])){
                 if(!$dateSelect){
                     echo 'Select Date: ';
                     displayDateSelect("dateSelect", "dateSel",false,false,true,true);
@@ -58,6 +58,8 @@ function displayRadioLog($config, $isApprovePage = false){
                         <input type="submit" name="addBtn" value="Checkout Radio" /></h3>';
                 }
             }
+            else
+                 echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
             if($goBtn){                       
                 if($config->adminLvl < 25){
                     //non supervisor logs
@@ -1052,8 +1054,7 @@ function showItemExchange($config, $radioLogID){
     $item = $result->fetch_assoc();
     $radioID = $item['RADIOID'];
     
-    echo '<input type="hidden" name="exchangeLogID" value="'.$radioLogID.'" />';
-    echo '<input type="hidden" name="itemID" value="'.$radioID.'" />';
+    
     echo $item['itemType'].' '.$item['OTHER_SN'].' will be exchanged from '.$item['deputyName'].' to: <br/>';
     
     
@@ -1061,6 +1062,7 @@ function showItemExchange($config, $radioLogID){
     //debug
     //var_dump($_POST);
     //Show previously added deputies
+    $isExchanged = false;
     $deputyCount=0;
     $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
     if($num_deputies > 0){
@@ -1100,12 +1102,17 @@ function showItemExchange($config, $radioLogID){
                     $insertLogID = checkOutItem($config, $deputyID[$i], $row['RADIO'], $radioID, "POD", $tempReserve, "0", $noLog=true);
                 
                     addLog($config, 'Exchanged Log Ref#'.$radioLogID.' with Ref#'.$insertLogID);
+                    $isExchanged = true;
                 }
+               
                 $deputyCount++;
             }
         }//End for loop of previously added deputies
     }//End check for multiple deputies
-
+     if(!$isExchanged){
+        echo '<input type="hidden" name="exchangeLogID" value="'.$radioLogID.'" />';
+        echo '<input type="hidden" name="itemID" value="'.$radioID.'" />';
+    }
     //Get added Deputy
     $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
     $foundUserFNAME = '';
