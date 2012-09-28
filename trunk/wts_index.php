@@ -14,6 +14,8 @@ require_once('bin/common.php');
     <link type="text/css" href="templetes/DarkTemp/styles/960.css" rel="stylesheet" media="all" />
     <link type="text/css" href="templetes/DarkTemp/styles/style.css" rel="stylesheet" media="all" />
     <link type="text/css" href="templetes/DarkTemp/styles/print.css" rel="stylesheet" media="print" />
+    <link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
+    <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
     
 </head>
 <body>
@@ -96,4 +98,4 @@ require_once('bin/common.php');
 </body>
 </html>
 <?php $_SESSION['timeout'] = time(); //myAlerts($config); ?>
- <meta http-equiv="refresh" content="1800;url='<?php echo $_SERVER['PHP_SELF']; ?> '" />
+ <meta http-equiv="refresh" content="1800;url='<?php echo $_SERVER['REQUEST_URI']; ?>'" />
