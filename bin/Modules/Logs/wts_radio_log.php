@@ -1041,8 +1041,9 @@ function showItemExchange($config, $radioLogID){
     $mysqli = $config->mysqli;
     
     //get radioLog duplicating information
-    $myq = "SELECT R.RADIOID, R.TYPE, INV.OTHER_SN, ITYPE.DESCR 'itemType'
+    $myq = "SELECT R.RADIOID, R.TYPE, INV.OTHER_SN, ITYPE.DESCR 'itemType', CONCAT_WS(', ', EMP.LNAME, EMP.FNAME) 'deputyName'
         FROM WTS_RADIOLOG R
+        LEFT JOIN EMPLOYEE AS EMP ON R.DEPUTYID=EMP.IDNUM
         LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
         LEFT JOIN WTS_INV_TYPE AS ITYPE ON INV.TYPE=ITYPE.IDNUM
         WHERE R.REFNUM = '".$radioLogID."' LIMIT 1;";
@@ -1053,7 +1054,7 @@ function showItemExchange($config, $radioLogID){
     
     echo '<input type="hidden" name="exchangeLogID" value="'.$radioLogID.'" />';
     echo '<input type="hidden" name="itemID" value="'.$radioID.'" />';
-    echo $item['itemType'].' '.$item['OTHER_SN'].' will be exchanged to: <br/>';
+    echo $item['itemType'].' '.$item['OTHER_SN'].' will be exchanged from '.$item['deputyName'].' to: <br/>';
     
     
 
