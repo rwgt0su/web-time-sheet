@@ -710,8 +710,10 @@ function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=fals
             }//end for
         }
         if(empty($foundUserID) && $num_deputies == 0){
-            $foundUserID = $_SESSION['userIDnum'];
-            $foundUserIsReserve = false;
+            if($_SERVER['REMOTE_ADDR'] != nslookup('mcjcbcast.sheriff.mahoning.local')){
+                $foundUserID = $_SESSION['userIDnum'];
+                $foundUserIsReserve = false;
+            }
         }
         if(!empty($foundUserID)){
             if($foundUserIsReserve){
