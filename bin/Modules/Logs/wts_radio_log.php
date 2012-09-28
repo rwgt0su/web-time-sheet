@@ -32,6 +32,8 @@ function displayRadioLog($config, $isApprovePage = false){
             $isApprovePage = isset($_GET['secApprove']) ? true : $isApprovePage;
             $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
             $radioLogID = isset($_POST['backToApprove']) ? false : $radioLogID ;
+            $exchangeLogID = isset($_POST['exchangeLogID']) ? $_POST['exchangeLogID'] : false;
+            
             $counter = 0;
 
             if($showAll || $showNormal){
@@ -67,11 +69,17 @@ function displayRadioLog($config, $isApprovePage = false){
                 }
                 $counter += showRadioLog($config, $dateSelect, $counter, "POD", false);
                 $counter += showRadioLog($config, $dateSelect, $counter, "PERM", false);
-            }        
+            } 
+            if(isset($_POST['exchangeLogID']))
+                $addBtn = false;
             if($addBtn){
                 showRadioLogDetails($config, $radioLogID);
             }
-                    //get group update or logout
+            if($exchangeLogID){
+                showItemExchange($config, $exchangeLogID);
+                $editBtn = false;
+            }
+            //get group update or logout
             if($finalRows > 0){
                 $approveBtn = array();
                 $foundEditBtn = false;
@@ -96,6 +104,11 @@ function displayRadioLog($config, $isApprovePage = false){
                         updateRadioLog($config, $radioLogID, $radioCallNum, $checkOutType);
 
                         $editBtn = true;
+                    }
+                    else if(isset($_POST['exchangeBtn'.$i])){
+                        //checkin equipment and start checking back out
+                        $radioLogID = $_POST['radioLogID'.$i];
+                        showItemExchange($config, $radioLogID);
                     }
                     $approveBtn[$i] = isset($_POST['radioLogApproved'.$i]) ? true : false;
                     if($approveBtn[$i]){
@@ -228,7 +241,11 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
         }
         else if($logType == "POD"){
             echo '<div class="divider"></div><br/><h3>POD Equipment Assignment Checked Out Log</h3>';
-            
+            $showAll = isset($_POST['showAll']) ? true : false;
+            if($showAll)
+                $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
+            else
+                $showAllQ = "R.CHECKEDOUT=1";
             $myq =  "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
@@ -242,7 +259,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
-                WHERE R.CHECKEDOUT=1
+                WHERE ".$showAllQ."
                 AND R.TYPE='POD'
                 AND R.IS_RESERVE=0
 
@@ -261,7 +278,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
-                WHERE R.CHECKEDOUT=1
+                WHERE ".$showAllQ."
                 AND R.TYPE='POD'
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
@@ -323,7 +340,6 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 WHERE AUDIT_IN_ID != ''
-                AND R.TYPE != 'PERM'
                 AND R.IS_RESERVE=0
 
                 UNION
@@ -342,7 +358,6 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 WHERE AUDIT_IN_ID != ''
-                AND R.TYPE != 'PERM'
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
         
@@ -359,9 +374,9 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $showAll = isset($_POST['showAll']) ? true : false;
             if(!$isApprove){
                 if($showAll)
-                    echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Logs</div>';
+                    echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Loaner Logs</div>';
                 else
-                    echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Logs</div>';
+                    echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Loaner Logs</div>';
             }
             $theTable = array(array());
             if(!$isApprove){
@@ -406,12 +421,18 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             }
         }
         else if($logType == "POD"){
+            $showAll = isset($_POST['showAll']) ? true : false;
+                if($showAll)
+                    echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Shift Assignment Logs</div>';
+                else
+                    echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Shift Assignment Logs</div>';
+          
             $theTable = array(array());
             $x=0;
             $y=0;
             $theTable[$x][$y] = "Edit"; $y++;
             $theTable[$x][$y] = "Radio#"; $y++;
-            $theTable[$x][$y] = "POD"; $y++;
+            $theTable[$x][$y] = "Deputy "; $y++;
             $theTable[$x][$y] = "Type"; $y++;
             $theTable[$x][$y] = "OUT_Time"; $y++;
             $theTable[$x][$y] = "OUT_By"; $y++;
@@ -458,7 +479,8 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     }
                     $theTable[$x][$y] =$row['AUDIT_IN_ID']; $y++;
                     if($row['isCheckedOut'] == 1){
-                        $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$x.'" value="Check Back In" />'; $y++;
+                        $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$x.'" value="Check Back In" /><br/>
+                            <input type="submit" name="exchangeBtn'.$x.'" value="Exchange" />'; $y++;
                     }
                     else{
                         $theTable[$x][$y] = "Checked In"; $y++;
@@ -549,7 +571,8 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $theTable[$x][$y] = $row['AUDIT_IN_ID']; $y++;
                 if($row['isCheckedOut'] == 1){
                     if($config->adminLvl >=50){
-                        $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" />'; $y++;
+                        $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" /><br/>
+                            <input type="submit" name="exchangeBtn'.$x.'" value="Exchange" />'; $y++;
                     }
                     else{
                         $theTable[$x][$y] = "Checked Out"; $y++;
@@ -591,20 +614,19 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
     
     if($checkOutRadio){
         //get passed values
+        echo '<h2><font color="red">Results</font></h2>';
         if($num_deputies > 0){
             for($i=0;$i<$num_deputies;$i++){
                 $deputyID[$i] = isset($_POST['deputyID'.$i]) ? $mysqli->real_escape_string(strtoupper($_POST['deputyID'.$i])) : false;
                 $radioCallNum[$i] = isset($_POST['radioCallNum'.$i]) ? $mysqli->real_escape_string(strtoupper($_POST['radioCallNum'.$i])) : '';
                 $isReserve[$i] = isset($_POST['isReserve'.$i]) ? '1' : '0';
             }
-        }
-        $radioID = isset($_POST['radioID']) ? $mysqli->real_escape_string(strtoupper($_POST['radioID'])) : '';
-        $checkOutType = isset($_POST['checkOutType']) ? $mysqli->real_escape_string(strtoupper($_POST['checkOutType'])) : '';
-        $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
-        
-        //add to database
-        echo '<h2><font color="red">Results</font></h2>';
-        if($num_deputies>0){
+            
+            $radioID = isset($_POST['radioID']) ? $mysqli->real_escape_string(strtoupper($_POST['radioID'])) : '';
+            $podID = isset($_POST['podID']) ? $mysqli->real_escape_string(strtoupper($_POST['podID'])) : '';
+            $checkOutType = isset($_POST['checkOutType']) ? $mysqli->real_escape_string(strtoupper($_POST['checkOutType'])) : '';
+            $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
+
             for($i=0;$i<$num_deputies;$i++){
                 $gpIDq= "SELECT MAX( GPNUM ) 'gpID' FROM WTS_RADIOLOG";
                 $gpResult = $mysqli->query($gpIDq);
@@ -626,20 +648,8 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
                     }
                 }
                 
-                $myq = "INSERT INTO WTS_RADIOLOG ( REFNUM ,`DEPUTYID`,`RADIO_CALLNUM` , CHECKEDOUT, RADIOID, TYPE,
-                            `AUDIT_OUT_ID` ,`AUDIT_OUT_TS` ,`AUDIT_OUT_IP`, IS_RESERVE, GPNUM) 
-                        VALUES ( NULL , '".$deputyID[$i]."', '".$radioCallNum[$i]."', '1', '".$radioID."',
-                            '".$checkOutType."', '".$_SESSION['userIDnum']."', NOW(), 
-                            INET_ATON('".$_SERVER['REMOTE_ADDR']."'), ".$isReserve[$i].", '".$groupID."');";
-                $result = $mysqli->query($myq);
-                if(!SQLerrorCatch($mysqli, $result)) {
-                    $radioLogID = $mysqli->insert_id;  
-                    addLog($config, 'Radio Checked out Ref#'.$radioLogID.' Added');
-                    echo '<font color="red">Successfully Checked Out Radio with Reference Number: '.$radioLogID.'</font><br />';
-                    $isEditing = true;
-                }
-                else
-                    echo '<font color="red">Failed to check out radio, try again.</font><br />';
+                checkOutItem($config, $deputyID[$i], $radioCallNum[$i], $radioID, $checkOutType, $isReserve[$i], $groupID);
+                
             }
         }
         else{
@@ -659,10 +669,11 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
         ////get posted values
         $radioLogID = isset($_POST['radioLogID']) ? $mysqli->real_escape_string($_POST['radioLogID']) : '';
         $radioID = isset($_POST['radioID']) ? $mysqli->real_escape_string(strtoupper($_POST['radioID'])) : '';
+        $podID = isset($_POST['podID']) ? $mysqli->real_escape_string(strtoupper($_POST['podID'])) : '';
         $radioCallNum = isset($_POST['radioCallNum']) ? $mysqli->real_escape_string(strtoupper($_POST['radioCallNum'])) : '';
         $checkOutType = isset($_POST['checkOutType']) ? $mysqli->real_escape_string(strtoupper($_POST['checkOutType'])) : '';
         
-        updateRadioLog($config, $radioLogID, $radioCallNum, $radioID, $checkOutType);
+        updateRadioLog($config, $radioLogID, $radioCallNum, $radioID, $podID, $checkOutType);
         $isEditing = true;
     }
     
@@ -759,9 +770,9 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
             else
                 echo '<input type="radio" name="checkOutType" value="PERM">PERMANENT</input>';
             if($row['TYPE'] == "POD")
-                echo '<input type="radio" name="checkOutType" value="POD" CHECKED>POD ASSIGNMENT</input><br/>';
+                echo '<input type="radio" name="checkOutType" value="POD" CHECKED>SHIFT ASSIGNMENT</input><br/>';
             else
-                echo '<input type="radio" name="checkOutType" value="POD">POD ASSIGNMENT</input><br/>';
+                echo '<input type="radio" name="checkOutType" value="POD">SHIFT ASSIGNMENT</input><br/>';
             echo '<br/>Checked in time: ';
             if(strcmp($row['inTime'],"00/00/00 0000")==0){
                 echo "<font color=red><b>Not Checked back in Yet</b></font><br /><br />";
@@ -794,6 +805,7 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
         echo '<br/><br/>';
         $radioLogID = isset($_POST['secLogID']) ? $mysqli->real_escape_string($_POST['secLogID']) : '';
         $radioID = isset($_POST['radioID']) ? $mysqli->real_escape_string(strtoupper($_POST['radioID'])) : '';
+        $podID = isset($_POST['podID']) ? $mysqli->real_escape_string(strtoupper($_POST['podID'])) : '';
         $checkOutType = isset($_POST['checkOutType']) ? $mysqli->real_escape_string(strtoupper($_POST['checkOutType'])) : '';
 
         //debug
@@ -857,10 +869,12 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
             }//end for
         }
         if(empty($foundUserID) && $num_deputies == 0){
-            
-            //Default first deputy to logged in user on first load
-//            $foundUserID = $_SESSION['userIDnum'];
-//            $foundUserIsReserve = false;
+            //security check for central control computer
+            if($_SERVER['REMOTE_ADDR'] != nslookup('mcjcbcast.sheriff.mahoning.local')){
+                //Default first deputy to logged in user on first load
+                $foundUserID = $_SESSION['userIDnum'];
+                $foundUserIsReserve = false;
+            }
         }
         if(!empty($foundUserID)){
             if($foundUserIsReserve){
@@ -888,11 +902,10 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
         }
         echo 'Add Deputy: ';
         displayUserLookup($config);
-        echo '<br />';
         echo '<input type="hidden" name="num_deputies" value="'.$deputyCount.'" />';
-           
+        
         $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
-        echo '<br/><input type="hidden" name="gpID" value="'.$gpID.'" /> Radio Number: ';
+        echo '<br/><br/><input type="hidden" name="gpID" value="'.$gpID.'" /> Radio Number: ';
         selectRadioInventory($config, "radioID", $radioID);
         echo '<br/><br/>';
         if($checkOutType == "LOANER")
@@ -904,15 +917,15 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
             else
                 echo '<input type="radio" name="checkOutType" value="PERM">PERMANENT</input>';
             if($checkOutType == "POD")
-                echo '<input type="radio" name="checkOutType" value="POD" CHECKED>POD ASSIGNMENT</input><br/>';
+                echo '<input type="radio" name="checkOutType" value="POD" CHECKED>SHIFT ASSIGNMENT</input><br/>';
             else
-                echo '<input type="radio" name="checkOutType" value="POD">POD ASSIGNMENT</input><br/>';
+                echo '<input type="radio" name="checkOutType" value="POD">SHIFT ASSIGNMENT</input><br/>';
         echo '<br/><input type="hidden" name="addBtn" value="true" />
             <input type="submit" name="addRadioLog" value="Check Out Radio" />
             <input type="submit" name="goBtn" value="Cancel" />';
     }
 }
-function checkInRadioLog($config, $radioLogID){
+function checkInRadioLog($config, $radioLogID, $noLog=false){
     $mysqli = $config->mysqli;
     
     $myq = "UPDATE WTS_RADIOLOG SET CHECKEDOUT = '0', `AUDIT_IN_ID` = '".$_SESSION['userIDnum']."', `AUDIT_IN_TS` = NOW(),
@@ -920,7 +933,8 @@ function checkInRadioLog($config, $radioLogID){
     $result = $mysqli->query($myq);
     if(!SQLerrorCatch($mysqli, $result)){
             echo '<font color="red">Successfully checked radio back in with Reference Number: '.$radioLogID.'</font><br /><br/>';
-            addLog($config, 'Radio log #'.$radioLogID.' checked back in');
+            if(!$noLog)
+                addLog($config, 'Radio log #'.$radioLogID.' checked back in');
     }
     else
         echo '<h2>Results</h2><font color="red">Failed to check radio back in, try again.</font><br /><Br />';  
@@ -949,7 +963,7 @@ function selectRadioInventory($config, $inputName, $selectedValue=false, $onChan
     else
         echo '<select name="'.$inputName.'" >';
     
-    $myq = "SELECT IDNUM, OTHER_SN 
+    $myq = "SELECT IDNUM, OTHER_SN, DESCR 
             FROM WTS_INVENTORY INV
             WHERE IS_ACTIVE = 1
             AND IS_DEPRECIATED = 0
@@ -959,14 +973,208 @@ function selectRadioInventory($config, $inputName, $selectedValue=false, $onChan
     SQLerrorCatch($mysqli, $result);
     
     while($row = $result->fetch_assoc()){
+        $itemDesc = '';
+        if(!empty($row['DESCR']))
+            $itemDesc = ' ('.$row['DESCR'].')';
         if($row['IDNUM'] == $selectedValue)
-            echo '<option value="'.$row['IDNUM'].'" SELECTED>'.$row['OTHER_SN'].'</option>';
+            echo '<option value="'.$row['IDNUM'].'" SELECTED>'.$row['OTHER_SN'].$itemDesc.'</option>';
         else
-            echo '<option value="'.$row['IDNUM'].'">'.$row['OTHER_SN'].'</option>';
+            echo '<option value="'.$row['IDNUM'].'">'.$row['OTHER_SN'].$itemDesc.'</option>';
         
     }
     
     echo '</select>';
 }
+function selectPOD($config, $inputName, $selectedValue=false, $onChangeSubmit=false){
+        //assumes to be part of a form
+    //provides a drop down selection for time type.
+    $mysqli = $config->mysqli;
+    if($onChangeSubmit)
+        echo '<select name="'.$inputName.'" onchange="this.form.submit()">';
+    else
+        echo '<select name="'.$inputName.'" ><option value="0"></option>';
+    
+    $myq = "SELECT * FROM WTS_PODS";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    
+    while($row = $result->fetch_assoc()){
+        if($row['IDNUM'] == $selectedValue)
+            echo '<option value="'.$row['IDNUM'].'" SELECTED>'.$row['PODNAME'].'</option>';
+        else
+            echo '<option value="'.$row['IDNUM'].'">'.$row['PODNAME'].'</option>';
+        
+    }
+    
+    echo '</select>';
+}
+function checkOutItem($config, $deputyID, $radioCallNum, $itemID, $checkOutType, $isReserve, $groupID, $noLog=false){
+    $mysqli = $config->mysqli;
+    
+    //get supplied item's type
+    $itemq = "SELECT DESCR FROM WTS_INV_TYPE WHERE IDNUM=(SELECT TYPE FROM WTS_INVENTORY WHERE IDNUM='".$itemID."') LIMIT 1;";
+    $itemResult = $mysqli->query($itemq);
+    SQLerrorCatch($mysqli, $itemResult);
+    $itemName = $itemResult->fetch_assoc();
+    $itemType = $itemName['DESCR'];
+    $inventoryLogID = '';
+    
+    if($itemType == "RADIO"){
+            $myq = "INSERT INTO WTS_RADIOLOG ( REFNUM ,`DEPUTYID`,`RADIO_CALLNUM` , CHECKEDOUT, RADIOID, TYPE,
+                    `AUDIT_OUT_ID` ,`AUDIT_OUT_TS` ,`AUDIT_OUT_IP`, IS_RESERVE, GPNUM) 
+                VALUES ( NULL , '".$deputyID."', '".$radioCallNum."', '1', '".$itemID."',
+                    '".$checkOutType."', '".$_SESSION['userIDnum']."', NOW(), 
+                    INET_ATON('".$_SERVER['REMOTE_ADDR']."'), ".$isReserve.", '".$groupID."');";
+    }
+    $result = $mysqli->query($myq);
+    if(!SQLerrorCatch($mysqli, $result, $myq)) {
+        $inventoryLogID = $mysqli->insert_id;
+        if(!$noLog)
+            addLog($config, $itemType.' Checked out Ref#'.$inventoryLogID.' Added');
+        echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br />';
+    }
+    else
+        echo '<font color="red">Failed to check out radio, try again.</font><br />';
+    return $inventoryLogID;
+}
+function showItemExchange($config, $radioLogID){
+    $mysqli = $config->mysqli;
+    
+    //get radioLog duplicating information
+    $myq = "SELECT R.RADIOID, R.TYPE, INV.OTHER_SN, ITYPE.DESCR 'itemType'
+        FROM WTS_RADIOLOG R
+        LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+        LEFT JOIN WTS_INV_TYPE AS ITYPE ON INV.TYPE=ITYPE.IDNUM
+        WHERE R.REFNUM = '".$radioLogID."' LIMIT 1;";
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+    $item = $result->fetch_assoc();
+    $radioID = $item['RADIOID'];
+    
+    echo '<input type="hidden" name="exchangeLogID" value="'.$radioLogID.'" />';
+    echo '<input type="hidden" name="itemID" value="'.$radioID.'" />';
+    echo $item['itemType'].' '.$item['OTHER_SN'].' will be exchanged to: <br/>';
+    
+    
 
+    //debug
+    //var_dump($_POST);
+    //Show previously added deputies
+    $deputyCount=0;
+    $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
+    if($num_deputies > 0){
+        for($i=0;$i<$num_deputies;$i++){
+            if(!isset($_POST['removeDeputyBtn'.$i])){
+                $deputyID[$i] = isset($_POST['deputyID'.$i]) ? $mysqli->real_escape_string(strtoupper($_POST['deputyID'.$i])) : '';
+                $isReserve[$i] = isset($_POST['isReserve'.$i]) ? true : false;
+
+                //get this user's information
+                if($isReserve[$i]){
+                    $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM RESERVE WHERE IDNUM='.$deputyID[$i];
+                    $result = $mysqliReserve->query($myq);
+                    SQLerrorCatch($mysqliReserve, $result);
+                    $row = $result->fetch_assoc();
+                }
+                else{
+                    $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$deputyID[$i];
+                    $result = $mysqli->query($myq);
+                    SQLerrorCatch($mysqli, $result);
+                    $row = $result->fetch_assoc();
+                }  
+                if($i==0)
+                    $phone = $row['CELLPH'];
+                echo 'Deputy: <input type="hidden" name="deputyID'.$deputyCount.'" value="'.$deputyID[$i].'" />';
+                if($isReserve[$i]==1)
+                    echo '<input type="hidden" name="isReserve'.$deputyCount.'" value="true" />';
+                echo $row['LNAME'] . ', ' . $row['FNAME'];
+                echo ';  Radio Call #: <input type="hidden" name="radioCallNum'.$deputyCount.'" value="'.$row['RADIO'].'" />'.$row['RADIO'];
+                echo '<br/>';
+                if(isset($_POST['exchangeItemBtn'])){
+                    checkInRadioLog($config, $radioLogID, $noLog=true);
+                    $noteq = "UPDATE WTS_RADIOLOG SET EXCHANGEID = '".$deputyID."' WHERE REFNUM='".$radioLogID."';";
+                    $noteResult = $mysqli->query($noteq);
+                    SQLerrorCatch($mysqli, $noteResult);
+                    
+                    $tempReserve = isset($_POST['isReserve'.$i]) ? '1' : '0';
+                    $insertLogID = checkOutItem($config, $deputyID[$i], $row['RADIO'], $radioID, "POD", $tempReserve, "0", $noLog=true);
+                
+                    addLog($config, 'Exchanged Log Ref#'.$radioLogID.' with Ref#'.$insertLogID);
+                }
+                $deputyCount++;
+            }
+        }//End for loop of previously added deputies
+    }//End check for multiple deputies
+
+    //Get added Deputy
+    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
+    $foundUserFNAME = '';
+    $foundUserLNAME = '';
+    $foundUserName = '';
+    $foundUserID = '' ;
+    if($totalRows > 0) {         
+        //get post info providied from search results
+        for($i=0;$i<=$totalRows;$i++){
+            if(isset($_POST['foundUser'.$i])) {
+                $foundUserFNAME = $_POST['foundUserFNAME'.$i];
+                $foundUserLNAME = $_POST['foundUserLNAME'.$i];
+                $foundUserName = $_POST['foundUserName'.$i];
+                $foundUserID = $_POST['foundUserID'.$i];
+
+                if(isset($_POST['isReserve'.$i]))
+                        $foundUserIsReserve = true;
+                else
+                    $foundUserIsReserve = false;
+                break;
+            }//end if
+        }//end for
+    }
+    //Defaut First User - Default keep disabled for this type of exchange
+//    if(empty($foundUserID) && $num_deputies == 0){
+//        //security check for central control computer
+//        if($_SERVER['REMOTE_ADDR'] != nslookup('mcjcbcast.sheriff.mahoning.local')){
+//            //Default first deputy to logged in user on first load
+//            $foundUserID = $_SESSION['userIDnum'];
+//            $foundUserIsReserve = false;
+//        }
+//    }
+    
+    //Start to display information
+    if(!empty($foundUserID)){
+        if($foundUserIsReserve){
+            $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM RESERVE WHERE IDNUM='.$foundUserID;
+            $result = $mysqliReserve->query($myq);
+            SQLerrorCatch($mysqliReserve, $result);
+        }
+        else{
+            $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$foundUserID;
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+        }
+
+        $row = $result->fetch_assoc();
+
+        if($deputyCount==0)
+            $phone = $row['CELLPH'];
+        echo 'Deputy: <input type="hidden" name="deputyID'.$deputyCount.'" value="'.$foundUserID.'" />';
+        if($foundUserIsReserve)
+            echo '<input type="hidden" name="isReserve'.$deputyCount.'" value="true" />';
+        echo $row['LNAME'] . ', ' . $row['FNAME'];
+        echo ';  Radio Call#: <input type="hidden" name="radioCallNum'.$deputyCount.'" value="'.$row['RADIO'].'" />'.$row['RADIO'];
+        echo '<br/>';
+        $deputyCount++;
+    }
+    if($deputyCount < 1){
+        echo 'Add Deputy: ';
+        displayUserLookup($config);
+    }
+    echo '<input type="hidden" name="num_deputies" value="'.$deputyCount.'" />';
+    if(isset($_POST['exchangeItemBtn'])){
+        echo '<input type="submit" name="goBtn" value="Back to Logs" />';
+    }
+    else{
+        echo '<br/>
+            <input type="submit" name="exchangeItemBtn" value="Exchange Equipment" />
+            <input type="submit" name="goBtn" value="Cancel" />';
+    }
+}
 ?>
