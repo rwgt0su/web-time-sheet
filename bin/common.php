@@ -307,8 +307,10 @@ function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowToSortNe
         $echo .= '</table></div>
             <script type="text/javascript">
                 var '.$tableID.'=new table.sorter("'.$tableID.'");
-                '.$tableID.'.init("'.$tableID.'",'.$rowToSort.');
-            </script>';
+                '.$tableID.'.init("'.$tableID.'",'.$rowToSort.');';
+        if(!empty($rowToSortNext))
+            $echo .= $tableID.'.work('.$rowToSortNext.');';
+        $echo .= '</script>';
         echo $echo;
 }
 ?>
