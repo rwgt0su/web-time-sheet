@@ -313,4 +313,8 @@ function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowToSortNe
         $echo .= '</script>';
         echo $echo;
 }
+function nslookup ($hostname) {
+    
+ return gethostbyname($hostname);
+}
 ?>
