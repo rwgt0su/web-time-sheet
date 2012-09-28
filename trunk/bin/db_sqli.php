@@ -221,7 +221,7 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
 
 //try/catch providing db errors in a pop-up window
 //returns true if an error is caught, false if not
-function SQLerrorCatch($mysqli, $result) {
+function SQLerrorCatch($mysqli, $result, $myq='') {
     try {
             if (!$result) 
             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
@@ -233,6 +233,7 @@ function SQLerrorCatch($mysqli, $result) {
             foreach($dbgTrace as $dbgIndex => $dbgInfo) {
                 $dbgMsg .= '<tr width=300><td>'.$dbgInfo['file'].' (line '.$dbgInfo['line'].') -> '.$dbgInfo['function'].'</td></tr>';
             }
+            $dbgMsg .= '<tr><td>Querey Used:</td></tr><tr><td>'.$myq.'</td></tr>';
             $dbgMsg .= "<tr><td> </td></tr><tr><th>Debug backtrace end</th></tr></table>";
             popUpMessage($dbgMsg.'<br/><br/> '.$message, "Error Message");
             return true;

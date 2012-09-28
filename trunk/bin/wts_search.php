@@ -256,6 +256,7 @@ function displayUserLookup($config) {
         }
         else if ($formName == 'radioLog') {
             $radioLogID = isset($_POST['radioLogID']) ? $_POST['radioLogID'] :'' ;
+            $exchangeLogID = isset($_POST['exchangeLogID']) ? $_POST['exchangeLogID'] : false;
             $radioID = isset($_POST['radioID']) ? $_POST['radioID'] : '';
             $radioCallNum = isset($_POST['radioCallNum']) ? $_POST['radioCallNum'] : '';
             $checkOutType = isset($_POST['checkOutType']) ? $_POST['checkOutType'] : '';
@@ -278,6 +279,7 @@ function displayUserLookup($config) {
             }
             
             echo '<input type="hidden" name="gpID" value="'.$gpID.'" />';
+            echo '<input type="hidden" name="exchangeLogID" value="'.$exchangeLogID.'" />';
             echo '<input type="hidden" name="radioLogID" value="'.$radioLogID.'" />';
             echo '<input type="hidden" name="radioID" value="'.$radioID.'" />';
             echo '<input type="hidden" name="radioCallNum" value="'.$radioCallNum.'" />';
