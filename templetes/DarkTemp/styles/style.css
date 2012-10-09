@@ -245,8 +245,24 @@ a {
             display: block;
             clear: both;
         }
-        
-        
+            .content_highlight .post li {
+                background: url(../images/recent_posts_bg.png) repeat;
+                padding: 5px 0 0 30px;
+                margin: 0 0 1px 0;
+                height: 25px;
+                font-size: 105%;
+                list-style: none;
+            }
+            
+                .content_highlight .post li:hover {
+                    #background: #000;
+                    padding-left: 35px;
+                }
+
+                .content_highlight .post li a {
+                    #text-decoration: none;
+                    #display: block;
+                }
         
         .content_highlight .post table {
             border: 2px solid #cccccc;
