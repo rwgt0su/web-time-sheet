@@ -572,9 +572,11 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 }
                 $theTable[$x][$y] = $row['AUDIT_IN_ID']; $y++;
                 if($row['isCheckedOut'] == 1){
-                    if($config->adminLvl >=50){
-                        $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" /><br/>
-                            <input type="submit" name="exchangeBtn'.$x.'" value="Exchange" />'; $y++;
+                    if($config->adminLvl >=25){
+                        $theTable[$x][$y] ='';
+                        if($config->adminLvl>=50)
+                            $theTable[$x][$y] ='<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" /><br/>';
+                        $theTable[$x][$y] .= '<input type="submit" name="exchangeBtn'.$x.'" value="Exchange" />'; $y++;
                     }
                     else{
                         $theTable[$x][$y] = "Checked Out"; $y++;
