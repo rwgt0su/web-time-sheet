@@ -69,6 +69,8 @@ require_once 'bin/time_request_functions.php';
     require_once 'bin/Modules/Logs/wts_sec_log.php';
     //Radio Checkout Logs
     require_once 'bin/Modules/Logs/wts_radio_log.php';
+    //Key Checkout Logs
+    require_once 'bin/Modules/Logs/wts_key_log.php';
 
 //reserve employee management
 require_once 'bin/wts_reserves.php';
