@@ -281,7 +281,7 @@ function showTimeSelector($inputName, $input1, $input2, $required=true){
         }
         echo '</select>';
 }
-function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowToSortNext = ''){
+function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowsToSortNext = array()){
     
     //two dim array is $table.  Place any html code within any cell
     //do not pass this with a form
@@ -310,8 +310,12 @@ function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowToSortNe
             <script type="text/javascript">
                 var '.$tableID.'=new table.sorter("'.$tableID.'");
                 '.$tableID.'.init("'.$tableID.'",'.$rowToSort.');';
-        if(!empty($rowToSortNext))
-            $echo .= $tableID.'.work('.$rowToSortNext.');';
+        $count = count($rowsToSortNext);
+        if($count > 0){
+            for ($i = 0; $i < $count; $i++) {
+                $echo .= $tableID.'.work('.$rowsToSortNext[$i].');';
+            }
+        }
         $echo .= '</script>';
         echo $echo;
 }

@@ -156,7 +156,8 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
                 value="Lookup Employee" onClick="this.form.action=' . "'?userLookup=true'" . ';this.form.submit()" >
                 Lookup Employee</button></div><br/>';
             echo '<br/> Radio Number: ';
-            selectRadioInventory($config, "radioID", $row['RADIOID']);
+            //selectRadioInventory($config, "radioID", $row['RADIOID']);
+            selectKeyInventory($config, "keyID", $row['RADIOID']);
             echo '<br/><br/>';
             if($row['TYPE'] == "LOANER")
                 echo '<input type="radio" name="checkOutType" value="LOANER" CHECKED>LOANER</input>';
@@ -330,7 +331,18 @@ function selectKeyInventory($config, $inputName, $selectedValue=false, $onChange
         echo '<select name="'.$inputName.'" onchange="this.form.submit()">';
     else
         echo '<select name="'.$inputName.'" >';
-    echo '<option value=""></option>';
+    if($selectedValue){
+        $myq = "SELECT SERIAL_NUM, DESCR, PRIORITY_TYPE
+            FROM WTS_INVENTORY
+            WHERE IDNUM='".$selectedValue."';";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $row = $result->fetch_assoc();
+        $itemDesc = ' ('.$row['DESCR'].')';
+        echo '<option value="'.$selectedValue.'" SELECTED>'.$row['SERIAL_NUM'].$itemDesc.'</option>';
+    }
+    else
+        echo '<option value=""></option>';
     
     $myq = "SELECT I.IDNUM, I.SERIAL_NUM, I.DESCR, I.PRIORITY_TYPE 
             FROM WTS_INVENTORY I
