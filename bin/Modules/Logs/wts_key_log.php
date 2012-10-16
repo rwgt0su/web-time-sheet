@@ -336,7 +336,7 @@ function selectKeyInventory($config, $inputName, $selectedValue=false, $onChange
             FROM WTS_INVENTORY I
             WHERE IS_ACTIVE = 1
             AND IS_DEPRECIATED = 0
-            AND NOT (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND KEY_RING_ID = I.IDNUM) > 0
+            AND NOT (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) > 0
             AND TYPE = (SELECT IDNUM FROM WTS_INV_TYPE WHERE DESCR = 'Key');";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
