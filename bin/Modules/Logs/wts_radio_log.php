@@ -37,6 +37,7 @@ function displayRadioLog($config, $isApprovePage = false){
             $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
             $radioLogID = isset($_POST['backToApprove']) ? false : $radioLogID ;
             $exchangeLogID = isset($_POST['exchangeLogID']) ? $_POST['exchangeLogID'] : false;
+            $itemLogType = '';
             
             $counter = 0;
 
@@ -96,6 +97,7 @@ function displayRadioLog($config, $isApprovePage = false){
                 for($i=1;$i<=$finalRows;$i++){
                     if(isset($_POST['radioLogEditBtn'.$i])){
                         $radioLogID = $_POST['radioLogID'.$i];
+                        $itemLogType = $_POST['itemLogType'.$i];
                         $foundEditBtn = true;
                     }
                     if(isset($_POST['logoutRadioLog'.$i]) || isset($_POST['logoutRadioLogAll']) || isset($_POST['checkInRadio'.$i])){
@@ -167,7 +169,10 @@ function displayRadioLog($config, $isApprovePage = false){
                     }
                 }
                 if($foundEditBtn){
-                    showRadioLogDetails($config, $radioLogID, true, $isApprovePage); 
+                    if($itemLogType == "RADIO")
+                        showRadioLogDetails($config, $radioLogID, true, $isApprovePage);
+                    if($itemLogType == "KEY")
+                        showKeyLogDetails ($config, $radioLogID, true, $isApprovePage);
                 }
                 else if(!$addBtn && !$showAll && !$showNormal && !$changeDateBtn && !$isApprovePage && $totalRows < 0){
                     echo 'Error getting Reference Number!<br />';
@@ -486,7 +491,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                         }
                     }
                     $y = 1;
-                    $theTable[$x][$y] = $row['itemType']; $y++;
+                    $theTable[$x][$y] = $row['itemType'].'<input type="hidden" name="itemLogType'.$counter.'" value="'.$row['itemType'].'" />'; $y++;
                     $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                     $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                     $theTable[$x][$y] = $row['RADIO_CALLNUM']; $y++;
@@ -531,7 +536,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $theTable[$x][$y] = 'Ref# '.$row['REFNUM'].'
                     <input type="hidden" name="radioLogID'.$counter.'" value="'.$row['REFNUM'].'" />'; $y++; 
                 }
-                $theTable[$x][$y] = $row['itemType']; $y++;
+                $theTable[$x][$y] = $row['itemType'].'<input type="hidden" name="itemLogType'.$counter.'" value="'.$row['itemType'].'" />'; $y++;
                 $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                 $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                 $theTable[$x][$y] = $row['RADIO_CALLNUM']; $y++;
@@ -580,7 +585,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $theTable[$x][$y] = 'Ref# '.$row['REFNUM'].'
                     <input type="hidden" name="radioLogID'.$counter.'" value="'.$row['REFNUM'].'" />'; $y++; 
                 }
-                $theTable[$x][$y] = $row['itemType']; $y++;
+                $theTable[$x][$y] = $row['itemType'].'<input type="hidden" name="itemLogType'.$counter.'" value="'.$row['itemType'].'" />'; $y++;
                 $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                 $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                 $theTable[$x][$y] = $row['checkOutType']; $y++;
@@ -621,7 +626,8 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
         }//end while loop
     }
 
-    showSortableTable($theTable, 1, $logType);
+    $sortOrder = array(2, 1, 1);
+    showSortableTable($theTable, 2, $logType, $sortOrder);
     $echo .= '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
     
     echo $echo;
@@ -988,7 +994,20 @@ function selectRadioInventory($config, $inputName, $selectedValue=false, $onChan
         echo '<select name="'.$inputName.'" onchange="this.form.submit()">';
     else
         echo '<select name="'.$inputName.'" >';
-    
+    if($selectedValue){
+        $myq = "SELECT OTHER_SN, DESCR 
+                FROM WTS_INVENTORY INV
+                WHERE IDNUM='".$selectedValue."';";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $row = $result->fetch_assoc();
+        if(!empty($row['DESCR']))
+            $itemDesc = ' ('.$row['DESCR'].')';
+        echo '<option value="'.$selectedValue.'" SELECTED>'.$row['OTHER_SN'].$itemDesc.'</option>';
+    }
+    else
+        echo '<option value=""></option>';
+            
     $myq = "SELECT IDNUM, OTHER_SN, DESCR 
             FROM WTS_INVENTORY INV
             WHERE IS_ACTIVE = 1
@@ -998,7 +1017,6 @@ function selectRadioInventory($config, $inputName, $selectedValue=false, $onChan
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     
-    echo '<option value=""></option>';
     while($row = $result->fetch_assoc()){
         $itemDesc = '';
         if(!empty($row['DESCR']))
