@@ -9,9 +9,9 @@ function displayRadioLog($config, $isApprovePage = false){
     if($config->adminLvl >= 25){
         $mysqli = $config->mysqli;
         if($isApprovePage)
-            echo '<h2>Daily Radio Checkout Log Approval</h2>';
+            echo '<h2>Daily Inventory Checkout Log Approval</h2>';
         else
-            echo '<h2>Daily Radio Checkout Log</h2>';
+            echo '<h2>Daily Inventory Checkout Log</h2>';
 
         echo '<form name="radioLog" method="POST">
             <input type="hidden" name="formName" value="radioLog" />'; 
@@ -21,8 +21,12 @@ function displayRadioLog($config, $isApprovePage = false){
             $changeDateBtn = isset($_POST['changeDate']) ? True : false;
             $editSelect = isset($_POST['editRows']) ? $_POST['editRows'] : false;
             $addBtn = isset($_POST['addBtn']) ? True : false;
+            $checkoutKeyBtn = isset($_POST['checkoutKeyBtn']) ? True : false;
+            if($checkoutKeyBtn)
+                $addBtn = false;
             $editBtn = isset($_POST['editBtn']) ? True : false;
             $radioLogID = isset($_POST['radioLogID']) ? $_POST['radioLogID'] : false;
+            $keyLogID = isset($_POST['keyLogID']) ? $_POST['keyLogID'] : false;
             $finalRows = isset($_POST['finalRows']) ? $_POST['finalRows'] : false;
             $checkInRadio = isset($_POST['checkInRadio']) ? true : false;
             $updateRadioLog = isset($_POST['updateRadioLog']) ? true : false;
@@ -55,7 +59,8 @@ function displayRadioLog($config, $isApprovePage = false){
                     echo '<h3>Date: '.$dateSelect.'';
                     echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />
                         <input type="submit" name="changeDate" value="Change Date" /> 
-                        <input type="submit" name="addBtn" value="Checkout Radio" /></h3>';
+                        <input type="submit" name="addBtn" value="Checkout Radio" />
+                        <input type="submit" name="checkoutKeyBtn" value="Checkout Keys" /></h3>';
                 }
             }
             else
@@ -76,6 +81,9 @@ function displayRadioLog($config, $isApprovePage = false){
                 $addBtn = false;
             if($addBtn){
                 showRadioLogDetails($config, $radioLogID);
+            }
+            if($checkoutKeyBtn){
+                showKeyLogDetails($config, $keyLogID);
             }
             if($exchangeLogID){
                 showItemExchange($config, $exchangeLogID);
@@ -204,7 +212,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
         if($logType == "PERM"){
             echo '<div class="divider"></div><br/><h3>Permanent Equipment Checked Out Log</h3>';
             
-            $myq =  "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+            $myq =  "SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -217,13 +225,14 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE R.CHECKEDOUT=1
                 AND R.TYPE='PERM'
                 AND R.IS_RESERVE=0
 
                 UNION
 
-                SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+                SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -236,6 +245,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE R.CHECKEDOUT=1
                 AND R.TYPE='PERM'
                 AND R.IS_RESERVE=1
@@ -248,7 +258,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
             else
                 $showAllQ = "R.CHECKEDOUT=1";
-            $myq =  "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+            $myq =  "SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -261,13 +271,14 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE ".$showAllQ."
                 AND R.TYPE='POD'
                 AND R.IS_RESERVE=0
 
                 UNION
 
-                SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+                SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -280,6 +291,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE ".$showAllQ."
                 AND R.TYPE='POD'
                 AND R.IS_RESERVE=1
@@ -287,7 +299,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
         }
         else if($logType == "LOANER"){
             echo '<br/><br/><div class="divider"></div><h3>Loaner Equipment Log</h3>';
-            $myq =  "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+            $myq =  "SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -300,13 +312,14 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'
                 AND R.TYPE = 'LOANER'
                 AND R.IS_RESERVE=0
 
                 UNION
 
-                SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+                SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -319,6 +332,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'
                 AND R.TYPE = 'LOANER'
                 AND R.IS_RESERVE=1
@@ -328,7 +342,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
     else{
         echo '<br/><br/><div class="divider"></div><h3>Approve Equipment Log</h3>';
         //Querey used for approvals.  
-        $myq =  "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+        $myq =  "SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -341,12 +355,13 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE AUDIT_IN_ID != ''
                 AND R.IS_RESERVE=0
 
                 UNION
 
-                SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
+                SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut',
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
@@ -359,6 +374,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS LOGIN ON R.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
+                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE AUDIT_IN_ID != ''
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
@@ -387,7 +403,8 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             else{
                 $theTable[$x][$y] = "Approve"; $y++;
             }
-            $theTable[$x][$y] = "Radio#"; $y++;
+            $theTable[$x][$y] = "Type"; $y++;
+            $theTable[$x][$y] = "Serial Number"; $y++;
             $theTable[$x][$y] = "Deputy"; $y++;
             $theTable[$x][$y] = "Radio Call#"; $y++;
             $theTable[$x][$y] = "Type"; $y++;
@@ -407,7 +424,8 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $x=0;
             $y=0;
             $theTable[$x][$y] = "Edit"; $y++;
-            $theTable[$x][$y] = "Radio#"; $y++;
+            $theTable[$x][$y] = "Type"; $y++;
+            $theTable[$x][$y] = "Serial Number"; $y++;
             $theTable[$x][$y] = "Deputy"; $y++;
             $theTable[$x][$y] = "Radio Call#"; $y++;
             $theTable[$x][$y] = "Type"; $y++;
@@ -433,7 +451,8 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $x=0;
             $y=0;
             $theTable[$x][$y] = "Edit"; $y++;
-            $theTable[$x][$y] = "Radio#"; $y++;
+            $theTable[$x][$y] = "Type"; $y++;
+            $theTable[$x][$y] = "Serial Number"; $y++;
             $theTable[$x][$y] = "Deputy "; $y++;
             $theTable[$x][$y] = "Type"; $y++;
             $theTable[$x][$y] = "OUT_Time"; $y++;
@@ -467,6 +486,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                         }
                     }
                     $y = 1;
+                    $theTable[$x][$y] = $row['itemType']; $y++;
                     $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                     $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                     $theTable[$x][$y] = $row['RADIO_CALLNUM']; $y++;
@@ -511,6 +531,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $theTable[$x][$y] = 'Ref# '.$row['REFNUM'].'
                     <input type="hidden" name="radioLogID'.$counter.'" value="'.$row['REFNUM'].'" />'; $y++; 
                 }
+                $theTable[$x][$y] = $row['itemType']; $y++;
                 $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                 $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                 $theTable[$x][$y] = $row['RADIO_CALLNUM']; $y++;
@@ -559,6 +580,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $theTable[$x][$y] = 'Ref# '.$row['REFNUM'].'
                     <input type="hidden" name="radioLogID'.$counter.'" value="'.$row['REFNUM'].'" />'; $y++; 
                 }
+                $theTable[$x][$y] = $row['itemType']; $y++;
                 $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                 $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                 $theTable[$x][$y] = $row['checkOutType']; $y++;
@@ -976,6 +998,7 @@ function selectRadioInventory($config, $inputName, $selectedValue=false, $onChan
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
     
+    echo '<option value=""></option>';
     while($row = $result->fetch_assoc()){
         $itemDesc = '';
         if(!empty($row['DESCR']))
@@ -1016,19 +1039,20 @@ function checkOutItem($config, $deputyID, $radioCallNum, $itemID, $checkOutType,
     $mysqli = $config->mysqli;
     
     //get supplied item's type
-    $itemq = "SELECT DESCR FROM WTS_INV_TYPE WHERE IDNUM=(SELECT TYPE FROM WTS_INVENTORY WHERE IDNUM='".$itemID."') LIMIT 1;";
+    $itemq = "SELECT IDNUM, DESCR FROM WTS_INV_TYPE WHERE IDNUM=(SELECT TYPE FROM WTS_INVENTORY WHERE IDNUM='".$itemID."') LIMIT 1;";
     $itemResult = $mysqli->query($itemq);
     SQLerrorCatch($mysqli, $itemResult);
     $itemName = $itemResult->fetch_assoc();
     $itemType = $itemName['DESCR'];
+    $itemTypeID = $itemName['IDNUM'];
     $inventoryLogID = '';
     
-    if($itemType == "RADIO"){
+    if($itemType == "RADIO" || $itemType == "KEY"){
             $myq = "INSERT INTO WTS_RADIOLOG ( REFNUM ,`DEPUTYID`,`RADIO_CALLNUM` , CHECKEDOUT, RADIOID, TYPE,
-                    `AUDIT_OUT_ID` ,`AUDIT_OUT_TS` ,`AUDIT_OUT_IP`, IS_RESERVE, GPNUM) 
+                    `AUDIT_OUT_ID` ,`AUDIT_OUT_TS` ,`AUDIT_OUT_IP`, IS_RESERVE, GPNUM, ITEM_TYPE_ID) 
                 VALUES ( NULL , '".$deputyID."', '".$radioCallNum."', '1', '".$itemID."',
                     '".$checkOutType."', '".$_SESSION['userIDnum']."', NOW(), 
-                    INET_ATON('".$_SERVER['REMOTE_ADDR']."'), ".$isReserve.", '".$groupID."');";
+                    INET_ATON('".$_SERVER['REMOTE_ADDR']."'), ".$isReserve.", '".$groupID."', ".$itemTypeID." );";
     }
     $result = $mysqli->query($myq);
     if(!SQLerrorCatch($mysqli, $result, $myq)) {
@@ -1096,7 +1120,7 @@ function showItemExchange($config, $radioLogID){
                 echo '<br/>';
                 if(isset($_POST['exchangeItemBtn'])){
                     checkInRadioLog($config, $radioLogID, $noLog=true);
-                    $noteq = "UPDATE WTS_RADIOLOG SET EXCHANGEID = '".$deputyID."' WHERE REFNUM='".$radioLogID."';";
+                    $noteq = "UPDATE WTS_RADIOLOG SET EXCHANGEID = '".$deputyID[$i]."' WHERE REFNUM='".$radioLogID."';";
                     $noteResult = $mysqli->query($noteq);
                     SQLerrorCatch($mysqli, $noteResult);
                     
