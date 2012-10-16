@@ -302,7 +302,7 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
         echo '<input type="hidden" name="num_deputies" value="'.$deputyCount.'" />';
         
         $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
-        echo '<br/><br/><input type="hidden" name="gpID" value="'.$gpID.'" /> Key Number: ';
+        echo '<br/><br/><input type="hidden" name="gpID" value="'.$gpID.'" /> Key Ring Number: ';
         selectKeyInventory($config, "keyID", $keyID);
         echo '<br/><br/>';
         if($checkOutType == "LOANER")
