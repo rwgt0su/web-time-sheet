@@ -323,4 +323,180 @@ function nslookup ($hostname) {
     
  return gethostbyname($hostname);
 }
+function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToSort = 1){
+    ?>
+    <link rel="stylesheet" type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.4.custom.css" id="link"/>
+    <link rel="stylesheet" type="text/css" href="bin/jQuery/css/base.css" />			
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="bin/jQuery/js/highlighter/codehighlighter.js"></script>	
+    <script type="text/javascript" src="bin/jQuery/js/highlighter/javascript.js"></script>			
+    <script type="text/javascript" src="bin/jQuery/js/jquery.fixheadertable.min.js"></script>		
+
+    <script type="text/javascript">  
+        $(document).ready(function(){
+	// Write on keyup event of keyword input element
+	$("#kwd_search").keyup(function(){
+		// When value of the input is not blank
+		if( $(this).val() != "")
+		{
+			// Show only matching TR, hide rest of them
+			$("#floatingTH tbody>tr").hide();
+			$("#floatingTH td:contains-ci('" + $(this).val() + "')").parent("tr").show();
+		}
+		else
+		{
+			// When there is no input or clean again, show everything back
+			$("#floatingTH tbody>tr").show();
+		}
+            });
+        });
+        // jQuery expression for case-insensitive filter
+        $.extend($.expr[":"], 
+        {
+            "contains-ci": function(elem, i, match, array) 
+                {
+                        return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+                }
+        });
+        $(document).ready(function() {  	
+            $('#selectTable').fixheadertable({ 
+                    caption : 'Selected Values', 
+                    showhide : false,
+                    startHide : false,
+                    colratio : [50,100,100,250,200], 
+                    height : 200, 
+                    width : 700,
+                    minWidthAuto   : true,
+                    whiteSpace : 'normal',
+                    zebra : true, 
+                    sortable : true,
+                    //sortedColId : 1, 
+                    resizeCol : true,
+                    pager : false,
+                    rowsPerPage	 : 10, //default
+                    //sortType : ['integer', 'string', 'string', 'string', 'string', 'date'],
+                    sortedColId    : <?php echo $rowToSort; ?>,
+                    dateFormat : 'm/d/Y'
+            });
+            $('#floatingTH').fixheadertable({ 
+                    caption : 'Choose From', 
+                    showhide : true,
+                    <?php if(!empty($selectedValues)) echo 'startHide : true,'; ?>
+                    colratio : [50,100,100,250,200], 
+                    height : 200, 
+                    width : 700,
+                    minWidthAuto   : true,
+                    whiteSpace : 'normal',
+                    zebra : true, 
+                    sortable : true,
+                    //sortedColId : 1, 
+                    resizeCol : true,
+                    pager : false,
+                    rowsPerPage	 : 10, //default
+                    //sortType : ['integer', 'string', 'string', 'string', 'string', 'date'],
+                    sortedColId    : <?php echo $rowToSort; ?>,
+                    dateFormat : 'm/d/Y'
+            });
+
+        });
+    </script>		
+    <script type="text/javascript">
+        function Move(tr,cell)
+        {
+            while (tr.parentNode&&tr.nodeName.toUpperCase()!='TR')
+            {
+                tr=tr.parentNode;
+            }
+            var table1=document.getElementById('tst1');
+            if (!this.rows)
+            {
+                var rows=table1.getElementsByTagName('TR');
+                this.rows=[];
+                for (var z0=0;z0<rows.length;z0++)
+                {
+                    this.rows[z0]=rows[z0];
+                }
+            }
+            var table2=document.getElementById('tst2');
+            if (tr.parentNode!=table2)
+            {
+                table2.appendChild(tr);
+            }
+            else 
+            {       
+                table1.appendChild(tr);
+
+                for (var z0=0;z0<this.rows.length;z0++)
+                {
+                    if (this.rows[z0].parentNode==table1)
+                    {
+                        table1.appendChild(this.rows[z0]);
+                    }
+                }
+            }
+        }
+
+    </script>
+    <?php
+    $debug = '';
+    $echo = '<div align="center">Quick Search: <input type="text" id="kwd_search" value=""/>
+        </div><br/>
+        <table id="floatingTH" border="1" style="width:100%;">
+                <thead>
+                <tr>';
+    for($y=0;$y<sizeof($theTable[0]);$y++){
+        $echo .= '<th style="background-color:black;">'.$theTable[0][$y].'</th>';
+    }
+    $echo .= '</tr>
+        <tbody id="tst1">
+        ';
+    $x=1;
+    for($x;$x<sizeof($theTable);$x++){
+        $echo .= '<tr>';
+        for($y=0;$y<sizeof($theTable[$x]);$y++){
+            if($theTable[$x][$y] == "EMERGENCY")
+                $echo .= '<td id="red">';
+            else
+            $echo .= '<td>';
+            $echo .= $theTable[$x][$y].'</td>';
+        }
+        $echo .= '</tr>
+            ';
+    }
+    $echo .= '</tbody></table><br/>';
+   
+    $echo .= '<table id="selectTable">
+                    <thead><tr>
+             ';
+    for($y=0;$y<sizeof($theTable[0]);$y++){
+        $echo .= '<th>'.$theTable[0][$y].'</th>';
+    }
+    $echo .= '</tr>
+        <tbody id="tst2" >
+        ';
+   $debug .= 'selected values: '.sizeof($selectedValues);
+   if(!empty($selectedValues)){
+        for($z=0;$z<sizeof($selectedValues);$z++){
+            $echo .= '<tr>';
+            for($y=0;$y<sizeof($selectedValues[$z]);$y++){
+                if($selectedValues[$z][$y] == "EMERGENCY")
+                    $echo .= '<td>';
+                else
+                $echo .= '<td>';
+                $echo .= $selectedValues[$z][$y].'</td>';
+                $x++; //Total Rows Counter
+            }
+            $echo .= '</tr>
+                ';
+        }
+   }
+    $echo .= '
+        </tbody>
+        </table><br/>';    
+    $echo = '<input type="hidden" name="totalRows" value="'.$x.'" />'.$echo;
+    echo $echo;
+    //popUpMessage($debug);
+
+}
 ?>
