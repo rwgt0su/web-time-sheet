@@ -461,6 +461,8 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
             for($y=0;$y<sizeof($theTable[$x]);$y++){
                 if($theTable[$x][$y] == "EMERGENCY")
                     $echo .= '<td id="red">';
+                else if($theTable[$x][$y] == "CONTROLED KEY")
+                    $echo .= '<td id="yellow">';
                 else
                     $echo .= '<td>';
                 $echo .= $theTable[$x][$y].'</td>';
@@ -487,6 +489,8 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
             for($y=0;$y<sizeof($selectedValues[$z]);$y++){
                 if($selectedValues[$z][$y] == "EMERGENCY")
                     $echo .= '<td id="red">';
+                else if($theTable[$x][$y] == "CONTROLED KEY")
+                    $echo .= '<td id="yellow">';
                 else
                     $echo .= '<td id="blue">';
                 $echo .= $selectedValues[$z][$y].'</td>';
