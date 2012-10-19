@@ -607,32 +607,57 @@ function showMyInventory($config){
         selectInventory($config, $selectedRows, true, $invView=true, $height=400);
 }
 function showQuickSearch(){
-    echo '<br/><div align="center">Quick Search: <input type="text" id="kwd_search" value=""/></div>';
-    echo '    <script type="text/javascript">  
-        $(document).ready(function(){
-	// Write on keyup event of keyword input element
-	$("#kwd_search").keyup(function(){
-		// When value of the input is not blank
-		if( $(this).val() != "")
-		{
-			// Show only matching TR, hide rest of them
-                        $("#PERM table>tr").hide();
-			$("#PERM td:contains-ci(\'" + $(this).val() + "\')").parent("tr").show();
-		}
-		else
-		{
-			// When there is no input or clean again, show everything back
-                        $("#PERM tbody>tr").show();
-		}
+    echo '<br/><div align="center">Quick Search: <input type="text" id="kwd_search" value=""/></div>
+        <table id="quickSearch" class="sortable"></table>';
+    echo '    
+        <link rel="stylesheet" type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.4.custom.css" id="link"/>
+        <link rel="stylesheet" type="text/css" href="bin/jQuery/css/base.css" />			
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="bin/jQuery/js/highlighter/codehighlighter.js"></script>	
+        <script type="text/javascript" src="bin/jQuery/js/highlighter/javascript.js"></script>			
+        <script type="text/javascript" src="bin/jQuery/js/jquery.fixheadertable.min.js"></script>
+        
+<script type="text/javascript"> 
+       $(document).ready(function(){
+            // Write on keyup event of keyword input element
+            //copy all tables to quickSearch table Cache
+            var cloneTable = $("#LOANER").html();
+            $("#quickSearch").append(cloneTable);
+            var cloneTable = $("#SHIFT").html();
+            $("#quickSearch").append(cloneTable);
+            var cloneTable = $("#PERM").html();
+            $("#quickSearch").append(cloneTable);
+            $("#quickSearch tbody>tr").hide();
+
+            $("#kwd_search").keyup(function(){
+                // When value of the input is not blank
+                if( $(this).val() != "")
+                {
+                    // Show only matching TR, hide rest of them
+                    //$("#LOANER tbody>tr").hide();
+                    $("#quickSearch tbody>tr").hide();
+                    $("#quickSearch td:contains-ci(\'" + $(this).val() + "\')").parent("tr").show();
+                    //var foundRow = $("#LOANER td:contains-ci(\'" + $(this).val() + "\')").parent("tr").html();
+                    //$("#quickSearch").append(foundRow);
+                    //$("#quickSearch tr").append();
+                    //$("#LOANER td:contains-ci(\'" + $(this).val() + "\')").parent("tr").show();
+                }
+                else
+                {
+                    // When there is no input or clean again, show everything back
+                    //$("#LOANERtbody>tr").show();
+                    $("#quickSearch tbody>tr").hide();
+                }
             });
         });
         // jQuery expression for case-insensitive filter
         $.extend($.expr[":"], 
         {
             "contains-ci": function(elem, i, match, array) 
-                {
-                        return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
-                }
+            {
+                return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+            }
         });
         </script>';
 }
