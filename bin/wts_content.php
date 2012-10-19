@@ -146,6 +146,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displayRadioLog($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isMyInv){
+            ?>
+            <div class="post"><?php showMyInventory($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
         
         myAlerts($config, $wts_content); 
     }

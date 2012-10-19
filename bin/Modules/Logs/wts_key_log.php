@@ -404,7 +404,7 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
             <input type="submit" name="goBtn" value="Cancel" />';
     }
 }
-function selectInventory($config, $selectedValues=false, $selectOnly=false){
+function selectInventory($config, $selectedValues=false, $selectOnly=false, $myInvView=false, $tableHeight=200){
         //assumes to be part of a form
     //provides a drop down selection for time type.
     $mysqli = $config->mysqli;
@@ -418,33 +418,55 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false){
 //        echo '<select name="'.$inputName.'" onchange="this.form.submit()">';
 //    else
 //        echo '<select name="'.$inputName.'" >';
-    
+
     $theTable[$x][$y] = ""; $y++;
     $theTable[$x][$y] = "Type"; $y++;
     $theTable[$x][$y] = "Item ID"; $y++;
     $theTable[$x][$y] = "Description"; $y++;
     $theTable[$x][$y] = "Priority Type"; $y++;
+    if($myInvView){
+        $theTable[$x][$y] = "Check Out Type"; $y++;
+    }
     $x++;
     $y=0;
     
     if($selectedValues){
         for($z=0;$z<sizeof($selectedValues);$z++){
-            $myq = "SELECT I.IDNUM, OTHER_SN, T.DESCR 'itemType', I.DESCR 'itemDescr', PRIORITY_TYPE
+            if($myInvView){
+                $myq = "SELECT I.IDNUM, OTHER_SN, T.DESCR 'itemType', I.DESCR 'itemDescr', 
+                    PRIORITY_TYPE, RLOG.TYPE 'checkOutType'
                 FROM WTS_INVENTORY I
                 JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
+                RIGHT JOIN WTS_RADIOLOG AS RLOG ON RLOG.RADIOID=I.IDNUM
                 WHERE I.IDNUM=(SELECT R.RADIOID FROM WTS_RADIOLOG R WHERE REFNUM='".$selectedValues[$z]."')
                 AND I.TYPE=(SELECT RL.ITEM_TYPE_ID FROM WTS_RADIOLOG RL WHERE REFNUM='".$selectedValues[$z]."')
                     ;";
+            }
+            else{
+                $myq = "SELECT I.IDNUM, OTHER_SN, T.DESCR 'itemType', I.DESCR 'itemDescr', PRIORITY_TYPE
+                    FROM WTS_INVENTORY I
+                    JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
+                    WHERE I.IDNUM=(SELECT R.RADIOID FROM WTS_RADIOLOG R WHERE REFNUM='".$selectedValues[$z]."')
+                    AND I.TYPE=(SELECT RL.ITEM_TYPE_ID FROM WTS_RADIOLOG RL WHERE REFNUM='".$selectedValues[$z]."')
+                        ;";
+            }
             $result = $mysqli->query($myq);
             SQLerrorCatch($mysqli, $result, $myq);
             $row = $result->fetch_assoc();
             //echo '<option value="'.$selectedValue.'" SELECTED>'.$row['SERIAL_NUM'].$itemDesc.'</option>';
-            $selectedRow[$z][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
-                                      <input type="checkbox" CHECKED name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++;
+            if(!$myInvView)
+                $selectedRow[$z][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
+                                      <input type="checkbox" CHECKED name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; 
+            else
+                $selectedRow[$z][$y] = '';
+            $y++;
             $selectedRow[$z][$y] = '<input type="hidden" name="itemType'.$counter.'"  value="'.$row['itemType'].'" />'.$row['itemType']; $y++;
             $selectedRow[$z][$y] = $row['OTHER_SN']; $y++;
             $selectedRow[$z][$y] = $row['itemDescr']; $y++;
             $selectedRow[$z][$y] = $row['PRIORITY_TYPE']; $y++;
+            if($myInvView){
+                $selectedRow[$z][$y] = $row['checkOutType']; $y++;
+            }
             $y=0;
             $counter++;
         }
@@ -453,56 +475,77 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false){
         echo '<option value=""></option>';
         $selectedRow = '';
     }
-    
-    $myq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE 
-            FROM WTS_INVENTORY I
-            JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
-            WHERE IS_ACTIVE = 1
-            AND IS_DEPRECIATED = 0
-            AND NOT 
-                (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
-                > 
-                (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM);";
-    $result = $mysqli->query($myq);
-    SQLerrorCatch($mysqli, $result);
-    
-    while($row = $result->fetch_assoc()){
-        $itemDesc = '';
-        if(!empty($row['DESCR']))
-            $itemDesc = ' ('.$row['DESCR'].')';
-        $theTable[$x][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
-                                      <input type="checkbox" name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++; //
-        $theTable[$x][$y] = '<input type="hidden" name="itemType'.$counter.'"  value="'.$row['TYPE'].'" />'.$row['itemType']; $y++;
-        $theTable[$x][$y] = $row['OTHER_SN']; $y++;
-        $theTable[$x][$y] = $itemDesc; $y++;
-        $theTable[$x][$y] = $row['PRIORITY_TYPE']; $y++;
-        $x++;
-        $counter++;
-        $y=0;
-        
+    if(!$selectOnly){
+        $myq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE 
+                FROM WTS_INVENTORY I
+                JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
+                WHERE IS_ACTIVE = 1
+                AND IS_DEPRECIATED = 0
+                AND NOT 
+                    (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
+                    > 
+                    (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM);";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+
+        while($row = $result->fetch_assoc()){
+            $itemDesc = '';
+            if(!empty($row['DESCR']))
+                $itemDesc = ' ('.$row['DESCR'].')';
+            $theTable[$x][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
+                                        <input type="checkbox" name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++; //
+            $theTable[$x][$y] = '<input type="hidden" name="itemType'.$counter.'"  value="'.$row['TYPE'].'" />'.$row['itemType']; $y++;
+            $theTable[$x][$y] = $row['OTHER_SN']; $y++;
+            $theTable[$x][$y] = $itemDesc; $y++;
+            $theTable[$x][$y] = $row['PRIORITY_TYPE']; $y++;
+            $x++;
+            $counter++;
+            $y=0;
+
+        }
     }
     
-    moveTablesOnSelect($theTable, $selectedRow, $rowToSort = 2, $selectOnly);
+    moveTablesOnSelect($theTable, $selectedRow, $rowToSort = 2, $selectOnly, $tableHeight);
     //echo '</select>';
 }
-function showInventoryGroups($config, $keyLogID){
+function showInventoryGroups($config, $keyLogID, $deputyID=''){
     $mysqli = $config->mysqli;
-    $myq = "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
-                R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
-            FROM WTS_RADIOLOG R
-            JOIN EMPLOYEE AS SEC ON SEC.IDNUM=R.DEPUTYID
-            WHERE R.DEPUTYID = (SELECT RL.DEPUTYID FROM WTS_RADIOLOG RL WHERE RL.REFNUM='".$keyLogID."') 
-                AND CHECKEDOUT=1 
-                AND IS_RESERVE=0
-            UNION
-            SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
-                R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
-            FROM WTS_RADIOLOG R
-            JOIN RESERVE AS SEC ON SEC.IDNUM=R.DEPUTYID
-            WHERE R.DEPUTYID = (SELECT RL.DEPUTYID FROM WTS_RADIOLOG RL WHERE RL.REFNUM='".$keyLogID."') 
-                AND CHECKEDOUT=1 
-                AND IS_RESERVE=1
-            ";
+    if(!empty($deputyID)){
+        $myq = "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                    R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
+                FROM WTS_RADIOLOG R
+                JOIN EMPLOYEE AS SEC ON SEC.IDNUM=R.DEPUTYID
+                WHERE R.DEPUTYID = '".$deputyID."'
+                    AND CHECKEDOUT=1 
+                    AND IS_RESERVE=0
+                UNION
+                SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                    R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
+                FROM WTS_RADIOLOG R
+                JOIN RESERVE AS SEC ON SEC.IDNUM=R.DEPUTYID
+                WHERE R.DEPUTYID = '".$deputyID."'
+                    AND CHECKEDOUT=1 
+                    AND IS_RESERVE=1
+                ";
+    }
+    else{
+        $myq = "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                    R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
+                FROM WTS_RADIOLOG R
+                JOIN EMPLOYEE AS SEC ON SEC.IDNUM=R.DEPUTYID
+                WHERE R.DEPUTYID = (SELECT RL.DEPUTYID FROM WTS_RADIOLOG RL WHERE RL.REFNUM='".$keyLogID."') 
+                    AND CHECKEDOUT=1 
+                    AND IS_RESERVE=0
+                UNION
+                SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                    R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
+                FROM WTS_RADIOLOG R
+                JOIN RESERVE AS SEC ON SEC.IDNUM=R.DEPUTYID
+                WHERE R.DEPUTYID = (SELECT RL.DEPUTYID FROM WTS_RADIOLOG RL WHERE RL.REFNUM='".$keyLogID."') 
+                    AND CHECKEDOUT=1 
+                    AND IS_RESERVE=1
+                ";
+    }
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
         //get all users
@@ -522,5 +565,44 @@ function showInventoryGroups($config, $keyLogID){
             $sRows++;
         }
         selectInventory($config, $selectedRows, true);
+}
+function showMyInventory($config){
+    $mysqli = $config->mysqli;
+    $myq = "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
+            FROM WTS_RADIOLOG R
+            JOIN EMPLOYEE AS SEC ON SEC.IDNUM=R.DEPUTYID
+            WHERE R.DEPUTYID = '".$_SESSION['userIDnum'] ."'
+                AND CHECKEDOUT=1 
+                AND IS_RESERVE=0
+            UNION
+            SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
+                R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
+            FROM WTS_RADIOLOG R
+            JOIN RESERVE AS SEC ON SEC.IDNUM=R.DEPUTYID
+            WHERE R.DEPUTYID = '".$_SESSION['userIDnum'] ."'
+                AND CHECKEDOUT=1 
+                AND IS_RESERVE=1
+            ";
+
+    $result = $mysqli->query($myq);
+    SQLerrorCatch($mysqli, $result);
+        //get all users
+        $selectedRows = array();
+        $sRows = 0;
+
+        while($newRow = $result->fetch_assoc()){
+            if($sRows == 0){
+                echo '<br/><br/><div align="center"><h3>Items Currently Checked Out By:</h3></div>Deputy:
+                    '.$newRow['DEPUTYNAME'];
+                echo ';  Radio Call#: '.$newRow['RADIO_CALLNUM'];
+                echo '<br/><br/>';
+            }
+            //echo '<option value="'.$selectedValue.'" SELECTED>'.$row['SERIAL_NUM'].$itemDesc.'</option>';
+            $selectedRows[$sRows] = $newRow['REFNUM'];
+
+            $sRows++;
+        }
+        selectInventory($config, $selectedRows, true, $invView=true, $height=400);
 }
 ?>

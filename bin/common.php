@@ -323,7 +323,7 @@ function nslookup ($hostname) {
     
  return gethostbyname($hostname);
 }
-function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToSort = 1, $selectOnly=false){
+function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToSort = 1, $selectOnly=false, $tableHeight=200){
     ?>
     <link rel="stylesheet" type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.4.custom.css" id="link"/>
     <link rel="stylesheet" type="text/css" href="bin/jQuery/css/base.css" />			
@@ -364,8 +364,8 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
                     caption : 'Selected Values', 
                     showhide : false,
                     startHide : false,
-                    colratio : [50,100,100,250,200], 
-                    height : 200, 
+                    colratio : [50,100,100,250<?php if($selectOnly) echo ',100,100'; else echo ',200'; ?>], 
+                    height : <?php echo $tableHeight; ?>, 
                     width : 700,
                     minWidthAuto   : true,
                     whiteSpace : 'normal',
@@ -383,8 +383,8 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
                     caption : 'Choose From', 
                     showhide : true,
                     <?php if(!empty($selectedValues)) echo 'startHide : true,'; ?>
-                    colratio : [50,100,100,250,200], 
-                    height : 200, 
+                    colratio : [50,100,100,250,200 <?php if($selectOnly) echo ',100,100'; else echo ',200'; ?>], 
+                    height : <?php echo $tableHeight; ?>, 
                     width : 700,
                     minWidthAuto   : true,
                     whiteSpace : 'normal',
@@ -470,7 +470,7 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
         }
         $echo .= '</tbody></table><br/>';
     }
-   
+
     $echo .= '<table id="selectTable">
                     <thead><tr>
              ';
