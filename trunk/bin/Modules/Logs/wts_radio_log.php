@@ -122,6 +122,10 @@ function displayRadioLog($config, $isApprovePage = false){
                         $radioLogID = $_POST['radioLogID'.$i];
                         showItemExchange($config, $radioLogID);
                     }
+                    if(isset($_POST['viewDeputyInv'.$i])){
+                        $radioLogID = $_POST['radioLogID'.$i];
+                        showInventoryGroups($config, $radioLogID);
+                    }
                     $approveBtn[$i] = isset($_POST['radioLogApproved'.$i]) ? true : false;
                     if($approveBtn[$i]){
                         $radioLogID = $_POST['radioLogID'.$i];
@@ -547,7 +551,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $theTable[$x][$y] = $row['itemType'].'<input type="hidden" name="itemLogType'.$counter.'" value="'.$row['itemType'].'" />'; $y++;
                 $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                 if($config->adminLvl >=25)
-                        $theTable[$x][$y] = '<input type="submit" value="All Inventory for '.$row['DEPUTYID'].'" name="viewDeputyInv'.$x.'" />';
+                        $theTable[$x][$y] = 'All Inventory for <br/><input type="submit" value="'.$row['DEPUTYID'].'" name="viewDeputyInv'.$x.'" />';
                     else
                         $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                 $theTable[$x][$y] = $row['RADIO_CALLNUM']; $y++;
@@ -599,7 +603,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 $theTable[$x][$y] = $row['itemType'].'<input type="hidden" name="itemLogType'.$counter.'" value="'.$row['itemType'].'" />'; $y++;
                 $theTable[$x][$y] = $row['OTHER_SN']; $y++;
                 if($config->adminLvl >=25)
-                    $theTable[$x][$y] = '<input type="submit" value="All Inventory for '.$row['DEPUTYID'].'" name="viewDeputyInv'.$x.'" />';
+                    $theTable[$x][$y] = 'All Inventory for <br/><input type="submit" value="'.$row['DEPUTYID'].'" name="viewDeputyInv'.$x.'" />';
                 else
                     $theTable[$x][$y] = $row['DEPUTYID']; $y++;
                 $theTable[$x][$y] = $row['checkOutType']; $y++;
