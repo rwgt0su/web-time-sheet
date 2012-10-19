@@ -169,6 +169,9 @@ div.t_fixed_header.ui .body tr td {
 div.t_fixed_header.ui .body tr td#red {
     background		: red;
 }
+div.t_fixed_header.ui .body tr td#yellow {
+    background		: yellow;
+}
 div.t_fixed_header.ui .body tr:last-child td {
 	border-bottom-width : 0px;
 }
