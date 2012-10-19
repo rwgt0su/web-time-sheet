@@ -404,7 +404,7 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
             <input type="submit" name="goBtn" value="Cancel" />';
     }
 }
-function selectInventory($config, $selectedValues=false){
+function selectInventory($config, $selectedValues=false, $selectOnly=false){
         //assumes to be part of a form
     //provides a drop down selection for time type.
     $mysqli = $config->mysqli;
@@ -439,7 +439,7 @@ function selectInventory($config, $selectedValues=false){
             SQLerrorCatch($mysqli, $result, $myq);
             $row = $result->fetch_assoc();
             //echo '<option value="'.$selectedValue.'" SELECTED>'.$row['SERIAL_NUM'].$itemDesc.'</option>';
-            $selectedRow[$z][$y] = $counter.'<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
+            $selectedRow[$z][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
                                       <input type="checkbox" CHECKED name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++;
             $selectedRow[$z][$y] = '<input type="hidden" name="itemType'.$counter.'"  value="'.$row['itemType'].'" />'.$row['itemType']; $y++;
             $selectedRow[$z][$y] = $row['OTHER_SN']; $y++;
@@ -470,7 +470,7 @@ function selectInventory($config, $selectedValues=false){
         $itemDesc = '';
         if(!empty($row['DESCR']))
             $itemDesc = ' ('.$row['DESCR'].')';
-        $theTable[$x][$y] = $counter.'<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
+        $theTable[$x][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
                                       <input type="checkbox" name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++; //
         $theTable[$x][$y] = '<input type="hidden" name="itemType'.$counter.'"  value="'.$row['TYPE'].'" />'.$row['itemType']; $y++;
         $theTable[$x][$y] = $row['OTHER_SN']; $y++;
@@ -482,78 +482,45 @@ function selectInventory($config, $selectedValues=false){
         
     }
     
-    moveTablesOnSelect($theTable, $selectedRow, $rowToSort = 2);
+    moveTablesOnSelect($theTable, $selectedRow, $rowToSort = 2, $selectOnly);
     //echo '</select>';
 }
-function displayInventoryGroups($config, $keyLogID){
+function showInventoryGroups($config, $keyLogID){
     $mysqli = $config->mysqli;
     $myq = "SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
                 R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
             FROM WTS_RADIOLOG R
             JOIN EMPLOYEE AS SEC ON SEC.IDNUM=R.DEPUTYID
-            WHERE R.REFNUM = '".$keyLogID."' AND IS_RESERVE=0
+            WHERE R.DEPUTYID = (SELECT RL.DEPUTYID FROM WTS_RADIOLOG RL WHERE RL.REFNUM='".$keyLogID."') 
+                AND CHECKEDOUT=1 
+                AND IS_RESERVE=0
             UNION
             SELECT R.REFNUM, R.GPNUM 'gpID', CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
                 R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
             FROM WTS_RADIOLOG R
             JOIN RESERVE AS SEC ON SEC.IDNUM=R.DEPUTYID
-            WHERE R.REFNUM = '".$keyLogID."' AND IS_RESERVE=1
+            WHERE R.DEPUTYID = (SELECT RL.DEPUTYID FROM WTS_RADIOLOG RL WHERE RL.REFNUM='".$keyLogID."') 
+                AND CHECKEDOUT=1 
+                AND IS_RESERVE=1
             ";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
-    $row = $result->fetch_assoc();
-    if($row['gpID'] != 0 && false){
         //get all users
-        echo '<div align="center">Group Reference #: '.$row['gpID'].'
-            <input type="hidden" name="gpID" value="'.$row['gpID'].'" /></div>';
-
-        $newq = "SELECT R.REFNUM 'refNum', R.GPNUM 'gpID', 
-                CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
-                R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
-            FROM WTS_RADIOLOG R
-            JOIN EMPLOYEE AS SEC ON SEC.IDNUM=R.DEPUTYID
-            WHERE R.GPNUM = '".$row['gpID']."' AND IS_RESERVE=0
-            UNION
-            SELECT R.REFNUM 'refNum', R.GPNUM 'gpID', 
-                CONCAT_WS(', ', LNAME, FNAME) 'DEPUTYNAME', R.RADIO_CALLNUM, 
-                R.RADIOID, R.TYPE, DATE_FORMAT (AUDIT_IN_TS, '%m/%d/%y %H%i') 'inTime'
-            FROM WTS_RADIOLOG R
-            JOIN RESERVE AS SEC ON SEC.IDNUM=R.DEPUTYID
-            WHERE R.GPNUM = '".$row['gpID']."' AND IS_RESERVE=1";
-        $newResult = $mysqli->query($newq);
-        SQLerrorCatch($mysqli, $newResult, $newq);
-
-        $x=0;
-        $y=0;
-        $depTable = array(array());
         $selectedRows = array();
         $sRows = 0;
-        $depTable[$x][$y] = "Deputy"; $y++;
-        $depTable[$x][$y] = "Radio#"; $y++;                
 
-        $x++;
-        while($newRow = $newResult->fetch_assoc()){
-            $y=0;
-            $lastDeputy = false;
-            for($t=0;$t<sizeof($depTable);$t++){
-                if($newRow['DEPUTYNAME'] == $depTable[$t][0]){
-                    $lastDeputy = true;
-                    break;
-                }
-            }
-            if(!$lastDeputy){
-                $depTable[$x][$y] = $newRow['DEPUTYNAME']; $y++;
-                $depTable[$x][$y] = '<input type="text" name="radioCallNum'.$x.'" value="'.$newRow['RADIO_CALLNUM'].'" />'; $y++;
+        while($newRow = $result->fetch_assoc()){
+            if($sRows == 0){
+                echo '<br/><br/><div align="center"><h3>Items Currently Checked Out By:</h3></div>Deputy:
+                    '.$newRow['DEPUTYNAME'];
+                echo ';  Radio Call#: '.$newRow['RADIO_CALLNUM'];
+                echo '<br/><br/>';
             }
             //echo '<option value="'.$selectedValue.'" SELECTED>'.$row['SERIAL_NUM'].$itemDesc.'</option>';
-            $selectedRows[$sRows] = $newRow['refNum'];
+            $selectedRows[$sRows] = $newRow['REFNUM'];
 
             $sRows++;
-            $x++;
         }
-        showSortableTable($depTable, 0);
-        selectInventory($config, $selectedRows);
-
-    }
+        selectInventory($config, $selectedRows, true);
 }
 ?>
