@@ -243,17 +243,17 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
                 echo '<input type="radio" name="checkOutType" value="LOANER" CHECKED>LOANER</input>';
             else
                 echo '<input type="radio" name="checkOutType" value="LOANER">LOANER</input>';
-            if($config->adminLvl >= 25){
+            if($row['TYPE'] == "SHIFT")
+                echo '<input type="radio" name="checkOutType" value="SHIFT" CHECKED>SHIFT ASSIGNMENT</input><br/>';
+            else
+                echo '<input type="radio" name="checkOutType" value="SHIFT">SHIFT ASSIGNMENT</input>';
+             if($config->adminLvl >= 25){
                 if($row['TYPE'] == "PERM")
                     echo '<input type="radio" name="checkOutType" value="PERM" CHECKED>PERMANENT</input>';
                 else
                     echo '<input type="radio" name="checkOutType" value="PERM">PERMANENT</input>';
             }
-            if($row['TYPE'] == "POD")
-                echo '<input type="radio" name="checkOutType" value="SHIFT" CHECKED>SHIFT ASSIGNMENT</input><br/>';
-            else
-                echo '<input type="radio" name="checkOutType" value="SHIFT">SHIFT ASSIGNMENT</input><br/>';
-            echo '<br/>Checked in time: ';
+            echo '<br/><br/>Checked in time: ';
             if(strcmp($row['inTime'],"00/00/00 0000")==0){
                 echo "<font color=red><b>Not Checked back in Yet</b></font><br /><br />";
                 echo '<input type="submit" name="checkInKey" value="Check Back In" />';
@@ -389,17 +389,17 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
             echo '<input type="radio" name="checkOutType" value="LOANER" CHECKED>LOANER</input>';
         else
             echo '<input type="radio" name="checkOutType" value="LOANER">LOANER</input>';
+        if($checkOutType == "SHIFT")
+            echo '<input type="radio" name="checkOutType" value="SHIFT" CHECKED>SHIFT ASSIGNMENT</input><br/>';
+        else
+            echo '<input type="radio" name="checkOutType" value="SHIFT">SHIFT ASSIGNMENT</input>';
         if($config->adminLvl >= 25){
             if($checkOutType == "PERM")
                 echo '<input type="radio" name="checkOutType" value="PERM" CHECKED>PERMANENT</input>';
             else
                 echo '<input type="radio" name="checkOutType" value="PERM">PERMANENT</input>';
         }
-        if($checkOutType == "POD")
-            echo '<input type="radio" name="checkOutType" value="SHIFT" CHECKED>SHIFT ASSIGNMENT</input><br/>';
-        else
-            echo '<input type="radio" name="checkOutType" value="SHIFT">SHIFT ASSIGNMENT</input><br/>';
-        echo '<br/><input type="hidden" name="checkoutKeyBtn" value="true" />
+        echo '<br/><br/><input type="hidden" name="checkoutKeyBtn" value="true" />
             <input type="submit" name="addKeyLog" value="Check Out Key" />
             <input type="submit" name="goBtn" value="Cancel" />';
     }
@@ -483,7 +483,7 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false, $myI
                 AND IS_DEPRECIATED = 0
                 AND NOT 
                     (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
-                    > 
+                    >= 
                     (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM);";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
@@ -565,6 +565,7 @@ function showInventoryGroups($config, $keyLogID, $deputyID=''){
             $sRows++;
         }
         selectInventory($config, $selectedRows, true);
+        echo '<input type="submit" name="goBtn" value="Back To Logs" />';
 }
 function showMyInventory($config){
     $mysqli = $config->mysqli;
@@ -604,5 +605,35 @@ function showMyInventory($config){
             $sRows++;
         }
         selectInventory($config, $selectedRows, true, $invView=true, $height=400);
+}
+function showQuickSearch(){
+    echo '<br/><div align="center">Quick Search: <input type="text" id="kwd_search" value=""/></div>';
+    echo '    <script type="text/javascript">  
+        $(document).ready(function(){
+	// Write on keyup event of keyword input element
+	$("#kwd_search").keyup(function(){
+		// When value of the input is not blank
+		if( $(this).val() != "")
+		{
+			// Show only matching TR, hide rest of them
+                        $("#PERM table>tr").hide();
+			$("#PERM td:contains-ci(\'" + $(this).val() + "\')").parent("tr").show();
+		}
+		else
+		{
+			// When there is no input or clean again, show everything back
+                        $("#PERM tbody>tr").show();
+		}
+            });
+        });
+        // jQuery expression for case-insensitive filter
+        $.extend($.expr[":"], 
+        {
+            "contains-ci": function(elem, i, match, array) 
+                {
+                        return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+                }
+        });
+        </script>';
 }
 ?>

@@ -6,7 +6,7 @@
  */
 
 function displayRadioLog($config, $isApprovePage = false){
-    if($config->adminLvl >= 25){
+    if($config->adminLvl >= 0){
         $mysqli = $config->mysqli;
         if($isApprovePage)
             echo '<h2>Daily Inventory Checkout Log Approval</h2>';
@@ -31,7 +31,9 @@ function displayRadioLog($config, $isApprovePage = false){
             $checkInKey = isset($_POST['checkInKey']) ? true : false;
             $updateRadioLog = isset($_POST['updateRadioLog']) ? true : false;
             $updateKeyLog = isset($_POST['updateKeyLog']) ? true : false;
-            $showAll = isset($_POST['showAll']) ? true : false;
+            $showAll = isset($_POST['showAllPerm']) ? true : false;
+            $showAll = isset($_POST['showAllLoaner']) ? true : $showAll;
+            $showAll = isset($_POST['showAllShift']) ? true : $showAll;
             $showNormal = isset($_POST['showNormal']) ?  true : false;
             $goBtn = isset($_POST['goBtn']) ? true : false;
             $isApprovePage = isset($_GET['secApprove']) ? true : $isApprovePage;
@@ -39,7 +41,7 @@ function displayRadioLog($config, $isApprovePage = false){
             $radioLogID = isset($_POST['backToApprove']) ? false : $radioLogID ;
             $exchangeLogID = isset($_POST['exchangeLogID']) ? $_POST['exchangeLogID'] : false;
             $itemLogType = '';
-            
+            $cancelBtn = isset($_POST['cancelBtn']) ? true : false;
             $counter = 0;
 
             if($showAll || $showNormal){
@@ -50,6 +52,10 @@ function displayRadioLog($config, $isApprovePage = false){
                 $editSelect = false;
                 $goBtn = false;
                 $addBtn = false;
+            }
+            if($cancelBtn){
+                $goBtn = true;
+                $exchangeLogID = '';
             }
             if(!$isApprovePage && !isset($_POST['exchangeLogID'])){
                 if(!$dateSelect){
@@ -66,7 +72,8 @@ function displayRadioLog($config, $isApprovePage = false){
             }
             else
                  echo '<input type="hidden" name="dateSelect" value="'.$dateSelect.'" />';
-            if($goBtn){                       
+            if($goBtn){
+                showQuickSearch();
                 if($config->adminLvl < 25){
                     //non supervisor logs
                     $counter += showRadioLog($config, $dateSelect,$counter, "LOANER", false);
@@ -75,7 +82,7 @@ function displayRadioLog($config, $isApprovePage = false){
                     //supervisor logs
                     $counter += showRadioLog($config, $dateSelect, $counter, "LOANER", true);
                 }
-                $counter += showRadioLog($config, $dateSelect, $counter, "POD", false);
+                $counter += showRadioLog($config, $dateSelect, $counter, "SHIFT", false);
                 $counter += showRadioLog($config, $dateSelect, $counter, "PERM", false);
             } 
             if(isset($_POST['exchangeLogID']))
@@ -103,8 +110,9 @@ function displayRadioLog($config, $isApprovePage = false){
                     if(isset($_POST['logoutRadioLog'.$i]) || isset($_POST['logoutRadioLogAll']) || isset($_POST['checkInRadio'.$i])){
                         $radioLogID = $_POST['radioLogID'.$i];
                         checkInRadioLog($config, $radioLogID);
+                        showQuickSearch();
                         $counter += showRadioLog($config, $dateSelect, $counter, "LOANER", false);
-                        $counter += showRadioLog($config, $dateSelect, $counter, "POD", false);
+                        $counter += showRadioLog($config, $dateSelect, $counter, "SHIFT", false);
                         $counter += showRadioLog($config, $dateSelect, $counter, "PERM", false);
                     }
                     else if(isset($_POST['updateRadioLog'.$i]) || isset($_POST['updateRadioLogAll'])){
@@ -167,8 +175,9 @@ function displayRadioLog($config, $isApprovePage = false){
                             addLog($config, 'Radio Checkout Log #'.$radioLogID.' approved');
                             echo 'Radio Checkout Log #'.$radioLogID.' approved.<br />';
                         }
+                        showQuickSearch();
                         $counter += showRadioLog($config, $dateSelect, $counter, "LOANER", false, $isApprovePage=true);
-                        $counter += showRadioLog($config, $dateSelect, $counter, "POD", false);
+                        $counter += showRadioLog($config, $dateSelect, $counter, "SHIFT", false);
                         $counter += showRadioLog($config, $dateSelect, $counter, "PERM");
                     }
                 }
@@ -184,8 +193,9 @@ function displayRadioLog($config, $isApprovePage = false){
                 }
             }
             if($isApprovePage && empty($radioLogID)){
+                showQuickSearch();
                 $counter += showRadioLog($config, $dateSelect, $counter, "LOANER", false, $isApprovePage);
-                $counter += showRadioLog($config, $dateSelect, $counter, "POD", false);
+                $counter += showRadioLog($config, $dateSelect, $counter, "SHIFT", false);
                 $counter += showRadioLog($config, $dateSelect, $counter, "PERM");
             }
             if($editBtn || $updateRadioLog || $checkInKey || $updateKeyLog){
@@ -213,11 +223,16 @@ function displayRadioLog($config, $isApprovePage = false){
 function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $isApprove=false){
     $mysqli = $config->mysqli;
     $isApprove = isset($_POST['isApprove']) ? true : $isApprove;
-   
+    
     /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
       depending on the value of SECLOG.IS_RESERVE */
     if(!$isApprove){
         if($logType == "PERM"){
+            $showAll = isset($_POST['showAllPerm']) ? true : false;
+            if($showAll)
+                $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
+            else
+                $showAllQ = "R.CHECKEDOUT=1";
             echo '<div class="divider"></div><br/><h3>Permanent Equipment Checked Out Log</h3>';
             
             $myq =  "SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
@@ -234,7 +249,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
-                WHERE R.CHECKEDOUT=1
+                WHERE ".$showAllQ."
                 AND R.TYPE='PERM'
                 AND R.IS_RESERVE=0
 
@@ -254,14 +269,14 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
-                WHERE R.CHECKEDOUT=1
+                WHERE ".$showAllQ."
                 AND R.TYPE='PERM'
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
         }
-        else if($logType == "POD"){
-            echo '<div class="divider"></div><br/><h3>POD Equipment Assignment Checked Out Log</h3>';
-            $showAll = isset($_POST['showAll']) ? true : false;
+        else if($logType == "SHIFT"){
+            echo '<div class="divider"></div><br/><h3>SHIFT Assignment Checked Out Items Log</h3>';
+            $showAll = isset($_POST['showAllShift']) ? true : false;
             if($showAll)
                 $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
             else
@@ -281,7 +296,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE ".$showAllQ."
-                AND R.TYPE='POD'
+                AND R.TYPE='SHIFT'
                 AND R.IS_RESERVE=0
 
                 UNION
@@ -301,12 +316,17 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
                 WHERE ".$showAllQ."
-                AND R.TYPE='POD'
+                AND R.TYPE='SHIFT'
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
         }
         else if($logType == "LOANER"){
             echo '<br/><br/><div class="divider"></div><h3>Loaner Equipment Log</h3>';
+            $showAll = isset($_POST['showAllLoaner']) ? true : false;
+            if($showAll)
+                $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
+            else
+                $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
             $myq =  "SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut', R.COMMENTS, 
@@ -321,7 +341,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
-                WHERE AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'
+                WHERE ".$showAllQ."
                 AND R.TYPE = 'LOANER'
                 AND R.IS_RESERVE=0
 
@@ -341,7 +361,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 LEFT JOIN EMPLOYEE AS SUP ON R.SUP_ID=SUP.IDNUM
                 LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
                 LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=R.ITEM_TYPE_ID
-                WHERE AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'
+                WHERE ".$showAllQ."
                 AND R.TYPE = 'LOANER'
                 AND R.IS_RESERVE=1
                 ORDER BY 'gpID'";
@@ -391,18 +411,18 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
     }
 
     $result = $mysqli->query($myq);
-    SQLerrorCatch($mysqli, $result);
+    SQLerrorCatch($mysqli, $result, $myq);
     $echo = '';
     $x=$counter;
     $y=0;
     if($config->adminLvl >= 0){
         if($logType == "LOANER"){
-            $showAll = isset($_POST['showAll']) ? true : false;
+            $showAll = isset($_POST['showAllLoaner']) ? true : false;
             if(!$isApprove){
                 if($showAll)
                     echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Loaner Logs</div>';
                 else
-                    echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Loaner Logs</div>';
+                    echo '<div align="right"><input type="checkbox" name="showAllLoaner" onclick="this.form.submit();" />Show All Loaner Logs</div>';
             }
             $theTable = array(array());
             if(!$isApprove){
@@ -422,7 +442,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $theTable[$x][$y] = "In_By"; $y++;
             $theTable[$x][$y] = "Status"; $y++;
 
-            if($config->adminLvl >=25){
+            if($config->adminLvl >=25 && false){
                 $theTable[$x][$y] = "Supervisor"; $y++;
                 $theTable[$x][$y] = "Sign_Off"; $y++;
             }
@@ -443,17 +463,17 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $theTable[$x][$y] = "In_By"; $y++;
             $theTable[$x][$y] = "Status"; $y++;
 
-            if($config->adminLvl >=25){
+            if($config->adminLvl >=25 && false){
                 $theTable[$x][$y] = "Supervisor"; $y++;
                 $theTable[$x][$y] = "Sign_Off"; $y++;
             }
         }
-        else if($logType == "POD"){
-            $showAll = isset($_POST['showAll']) ? true : false;
+        else if($logType == "SHIFT"){
+            $showAll = isset($_POST['showAllShift']) ? true : false;
                 if($showAll)
                     echo '<div align="right"><input type="checkbox" name="showNormal" onclick="this.form.submit();" />Show Normal Shift Assignment Logs</div>';
                 else
-                    echo '<div align="right"><input type="checkbox" name="showAll" onclick="this.form.submit();" />Show All Shift Assignment Logs</div>';
+                    echo '<div align="right"><input type="checkbox" name="showAllShift" onclick="this.form.submit();" />Show All Shift Assignment Logs</div>';
           
             $theTable = array(array());
             $x=0;
@@ -462,6 +482,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $theTable[$x][$y] = "Type"; $y++;
             $theTable[$x][$y] = "Serial Number"; $y++;
             $theTable[$x][$y] = "Deputy "; $y++;
+            $theTable[$x][$y] = "Radio Call#"; $y++;
             $theTable[$x][$y] = "Type"; $y++;
             $theTable[$x][$y] = "OUT_Time"; $y++;
             $theTable[$x][$y] = "OUT_By"; $y++;
@@ -469,7 +490,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $theTable[$x][$y] = "In_By"; $y++;
             $theTable[$x][$y] = "Status"; $y++;
 
-            if($config->adminLvl >=25){
+            if($config->adminLvl >=25 && false){
                 $theTable[$x][$y] = "Supervisor"; $y++;
                 $theTable[$x][$y] = "Sign_Off"; $y++;
             }
@@ -516,7 +537,11 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     else{
                         $theTable[$x][$y] = $row['checkIn']; $y++;
                     }
-                    $theTable[$x][$y] =$row['AUDIT_IN_ID']; $y++;
+                    if($row['AUDIT_IN_ID'] == "SYSTEM, USER")
+                        $theTable[$x][$y] = "";
+                    else
+                        $theTable[$x][$y] = $row['AUDIT_IN_ID']; 
+                    $y++;
                     if($row['isCheckedOut'] == 1){
                         $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$x.'" value="Check Back In" /><br/>
                             <input type="submit" name="exchangeBtn'.$x.'" value="Exchange" />'; $y++;
@@ -564,7 +589,11 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 else{
                     $theTable[$x][$y] = $row['checkIn']; $y++;
                 }
-                $theTable[$x][$y] = $row['AUDIT_IN_ID']; $y++;
+                if($row['AUDIT_IN_ID'] == "SYSTEM, USER")
+                    $theTable[$x][$y] = "";
+                else
+                    $theTable[$x][$y] = $row['AUDIT_IN_ID']; 
+                $y++;
                 if($row['isCheckedOut'] == 1){
                     if($config->adminLvl >=50){
                         $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" />'; $y++;
@@ -576,7 +605,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 else{
                     $theTable[$x][$y] = "Checked In"; $y++;
                 }  
-                if($config->adminLvl >=25){
+                if($config->adminLvl >=25 && false){
                     $theTable[$x][$y] =$row['SUP_ID']; $y++;
                     if($row['SUP_TIME']=="00/00/00 0000"){
                         $theTable[$x][$y] = ""; $y++;
@@ -587,12 +616,12 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 }
                 
             }//end Perm Log Check
-            else if ($logType == "POD"){
+            else if ($logType == "SHIFT"){
                 $x++;
                 $counter++;
                 $y=0;
 
-                if($config->adminLvl >=25){
+                if($row['checkIn'] == "" || $config->adminLvl >=25){
                     $theTable[$x][$y] = 'Ref# '.$row['REFNUM'].'<input type="submit" value="Edit/View" name="radioLogEditBtn'.$counter.'" />
                         <input type="hidden" name="radioLogID'.$counter.'" value="'.$row['REFNUM'].'" />'; $y++;
                 }
@@ -606,6 +635,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     $theTable[$x][$y] = 'All Inventory for <br/><input type="submit" value="'.$row['DEPUTYID'].'" name="viewDeputyInv'.$x.'" />';
                 else
                     $theTable[$x][$y] = $row['DEPUTYID']; $y++;
+                $theTable[$x][$y] = $row['RADIO_CALLNUM']; $y++;
                 $theTable[$x][$y] = $row['checkOutType']; $y++;
                 $theTable[$x][$y] = $row['checkOut']; $y++;
                 $theTable[$x][$y] = $row['AUDIT_OUT_ID']; $y++;
@@ -615,11 +645,15 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 else{
                     $theTable[$x][$y] = $row['checkIn']; $y++;
                 }
-                $theTable[$x][$y] = $row['AUDIT_IN_ID']; $y++;
+                if($row['AUDIT_IN_ID'] == "SYSTEM, USER")
+                    $theTable[$x][$y] = "";
+                else
+                    $theTable[$x][$y] = $row['AUDIT_IN_ID']; 
+                $y++;
                 if($row['isCheckedOut'] == 1){
-                    if($config->adminLvl >=25){
+                    if($config->adminLvl >=0){
                         $theTable[$x][$y] ='';
-                        if($config->adminLvl>=50)
+                        if($config->adminLvl>=0)
                             $theTable[$x][$y] ='<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" /><br/>';
                         $theTable[$x][$y] .= '<input type="submit" name="exchangeBtn'.$x.'" value="Exchange" />'; $y++;
                     }
@@ -630,7 +664,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                 else{
                     $theTable[$x][$y] = "Checked In"; $y++;
                 }  
-                if($config->adminLvl >=25){
+                if($config->adminLvl >=25 && false){
                     $theTable[$x][$y] =$row['SUP_ID']; $y++;
                     if($row['SUP_TIME']=="00/00/00 0000"){
                         $theTable[$x][$y] = ""; $y++;
@@ -1104,17 +1138,17 @@ function checkOutItem($config, $deputyID, $radioCallNum, $itemID, $itemTypeID, $
         $inventoryLogID = $mysqli->insert_id;
         if(!$noLog)
             addLog($config, $itemType.' Checked out Ref#'.$inventoryLogID.' Added');
-        echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br />';
+        echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br/>';
     }
     else
-        echo '<font color="red">Failed to check out '.$itemType.', try again.</font><br />';
+        echo '<font color="red">Failed to check out '.$itemType.', try again.</font><br/>';
     return $inventoryLogID;
 }
 function showItemExchange($config, $radioLogID){
     $mysqli = $config->mysqli;
     
     //get radioLog duplicating information
-    $myq = "SELECT R.RADIOID, R.TYPE, INV.OTHER_SN, ITYPE.DESCR 'itemType', CONCAT_WS(', ', EMP.LNAME, EMP.FNAME) 'deputyName'
+    $myq = "SELECT R.RADIOID, R.TYPE, INV.OTHER_SN, ITYPE.IDNUM 'itemTypeID', ITYPE.DESCR 'itemType', CONCAT_WS(', ', EMP.LNAME, EMP.FNAME) 'deputyName'
         FROM WTS_RADIOLOG R
         LEFT JOIN EMPLOYEE AS EMP ON R.DEPUTYID=EMP.IDNUM
         LEFT JOIN WTS_INVENTORY AS INV ON R.RADIOID=INV.IDNUM
@@ -1170,9 +1204,10 @@ function showItemExchange($config, $radioLogID){
                     SQLerrorCatch($mysqli, $noteResult);
                     
                     $tempReserve = isset($_POST['isReserve'.$i]) ? '1' : '0';
-                    $insertLogID = checkOutItem($config, $deputyID[$i], $row['RADIO'], $radioID, "POD", $tempReserve, "0", $noLog=true);
+                    $insertLogID = checkOutItem($config, $deputyID[$i], $row['RADIO'], $radioID, $item['itemTypeID'], "SHIFT", $tempReserve, "0", $noLog=true);
                 
                     addLog($config, 'Exchanged Log Ref#'.$radioLogID.' with Ref#'.$insertLogID);
+                    echo 'Exchanged Log Ref#'.$radioLogID.' with Ref#'.$insertLogID.'<br/>';
                     $isExchanged = true;
                 }
                
@@ -1248,12 +1283,13 @@ function showItemExchange($config, $radioLogID){
     }
     echo '<input type="hidden" name="num_deputies" value="'.$deputyCount.'" />';
     if(isset($_POST['exchangeItemBtn'])){
-        echo '<input type="submit" name="goBtn" value="Back to Logs" />';
+        echo '<br/><input type="submit" name="goBtn" value="Back to Logs" />';
     }
     else{
-        echo '<br/>
-            <input type="submit" name="exchangeItemBtn" value="Exchange Equipment" />
-            <input type="submit" name="goBtn" value="Cancel" />';
+        echo '<br/><br/>';
+        if($deputyCount > 0)
+            echo '<input type="submit" name="exchangeItemBtn" value="Exchange Equipment" />';
+        echo '<input type="submit" name="cancelBtn" value="Cancel" />';
     }
 }
 ?>
