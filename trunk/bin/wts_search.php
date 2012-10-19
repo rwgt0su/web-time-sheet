@@ -262,6 +262,7 @@ function displayUserLookup($config) {
             $checkOutType = isset($_POST['checkOutType']) ? $_POST['checkOutType'] : '';
             $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
             $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : '' ;
+            $invLogComments = isset($_POST['nvLogComments']) ? $mysqli->real_escape_string(strtoupper($_POST['nvLogComments'])) : '';
             $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
             
             if($num_deputies > 0){
@@ -287,6 +288,7 @@ function displayUserLookup($config) {
             echo '<input type="hidden" name="radioCallNum" value="'.$radioCallNum.'" />';
             echo '<input type="hidden" name="checkOutType" value="'.$checkOutType.'" />';
             echo '<input type="hidden" name="dateSelect" value="' . $dateSelect . '" />';
+            echo '<input type="hidden" name="invLogComments" value="' . $invLogComments . '" />';
             echo '<input type="hidden" name="addBtn" value="true" />';
         }
         $mysqli = $config->mysqli;

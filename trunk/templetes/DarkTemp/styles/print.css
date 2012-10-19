@@ -9,6 +9,8 @@
 
 /*.header_cotainer, .grid_4, .grid_8, .footer_container { display: none; }*/
  .menu_items, .grid_4 { display: none; }
+ .content_highlight .post { display:inline; }
+ .footer_container { display: none; }
  
  
 
@@ -22,6 +24,10 @@ color:#000000; }
 background-color:transparent;
 padding: 0px;
 margin: 0px;
+}
+.content_highlight .grid_8 {
+    padding: 0px 0 0 0;
+    height: 100%;
 }
 
 @Page {
