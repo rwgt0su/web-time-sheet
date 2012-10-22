@@ -489,7 +489,7 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
             for($y=0;$y<sizeof($selectedValues[$z]);$y++){
                 if($selectedValues[$z][$y] == "EMERGENCY")
                     $echo .= '<td id="red">';
-                else if($theTable[$x][$y] == "CONTROLED KEY")
+                else if($selectedValues[$z][$y] == "CONTROLED KEY")
                     $echo .= '<td id="yellow">';
                 else
                     $echo .= '<td id="blue">';
