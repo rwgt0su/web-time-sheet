@@ -416,6 +416,11 @@ else{
                         <input type="submit" name="update" value="Update Request">
                         <input type="submit" name="duplicateBtn" value="Duplicate Request" />
                         <INPUT TYPE="button" value="Back to My Requests" onClick="parent.location=\'wts_index.php?myReq=true\'"></p>';
+                else if(isset($updatingRequest))
+                    echo '<p><input type="hidden" name="formName" value="submittedRequests" />
+                        <input type="submit" name="update" value="Update Request">
+                        <input type="submit" name="duplicateBtn" value="Duplicate Request" />
+                        <INPUT TYPE="button" value="Back to Approvals" onClick="parent.location=\''.$updatingRequest.'\'"></p>';
                 else
                     echo '<p><input type="submit" name="submit" value="Submit for Approval"></p>';
                 ?>
@@ -1271,7 +1276,7 @@ function MUNISreport($config) {
     }
 }
 
-function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false, $totalRows=false) {
+function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false, $totalRows=false, $extraInputs='') {
     $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
     
     if($unExpunge && $_SESSION['admin']){
@@ -1285,7 +1290,8 @@ function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false
             $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
             addLog($configNew, 'UnExpunged Time Request with Ref# '.$referNum);
             popUpMessage ('Request '.$referNum.' Has been placed back into PENDING State. 
-                    <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
+                    <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
+                    '.$extraInputs.'                    
                     <input type="submit" value="OK" />
                     </form></div>');
         }
@@ -1300,12 +1306,13 @@ function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false
                 WHERE REFER=".$referNum;
             $result = $mysqli->query($myq);
 
-            if(!SQLerrorCatch($mysqli, $result)){
+            if(!SQLerrorCatch($mysqli, $result, $myq)){
                 $configNew = new Config();
                 $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
                 addLog($configNew, 'Expunged Time Request with Ref# '.$referNum);
                 popUpMessage ('Request '.$referNum.' expunged. 
-                            <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">                    
+                            <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
+                            '.$extraInputs.'                     
                             <input type="submit" value="OK" />
                             </form></div>');
             }
@@ -1322,6 +1329,7 @@ function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false
                 Request '.$referNum.' to be expunged<br/>   '.$result.'
                 Reason:<textarea name="expungedReason"></textarea><br/>
                 <input type="submit" name="confirmBtn" value="CONFIRM EXPUNGE" />
+                '.$extraInputs.' 
                 </form></div>';
             popUpMessage ($echo);
             
