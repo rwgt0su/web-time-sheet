@@ -251,6 +251,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
         $y = 0;
         if($config->adminLvl >=50 && $config->adminLvl !=75){
             $theTable[$x][$y] = "HR Approve"; $y++;
+            $theTable[$x][$y] = "Expunge"; $y++;
         }
         $theTable[$x][$y] = "Ref #"; $y++;
         $theTable[$x][$y] = "Date of Use"; $y++;
@@ -277,9 +278,8 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
                 $theTable[$x][$y] .= '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
                      '<input type="hidden" name="formName" value="'.$_SERVER['REQUEST_URI'].'"/>
                       <input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
-                      <input type="hidden" value="2" name="totalRows" />';;
-                $theTable[$x][$y] .= '<input type="submit" name="deleteBtn'.$x.'" value="Expunge" />';
-                $y++;
+                      <input type="hidden" value="2" name="totalRows" />';$y++;
+                $theTable[$x][$y] = '<br/><input type="submit" name="deleteBtn'.$x.'" value="Expunge" />';$y++;
             }
             $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
             $empMunis = $row['Munis'];
@@ -356,7 +356,6 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
     }
     $echo .= '</table></div>';
     echo $echo;
-    echo '<a href="javascript:window.print()">Print</a>';
     
     $refNo = '';
     //Was Approve Button Pressed
