@@ -1128,21 +1128,39 @@ function checkOutItem($config, $deputyID, $radioCallNum, $itemID, $itemTypeID, $
     $itemType = $itemName['DESCR'];
     $inventoryLogID = '';
     
-    $myq = "INSERT INTO WTS_RADIOLOG ( REFNUM ,`DEPUTYID`,`RADIO_CALLNUM` , CHECKEDOUT, RADIOID, TYPE,
-            `AUDIT_OUT_ID` ,`AUDIT_OUT_TS` ,`AUDIT_OUT_IP`, IS_RESERVE, GPNUM, ITEM_TYPE_ID, COMMENTS) 
-        VALUES ( NULL , '".$deputyID."', '".$radioCallNum."', '1', '".$itemID."',
-            '".$checkOutType."', '".$_SESSION['userIDnum']."', NOW(), 
-            INET_ATON('".$_SERVER['REMOTE_ADDR']."'), '".$isReserve."', '".$groupID."', '".$itemTypeID."', '".$comments."' );";
-    $result = $mysqli->query($myq);
-    if(!SQLerrorCatch($mysqli, $result, $myq)) {
-        $inventoryLogID = $mysqli->insert_id;
-        if(!$noLog)
-            addLog($config, $itemType.' Checked out Ref#'.$inventoryLogID.' Added');
-        echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br/>';
+    $verifyq = "SELECT COUNT(I.IDNUM) 'isAvailable', OTHER_SN 'itemID'
+                FROM WTS_INVENTORY I
+                WHERE IS_ACTIVE = 1
+                AND IS_DEPRECIATED = 0
+                AND NOT 
+                    (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
+                    >= 
+                    (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM)
+                AND I.IDNUM=".$itemID."
+                ;";
+    $verifyResult = $mysqli->query($verifyq);
+    SQLerrorCatch($mysqli, $verifyResult, $verifyq);
+    $verifyCount = $verifyResult->fetch_assoc();
+    
+    if($verifyCount['isAvailable'] == "1"){    
+        $myq = "INSERT INTO WTS_RADIOLOG ( REFNUM ,`DEPUTYID`,`RADIO_CALLNUM` , CHECKEDOUT, RADIOID, TYPE,
+                `AUDIT_OUT_ID` ,`AUDIT_OUT_TS` ,`AUDIT_OUT_IP`, IS_RESERVE, GPNUM, ITEM_TYPE_ID, COMMENTS) 
+            VALUES ( NULL , '".$deputyID."', '".$radioCallNum."', '1', '".$itemID."',
+                '".$checkOutType."', '".$_SESSION['userIDnum']."', NOW(), 
+                INET_ATON('".$_SERVER['REMOTE_ADDR']."'), '".$isReserve."', '".$groupID."', '".$itemTypeID."', '".$comments."' );";
+        $result = $mysqli->query($myq);
+        if(!SQLerrorCatch($mysqli, $result, $myq)) {
+            $inventoryLogID = $mysqli->insert_id;
+            if(!$noLog)
+                addLog($config, $itemType.' Checked out Ref#'.$inventoryLogID.' Added');
+            echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br/>';
+        }
+        else
+            echo '<font color="red">Failed to check out '.$itemType.', try again.</font><br/>';
+        return $inventoryLogID;
     }
     else
-        echo '<font color="red">Failed to check out '.$itemType.', try again.</font><br/>';
-    return $inventoryLogID;
+        return '<font color="red">'.$itemType.' '.$verifyCount['itemID'].' not available for checkout.  Please check back in first.</font>';
 }
 function showItemExchange($config, $radioLogID){
     $mysqli = $config->mysqli;
