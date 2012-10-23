@@ -790,7 +790,7 @@ function displayLeaveApproval($config){
                 $approveQuery="UPDATE REQUEST 
                                 SET STATUS='".$_POST['approve'.$j]."',
                                     REASON='".$mysqli->real_escape_string($_POST['reason' . $j])."',
-                                    APPROVEDBY='".$_SESSION['userIDnum']."' 
+                                    APPROVEDBY='".$_SESSION['userIDnum']."', ApproveTS=NOW() 
                                 WHERE REFER='$refs[$j]'";
                 //echo $approveQuery; //DEBUG
                 $approveResult = $mysqli->query($approveQuery);
