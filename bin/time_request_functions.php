@@ -795,13 +795,13 @@ function displayLeaveApproval($config){
                 $approveQuery="UPDATE REQUEST 
                                 SET STATUS='".$_POST['approve'.$j]."',
                                     REASON='".$mysqli->real_escape_string($_POST['reason' . $j])."',
-                                    APPROVEDBY='".$_SESSION['userIDnum']."', ApproveTS=NOW() 
+                                    APPROVEDBY='".$_SESSION['userIDnum']."', ApprovedTS=NOW() 
                                 WHERE REFER='$refs[$j]'";
                 //echo $approveQuery; //DEBUG
                 $approveResult = $mysqli->query($approveQuery);
                 $logMsg = 'Approved Time Request with Ref# '.$refs[$j];
                 addLog($config, $logMsg);
-                if(!SQLerrorCatch($mysqli, $approveResult))
+                if(!SQLerrorCatch($mysqli, $approveResult, $approveQuery))
                         echo "Approved Reference ".$refs[$j]."<br/>";
 
             }

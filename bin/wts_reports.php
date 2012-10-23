@@ -274,7 +274,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
                 if(!$row['HR_Approved'])
                     $theTable[$x][$y] = '<input type="submit" name="hrApprove'.$x.'" value="Approve" />';
                 else
-                    $theTable[$x][$y] = 'Approved';
+                    $theTable[$x][$y] = '<div align="center"><h3><font color="red">Approved</font></h3></div>';
                 $theTable[$x][$y] .= '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
                      '<input type="hidden" name="formName" value="'.$_SERVER['REQUEST_URI'].'"/>
                       <input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
@@ -299,7 +299,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
         }
         echo '<div align="center"><h3>Employee: '.$empName.'</h3>Munis# '.$empMunis.'</div>';
         
-        showSortableTable($theTable, 2, "hrDetails", array(2,1));
+        showSortableTable($theTable, 7, "hrDetails", array(2));
         echo '<input type="hidden" name="totalRows" value="'.$x.'" />
               <input type="hidden" value="View" name="viewDetailsBtn">
               <input type="hidden" value="'.$empID.'" name="empID">';
