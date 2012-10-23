@@ -103,11 +103,13 @@ function hrPayrolReportByEmployee($config){
             empTimeReportByPay($config, $startDate, $endDate, $empID);
         }
         else{
+            //First table to show pending HR approval
             $myq = "SELECT REFER, MUNIS, LNAME,FNAME,R.IDNUM
                     FROM REQUEST R, EMPLOYEE E
                     WHERE R.IDNUM=E.IDNUM
                     AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
                     AND (STATUS='APPROVED' OR STATUS='DENIED')
+                    AND R.HRAPP_IS=0
                     ORDER BY LNAME";
             $result = $mysqli->query($myq);
             SQLerrorCatch($mysqli, $result);
@@ -145,8 +147,55 @@ function hrPayrolReportByEmployee($config){
 
 
             }//end While loop
-            echo 'number of rows: '.$x;
-            showSortableTable($theTable, 1);
+            echo '<h3>Pending HR Approval</h3>';
+            showSortableTable($theTable, 1, "hrPending");
+            //Second table to show approved by HR
+            $myq = "SELECT REFER, MUNIS, LNAME,FNAME,R.IDNUM
+                    FROM REQUEST R, EMPLOYEE E
+                    WHERE R.IDNUM=E.IDNUM
+                    AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+                    AND (STATUS='APPROVED' OR STATUS='DENIED')
+                    AND R.HRAPP_IS=1
+                    ORDER BY LNAME";
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result);
+
+            $theTable = array(array());
+            $x = 0;
+            $theTable[$x][0] = "View";
+            $theTable[$x][1] = "Munis #";
+            $theTable[$x][2] = "Employee";
+            $theTable[$x][3] = "Number of Requests";
+
+            $lastUser = '';
+            $lastUserRow = 0;
+            $recordCounter = 0;
+
+            while($row = $result->fetch_assoc()) {
+                if(strcmp($lastUser, $row['LNAME'].', '.$row['FNAME'])==0){
+                    $recordCounter++;
+                    $theTable[$x][3] = $recordCounter;
+                }
+                else{
+                    $x++;
+                    $recordCounter = 1;
+                    $lastUser = $row['LNAME'].', '.$row['FNAME'];
+
+                    $theTable[$x][0] = '<form method="POST">
+                        <input type="submit" name="viewDetailsBtn" value="View" />
+                        <input type="hidden" name="empID" value="'.$row['IDNUM'].'" />
+                        </form>';
+                    $theTable[$x][1] = $row['MUNIS'];
+                    $theTable[$x][2] = $lastUser;
+                    $theTable[$x][3] = $recordCounter;
+
+                }
+
+
+            }//end While loop
+            //echo 'number of rows: '.$x;
+            echo '<h3>HR Approvals</h3>';
+            showSortableTable($theTable, 1, "hrApprove");
         }
 
     //show a print button. printed look defined by print.css
@@ -182,7 +231,9 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
                     DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                     DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                     T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
-                    APR.LNAME 'ApprovedBy', REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
+                    APR.LNAME 'ApprovedBy', 
+                    DATE_FORMAT(REQUEST.ApprovedTS,'%a %b %d %Y') 'approveTS',
+                    REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
                 FROM REQUEST
                 LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
                 LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
@@ -212,7 +263,8 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
         $theTable[$x][$y] = "Comment"; $y++;
         $theTable[$x][$y] = 'Status'; $y++;
         $theTable[$x][$y] = 'ApprovedBy'; $y++;
-        $theTable[$x][$y] = 'Reason'; $y++;
+        $theTable[$x][$y] = 'Approved Time'; $y++;
+        $theTable[$x][$y] = 'Reason';
 
         while($row = $result->fetch_assoc()) {
             $x++;
@@ -237,10 +289,12 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
             $theTable[$x][$y] = $row['Comment']; $y++;
             $theTable[$x][$y] = $row['Status']; $y++;
             $theTable[$x][$y] = $row['ApprovedBy']; $y++;
-            $theTable[$x][$y] = $row['Reason']; $y++;
+            $theTable[$x][$y] = $row['approveTS']; $y++;
+            $theTable[$x][$y] = $row['Reason'];
         }
         echo '<div align="center"><h3>Employee: '.$empName.'</h3>Munis# '.$empMunis.'</div>';
-        showSortableTable($theTable, 1);
+        
+        showSortableTable($theTable, 2, "hrDetails", array(2,1));
         echo '<input type="hidden" name="totalRows" value="'.$x.'" />
               <input type="hidden" value="View" name="viewDetailsBtn">
               <input type="hidden" value="'.$empID.'" name="empID">';
