@@ -249,7 +249,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
         $theTable = array(array());
         $x = 0;
         $y = 0;
-        if($config->adminLvl >=50){
+        if($config->adminLvl >=50 && $config->adminLvl !=75){
             $theTable[$x][$y] = "HR Approve"; $y++;
         }
         $theTable[$x][$y] = "Ref #"; $y++;
@@ -269,7 +269,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
         while($row = $result->fetch_assoc()) {
             $x++;
             $y=0;
-            if($config->adminLvl >=50){
+            if($config->adminLvl >=50 && $config->adminLvl !=75){
                 if(!$row['HR_Approved'])
                     $theTable[$x][$y] = '<input type="submit" name="hrApprove'.$x.'" value="Approve" />';
                 else
