@@ -261,7 +261,7 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
             else{
                 echo $row['inTime'].'<br /><br />';
             }
-            if(strcmp($row['inTime'],"00/00/0000 0000")==0 || $config->adminLvl >=25){
+            if(strcmp($row['inTime'],"00/00/00 0000")==0 || $config->adminLvl >=25){
                 echo '<input type="submit" name="updateKeyLog" value="Update" />';
             }
             if($isApprove)
