@@ -274,6 +274,11 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
                     $theTable[$x][$y] = '<input type="submit" name="hrApprove'.$x.'" value="Approve" />';
                 else
                     $theTable[$x][$y] = 'Approved';
+                $theTable[$x][$y] .= '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
+                     '<input type="hidden" name="formName" value="'.$_SERVER['REQUEST_URI'].'"/>
+                      <input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
+                      <input type="hidden" value="2" name="totalRows" />';;
+                $theTable[$x][$y] .= '<input type="submit" name="deleteBtn'.$x.'" value="Expunge" />';
                 $y++;
             }
             $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
@@ -352,6 +357,29 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
     $echo .= '</table></div>';
     echo $echo;
     echo '<a href="javascript:window.print()">Print</a>';
+    
+    $refNo = '';
+    //Was Approve Button Pressed
+    if(isset($_POST['totalRows'])){
+        $totalRows = $_POST['totalRows'];
+        for($i=0;$i<=$totalRows;$i++){
+            if(isset($_POST['hrEdit'.$i])){
+                $refNo = $_POST['refNo'.$i];
+                echo '<input type="hidden"  name="editBtn1" value="Edit" />
+                      <input type="hidden" name="requestID1" value="'.$refNo.'" />
+                      <input type="hidden" value="2" name="totalRows" 
+                        onLoad="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />';
+            }
+            if(isset($_POST['deleteBtn'.$i])){
+                $refNo = $_POST['refNo'.$i];
+                echo '</form>';
+                $extraInputs = '<input type="hidden" value="View" name="viewDetailsBtn" />
+                    <input type="hidden" name="empID" value="'.$_POST['empID'].'" />
+                     <input type="hidden" name="refNo'.$i.'" value="'.$refNo.'" />';
+                expungeRequest($mysqli, $refNo, false, $deleteIndex=$i, $totalRows, $extraInputs);
+            }
+        }
+    }
 
 }
 function sickReport($config){
