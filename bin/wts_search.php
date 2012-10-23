@@ -3,13 +3,17 @@
 function searchPage($config) {
     $searchInput = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
     if ($searchInput) {
-        echo '<h3>Results for: ' . $searchInput . '</h3>';
-        $rowCount1 = selectUserSearch($config, $searchInput, 1);
-        $rowCount2 = searchDatabase($config, $searchInput, $rowCount1, true, false);
-        $rowCount3 = $rowCount1 + $rowCount2;
-        $rowCount3 = searchReserves($config, $searchInput, $rowCount3, false);
-        $rowCount3 = $rowCount1 + $rowCount2 + $rowCount3;
-        echo "Total Number of entries found is " . $rowCount3 . "<br /><br /><hr />";
+        if(is_numeric($searchInput))
+            searchByReference ($config, $searchInput);
+        else{
+            echo '<h3>Results for: ' . $searchInput . '</h3>';
+            $rowCount1 = selectUserSearch($config, $searchInput, 1);
+            $rowCount2 = searchDatabase($config, $searchInput, $rowCount1, true, false);
+            $rowCount3 = $rowCount1 + $rowCount2;
+            $rowCount3 = searchReserves($config, $searchInput, $rowCount3, false);
+            $rowCount3 = $rowCount1 + $rowCount2 + $rowCount3;
+            echo "Total Number of entries found is " . $rowCount3 . "<br /><br /><hr />";
+        }
     } else {
         echo 'No information provided';
     }
@@ -349,6 +353,83 @@ function displayUserLookup($config) {
     }//end search or lookup button pressed
     else //lookup button not pressed, show button to get to lookup page
         echo '<button type="button"  name="searchBtn" value="Lookup Employee" onClick="this.form.action=' . "'?userLookup=true'" . ';this.form.submit()" >Lookup Employee</button>';
+}
+function searchByReference($config, $searchInput){
+    echo 'Search Results for Reference #'.$searchInput;
+    echo '<br/><br/>Results for Time Requests';
+    $mysqli = $config->mysqli;
+    $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
+                DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', STATUS 'Status',
+                    DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                    DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                    T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
+                    APR.LNAME 'ApprovedBy', 
+                    DATE_FORMAT(REQUEST.ApprovedTS,'%a %b %d %Y') 'approveTS',
+                    REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
+                FROM REQUEST
+                LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
+                LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
+                LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.HRAPP_ID
+                INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
+                WHERE REQUEST.REFER='".$searchInput."'
+                ";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+
+        $theTable = array(array());
+        $x = 0;
+        $y = 0;
+        if($config->adminLvl >=50 && $config->adminLvl !=75){
+            $theTable[$x][$y] = "HR Approve"; $y++;
+            $theTable[$x][$y] = "Expunge"; $y++;
+        }
+        $theTable[$x][$y] = "Ref #"; $y++;
+        $theTable[$x][$y] = "Employee"; $y++;
+        $theTable[$x][$y] = "Date of Use"; $y++;
+        $theTable[$x][$y] = "Start Time"; $y++;
+        $theTable[$x][$y] = "End Time"; $y++;
+        $theTable[$x][$y] = "Hours"; $y++;
+        $theTable[$x][$y] = "Type"; $y++;
+        $theTable[$x][$y] = "Subtype"; $y++;
+        $theTable[$x][$y] = "Call Off"; $y++;
+        $theTable[$x][$y] = "Comment"; $y++;
+        $theTable[$x][$y] = 'Status'; $y++;
+        $theTable[$x][$y] = 'ApprovedBy'; $y++;
+        $theTable[$x][$y] = 'Approved Time'; $y++;
+        $theTable[$x][$y] = 'Reason';
+
+        while($row = $result->fetch_assoc()) {
+            $x++;
+            $y=0;
+            if($config->adminLvl >=50 && $config->adminLvl !=75){
+                if(!$row['HR_Approved'])
+                    $theTable[$x][$y] = '<input type="submit" name="hrApprove'.$x.'" value="Approve" />';
+                else
+                    $theTable[$x][$y] = '<div align="center"><h3><font color="red">Approved</font></h3></div>';
+                $theTable[$x][$y] .= '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
+                     '<input type="hidden" name="formName" value="'.$_SERVER['REQUEST_URI'].'"/>
+                      <input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
+                      <input type="hidden" value="2" name="totalRows" />';$y++;
+                $theTable[$x][$y] = '<br/><input type="submit" name="deleteBtn'.$x.'" value="Expunge" />';$y++;
+            }
+            $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
+            $empMunis = $row['Munis'];
+            $empName = $row['Name'];
+            $theTable[$x][$y] = $empName; $y++;
+            $theTable[$x][$y] = $row['Used']; $y++;
+            $theTable[$x][$y] = $row['Start']; $y++;
+            $theTable[$x][$y] = $row['End']; $y++;
+            $theTable[$x][$y] = $row['Hrs']; $y++;
+            $theTable[$x][$y] = $row['Type']; $y++;
+            $theTable[$x][$y] = $row['Subtype']; $y++;
+            $theTable[$x][$y] = $row['Calloff']; $y++;
+            $theTable[$x][$y] = $row['Comment']; $y++;
+            $theTable[$x][$y] = $row['Status']; $y++;
+            $theTable[$x][$y] = $row['ApprovedBy']; $y++;
+            $theTable[$x][$y] = $row['approveTS']; $y++;
+            $theTable[$x][$y] = $row['Reason'];
+        }
+        showSortableTable($theTable, 7, "hrDetails", array(2));
 }
 
 ?>
