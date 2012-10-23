@@ -327,8 +327,8 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
     ?>
     <link rel="stylesheet" type="text/css" href="bin/jQuery/css/smoothness/jquery-ui-1.8.4.custom.css" id="link"/>
     <link rel="stylesheet" type="text/css" href="bin/jQuery/css/base.css" />			
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
     <script type="text/javascript" src="bin/jQuery/js/highlighter/codehighlighter.js"></script>	
     <script type="text/javascript" src="bin/jQuery/js/highlighter/javascript.js"></script>			
     <script type="text/javascript" src="bin/jQuery/js/jquery.fixheadertable.min.js"></script>		
