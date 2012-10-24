@@ -6,7 +6,7 @@ function searchPage($config) {
         if(is_numeric($searchInput)){
             echo '<form name="numericSearch" method="POST">
                 <input type="hidden" value="submittedRequests" name="formName">';
-            searchByReference ($config, $searchInput);
+            searchTimeReqByRef($config, $searchInput);
             echo '</form>';
         }
         else{
@@ -358,10 +358,15 @@ function displayUserLookup($config) {
     else //lookup button not pressed, show button to get to lookup page
         echo '<button type="button"  name="searchBtn" value="Lookup Employee" onClick="this.form.action=' . "'?userLookup=true'" . ';this.form.submit()" >Lookup Employee</button>';
 }
-function searchByReference($config, $searchInput){
+function searchTimeReqByRef($config, $searchInput){
     echo 'Search Results for Reference #'.$searchInput;
-    echo '<br/><br/>Results for Time Requests';
+    echo '<br/><br/><h2>Results for Time Requests</h2>';
     $mysqli = $config->mysqli;
+    if($config->adminLvl < 25){
+        //only allow to search own reference numbers
+        $searchInput .= "'
+            AND REQUEST.IDNUM = '".$_SESSION['userIDnum'];
+    }
     $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
                 DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', STATUS 'Status',
                     DATE_FORMAT(BEGTIME,'%H%i') 'Start',
@@ -385,6 +390,9 @@ function searchByReference($config, $searchInput){
         $y = 0;
         if($config->adminLvl >=50 && $config->adminLvl !=75){
             $theTable[$x][$y] = "HR Approve"; $y++;
+        }
+        else{
+            $theTable[$x][$y] = "Edit"; $y++;
         }
         $theTable[$x][$y] = "Ref #"; $y++;
         $theTable[$x][$y] = "Employee"; $y++;
@@ -410,6 +418,11 @@ function searchByReference($config, $searchInput){
                 else
                     $theTable[$x][$y] = '<div align="center"><h3><font color="red">Approved</font></h3></div>';
                 $theTable[$x][$y] .= '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
+                     '<input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
+                      <input type="hidden" value="2" name="totalRows" />';$y++;
+            }
+            else{
+                $theTable[$x][$y] = '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
                      '<input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
                       <input type="hidden" value="2" name="totalRows" />';$y++;
             }
