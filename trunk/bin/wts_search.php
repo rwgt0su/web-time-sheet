@@ -3,8 +3,12 @@
 function searchPage($config) {
     $searchInput = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
     if ($searchInput) {
-        if(is_numeric($searchInput))
+        if(is_numeric($searchInput)){
+            echo '<form name="numericSearch" method="POST">
+                <input type="hidden" value="submittedRequests" name="formName">';
             searchByReference ($config, $searchInput);
+            echo '</form>';
+        }
         else{
             echo '<h3>Results for: ' . $searchInput . '</h3>';
             $rowCount1 = selectUserSearch($config, $searchInput, 1);
@@ -381,7 +385,6 @@ function searchByReference($config, $searchInput){
         $y = 0;
         if($config->adminLvl >=50 && $config->adminLvl !=75){
             $theTable[$x][$y] = "HR Approve"; $y++;
-            $theTable[$x][$y] = "Expunge"; $y++;
         }
         $theTable[$x][$y] = "Ref #"; $y++;
         $theTable[$x][$y] = "Employee"; $y++;
@@ -403,14 +406,12 @@ function searchByReference($config, $searchInput){
             $y=0;
             if($config->adminLvl >=50 && $config->adminLvl !=75){
                 if(!$row['HR_Approved'])
-                    $theTable[$x][$y] = '<input type="submit" name="hrApprove'.$x.'" value="Approve" />';
+                    $theTable[$x][$y] = 'Pending';
                 else
                     $theTable[$x][$y] = '<div align="center"><h3><font color="red">Approved</font></h3></div>';
                 $theTable[$x][$y] .= '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
-                     '<input type="hidden" name="formName" value="'.$_SERVER['REQUEST_URI'].'"/>
-                      <input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
+                     '<input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
                       <input type="hidden" value="2" name="totalRows" />';$y++;
-                $theTable[$x][$y] = '<br/><input type="submit" name="deleteBtn'.$x.'" value="Expunge" />';$y++;
             }
             $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
             $empMunis = $row['Munis'];
