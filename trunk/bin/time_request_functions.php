@@ -411,12 +411,14 @@ else{
 
                 </br>
                 <p>Comment: <textarea rows="3" cols="40" name="comment" ><?php echo $comment; ?></textarea></p>
-                <?php if($updatingRequest==='submittedRequests' || $requestAccepted)
+                <?php 
+            //popUpMessage($updatingRequest);
+                if($updatingRequest==='submittedRequests' || $requestAccepted)
                     echo '<p><input type="hidden" name="formName" value="submittedRequests" />
                         <input type="submit" name="update" value="Update Request">
                         <input type="submit" name="duplicateBtn" value="Duplicate Request" />
                         <INPUT TYPE="button" value="Back to My Requests" onClick="parent.location=\'wts_index.php?myReq=true\'"></p>';
-                else if(isset($updatingRequest))
+                else if(strpos($updatingRequest, 'hrEmpRep=true'))
                     echo '<p><input type="hidden" name="formName" value="submittedRequests" />
                         <input type="submit" name="update" value="Update Request">
                         <input type="submit" name="duplicateBtn" value="Duplicate Request" />
