@@ -1027,9 +1027,10 @@ function checkInRadioLog($config, $radioLogID, $noLog=false){
         `AUDIT_IN_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE WTS_RADIOLOG.REFNUM = ".$radioLogID." LIMIT 1 ;";
     $result = $mysqli->query($myq);
     if(!SQLerrorCatch($mysqli, $result)){
-            echo '<font color="red">Successfully checked item back in with Reference Number: '.$radioLogID.'</font><br /><br/>';
-            if(!$noLog)
+            if(!$noLog){
+                echo '<font color="red">Successfully checked item back in with Reference Number: '.$radioLogID.'</font><br /><br/>';
                 addLog($config, 'Radio log #'.$radioLogID.' checked back in');
+            }
     }
     else
         echo '<h2>Results</h2><font color="red">Failed to check radio back in, try again.</font><br /><Br />';  
@@ -1151,9 +1152,10 @@ function checkOutItem($config, $deputyID, $radioCallNum, $itemID, $itemTypeID, $
         $result = $mysqli->query($myq);
         if(!SQLerrorCatch($mysqli, $result, $myq)) {
             $inventoryLogID = $mysqli->insert_id;
-            if(!$noLog)
+            if(!$noLog){
                 addLog($config, $itemType.' Checked out Ref#'.$inventoryLogID.' Added');
-            echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br/>';
+                echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br/>';
+            }
         }
         else
             echo '<font color="red">Failed to check out '.$itemType.', try again.</font><br/>';
@@ -1178,7 +1180,7 @@ function showItemExchange($config, $radioLogID){
     $radioID = $item['RADIOID'];
     
     
-    echo $item['itemType'].' '.$item['OTHER_SN'].' will be exchanged from '.$item['deputyName'].' to: <br/>';
+    echo '<br/>'.$item['itemType'].' '.$item['OTHER_SN'].' will be exchanged from '.$item['deputyName'].' to: <br/>';
     
     
 
@@ -1188,6 +1190,9 @@ function showItemExchange($config, $radioLogID){
     $isExchanged = false;
     $deputyCount=0;
     $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
+    $exchangeBtn = isset($_POST['exchangeItemBtn']) ? true : false;
+    $removeBtn = false;
+    
     if($num_deputies > 0){
         for($i=0;$i<$num_deputies;$i++){
             if(!isset($_POST['removeDeputyBtn'.$i])){
@@ -1198,13 +1203,13 @@ function showItemExchange($config, $radioLogID){
                 if($isReserve[$i]){
                     $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM RESERVE WHERE IDNUM='.$deputyID[$i];
                     $result = $mysqliReserve->query($myq);
-                    SQLerrorCatch($mysqliReserve, $result);
+                    SQLerrorCatch($mysqliReserve, $result, $myq);
                     $row = $result->fetch_assoc();
                 }
                 else{
                     $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM='.$deputyID[$i];
                     $result = $mysqli->query($myq);
-                    SQLerrorCatch($mysqli, $result);
+                    SQLerrorCatch($mysqli, $result, $myq);
                     $row = $result->fetch_assoc();
                 }  
                 if($i==0)
@@ -1215,7 +1220,7 @@ function showItemExchange($config, $radioLogID){
                 echo $row['LNAME'] . ', ' . $row['FNAME'];
                 echo ';  Radio Call #: <input type="hidden" name="radioCallNum'.$deputyCount.'" value="'.$row['RADIO'].'" />'.$row['RADIO'];
                 echo '<br/>';
-                if(isset($_POST['exchangeItemBtn'])){
+                if($exchangeBtn){
                     checkInRadioLog($config, $radioLogID, $noLog=true);
                     $noteq = "UPDATE WTS_RADIOLOG SET EXCHANGEID = '".$deputyID[$i]."' WHERE REFNUM='".$radioLogID."';";
                     $noteResult = $mysqli->query($noteq);
@@ -1225,12 +1230,14 @@ function showItemExchange($config, $radioLogID){
                     $insertLogID = checkOutItem($config, $deputyID[$i], $row['RADIO'], $radioID, $item['itemTypeID'], "SHIFT", $tempReserve, "0", $noLog=true);
                 
                     addLog($config, 'Exchanged Log Ref#'.$radioLogID.' with Ref#'.$insertLogID);
-                    echo 'Exchanged Log Ref#'.$radioLogID.' with Ref#'.$insertLogID.'<br/>';
+                    echo '<br/><font color="red">Exchanged Ref#'.$radioLogID.' with Ref#'.$insertLogID.'</font><br/>';
                     $isExchanged = true;
                 }
                
                 $deputyCount++;
-            }
+            }//End check for remove button
+            else
+                $removeBtn = true;
         }//End for loop of previously added deputies
     }//End check for multiple deputies
      if(!$isExchanged){
@@ -1271,7 +1278,12 @@ function showItemExchange($config, $radioLogID){
 //    }
     
     //Start to display information
-    if(!empty($foundUserID)){
+    if(empty($foundUserID) && !$removeBtn){
+        //default to logged in deputy
+        $foundUserID = $_SESSION['userIDnum'];
+        $foundUserIsReserve = false;
+    }
+    if(!empty($foundUserID) && !$exchangeBtn){
         if($foundUserIsReserve){
             $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM RESERVE WHERE IDNUM='.$foundUserID;
             $result = $mysqliReserve->query($myq);
@@ -1287,15 +1299,18 @@ function showItemExchange($config, $radioLogID){
 
         if($deputyCount==0)
             $phone = $row['CELLPH'];
-        echo 'Deputy: <input type="hidden" name="deputyID'.$deputyCount.'" value="'.$foundUserID.'" />';
+        echo '<br/>Deputy: <font color="red"><input type="hidden" name="deputyID'.$deputyCount.'" value="'.$foundUserID.'" />';
         if($foundUserIsReserve)
             echo '<input type="hidden" name="isReserve'.$deputyCount.'" value="true" />';
         echo $row['LNAME'] . ', ' . $row['FNAME'];
-        echo ';  Radio Call#: <input type="hidden" name="radioCallNum'.$deputyCount.'" value="'.$row['RADIO'].'" />'.$row['RADIO'];
+        echo '</font>;  Radio Call#: <input type="hidden" name="radioCallNum'.$deputyCount.'" value="'.$row['RADIO'].'" />'.$row['RADIO'];
+        echo '<input type="submit" name="removeDeputyBtn'.$deputyCount.'" value="Remove" />';
         echo '<br/>';
         $deputyCount++;
     }
     if($deputyCount < 1){
+        //default to logged in deputy
+        
         echo 'Add Deputy: ';
         displayUserLookup($config);
     }
