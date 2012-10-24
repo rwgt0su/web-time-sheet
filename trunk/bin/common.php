@@ -359,26 +359,50 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
                         return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
                 }
         });
-        $(document).ready(function() {  	
-            $('#selectTable').fixheadertable({ 
-                    caption : 'Selected Values', 
-                    showhide : false,
-                    startHide : false,
-                    colratio : [50,100,100,250<?php if($selectOnly) echo ',100,100'; else echo ',200'; ?>], 
-                    height : <?php echo $tableHeight; ?>, 
-                    width : 700,
-                    minWidthAuto   : true,
-                    whiteSpace : 'normal',
-                    zebra : true, 
-                    sortable : true,
-                    //sortedColId : 1, 
-                    resizeCol : true,
-                    pager : false,
-                    rowsPerPage	 : 10, //default
-                    //sortType : ['integer', 'string', 'string', 'string', 'string', 'date'],
-                    sortedColId    : <?php echo $rowToSort; ?>,
-                    dateFormat : 'm/d/Y'
-            });
+        $(document).ready(function() {
+            if(/msie|MSIE 6/.test(navigator.userAgent)){
+                    $('#selectTable').fixheadertable({ 
+                        caption : 'Selected Values', 
+                        showhide : false,
+                        startHide : true,
+                        colratio : [50,100,100,250<?php if($selectOnly) echo ',100,100'; else echo ',200'; ?>], 
+                        height : <?php echo $tableHeight; ?>, 
+                        width : 700,
+                        minWidthAuto   : true,
+                        whiteSpace : 'normal',
+                        zebra : true, 
+                        sortable : true,
+                        //sortedColId : 1, 
+                        resizeCol : true,
+                        pager : false,
+                        rowsPerPage	 : 10, //default
+                        //sortType : ['integer', 'string', 'string', 'string', 'string', 'date'],
+                        sortedColId    : <?php echo $rowToSort; ?>,
+                        dateFormat : 'm/d/Y'
+                });
+                alert('Your computer is using Internet Explorer Version 6!  \nFunctionality is limited in order to use this website');
+            }
+            else{            
+                $('#selectTable').fixheadertable({ 
+                        caption : 'Selected Values', 
+                        showhide : false,
+                        startHide : false,
+                        colratio : [50,100,100,250<?php if($selectOnly) echo ',100,100'; else echo ',200'; ?>], 
+                        height : <?php echo $tableHeight; ?>, 
+                        width : 700,
+                        minWidthAuto   : true,
+                        whiteSpace : 'normal',
+                        zebra : true, 
+                        sortable : true,
+                        //sortedColId : 1, 
+                        resizeCol : true,
+                        pager : false,
+                        rowsPerPage	 : 10, //default
+                        //sortType : ['integer', 'string', 'string', 'string', 'string', 'date'],
+                        sortedColId    : <?php echo $rowToSort; ?>,
+                        dateFormat : 'm/d/Y'
+                });
+            }
             $('#floatingTH').fixheadertable({ 
                     caption : 'Choose From', 
                     showhide : true,
@@ -405,34 +429,40 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
         <script type="text/javascript">
             function Move(tr,cell)
             {
-                while (tr.parentNode&&tr.nodeName.toUpperCase()!='TR')
-                {
-                    tr=tr.parentNode;
+                if(/msie|MSIE 6/.test(navigator.userAgent)){
+                    //alert('Your computer is using Internet Explorer Version 6!  \nFunctionality is limited in order to use this website');
                 }
-                var table1=document.getElementById('tst1');
-                if (!this.rows)
-                {
-                    var rows=table1.getElementsByTagName('TR');
-                    this.rows=[];
-                    for (var z0=0;z0<rows.length;z0++)
+                else{
+                    while (tr.parentNode&&tr.nodeName.toUpperCase()!='TR')
                     {
-                        this.rows[z0]=rows[z0];
+                        tr=tr.parentNode;
                     }
-                }
-                var table2=document.getElementById('tst2');
-                if (tr.parentNode!=table2)
-                {
-                    table2.appendChild(tr);
-                }
-                else 
-                {       
-                    table1.appendChild(tr);
-
-                    for (var z0=0;z0<this.rows.length;z0++)
+                    var table1=document.getElementById('tst1');
+                    if (!this.rows)
                     {
-                        if (this.rows[z0].parentNode==table1)
+                        var rows=table1.getElementsByTagName('TR');
+                        this.rows=[];
+                        for (var z0=0;z0<rows.length;z0++)
                         {
-                            table1.appendChild(this.rows[z0]);
+                            this.rows[z0]=rows[z0];
+                        }
+                    }
+                    var table2=document.getElementById('tst2');
+                    if (tr.parentNode!=table2)
+                    {
+                        //if tr's parent is not in test 2 table then add it to test2
+                        table2.appendChild(tr);
+                    }
+                    else 
+                    {       
+                        table1.appendChild(tr);
+
+                        for (var z0=0;z0<this.rows.length;z0++)
+                        {
+                            if (this.rows[z0].parentNode==table1)
+                            {
+                                table1.appendChild(this.rows[z0]);
+                            }
                         }
                     }
                 }
