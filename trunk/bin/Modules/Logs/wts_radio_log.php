@@ -1278,8 +1278,8 @@ function showItemExchange($config, $radioLogID){
 //    }
     
     //Start to display information
-    if(empty($foundUserID) && !$removeBtn){
-        //default to logged in deputy
+    if(empty($foundUserID) && !$removeBtn && $_SERVER['REMOTE_ADDR'] != '10.1.32.58'/*nslookup('mcjcbcast.sheriff.mahoning.local')*/){
+        //default to logged in deputy if remove button was not pressed and this is not the central computer
         $foundUserID = $_SESSION['userIDnum'];
         $foundUserIsReserve = false;
     }
