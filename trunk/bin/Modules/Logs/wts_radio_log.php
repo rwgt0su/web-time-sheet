@@ -58,6 +58,11 @@ function displayRadioLog($config, $isApprovePage = false){
                 $exchangeLogID = '';
             }
             if(!$isApprovePage && !isset($_POST['exchangeLogID'])){
+                if(!$changeDateBtn && !$dateSelect){
+                    //default to today's date
+                    $dateSelect = date('m/d/Y');
+                    $goBtn = true;
+                }
                 if(!$dateSelect){
                     echo 'Select Date: ';
                     displayDateSelect("dateSelect", "dateSel",false,false,true,true);
@@ -326,7 +331,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             if($showAll)
                 $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
             else
-                $showAllQ = "AUDIT_OUT_TS LIKE '%".Date('Y-m-d', strtotime($dateSelect))."%'";
+                $showAllQ = "R.CHECKEDOUT=1";
             $myq =  "SELECT R.REFNUM, T.DESCR 'itemType', R.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', 
                     INV.OTHER_SN, R.RADIO_CALLNUM, R.TYPE 'checkOutType', R.CHECKEDOUT 'isCheckedOut',
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut', R.COMMENTS, 
