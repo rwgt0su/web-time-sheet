@@ -171,7 +171,7 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                     else if($noBtn){
                         echo 'Canceled Submitting Request.';
                     }
-                    else if( ($type == 'OT' || $type == 'AG') && strtotime($usedate->format('Y-m-d')) >= strtotime(date('Y-m-d')) ){
+                    else if( ($type == 'OT' || $type == 'AG') && strtotime($usedate->format('Y-m-d')) > strtotime(date('Y-m-d')) ){
                        echo '<font color="red">Can not submit for Overtime or Comp Time Gain unless it is on or after the date of use</font>'; 
                     }
                     else{
