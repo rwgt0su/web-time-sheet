@@ -660,7 +660,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                         $theTable[$x][$y] ='';
                         if($config->adminLvl>=0)
                             $theTable[$x][$y] ='<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" /><br/>';
-                        $theTable[$x][$y] .= '<input type="submit" name="exchangeBtn'.$x.'" value="Exchange" />'; $y++;
+                        $theTable[$x][$y] .= '<input type="submit" name="exchangeBtn'.$counter.'" value="Exchange" />'; $y++;
                     }
                     else{
                         $theTable[$x][$y] = "Checked Out"; $y++;
