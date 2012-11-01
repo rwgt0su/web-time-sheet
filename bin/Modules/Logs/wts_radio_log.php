@@ -554,7 +554,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     else{
                         $theTable[$x][$y] = "Checked In"; $y++;
                     }  
-                    if($config->adminLvl >=25){
+                    if($config->adminLvl >=25 && false){
                         $theTable[$x][$y] =$row['SUP_ID']; $y++;
                         if($row['SUP_TIME']=="00/00/00 0000"){
                             $theTable[$x][$y] = ""; $y++;
@@ -600,7 +600,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     $theTable[$x][$y] = $row['AUDIT_IN_ID']; 
                 $y++;
                 if($row['isCheckedOut'] == 1){
-                    if($config->adminLvl >=50){
+                    if($config->adminLvl >25){
                         $theTable[$x][$y] = '<input type="submit" name="checkInRadio'.$counter.'" value="Check Back In" />'; $y++;
                     }
                     else{
