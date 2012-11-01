@@ -92,7 +92,7 @@ function displayAnnounce($config){
     }
 function displayAdminAnnounce($config){
     echo '<div align="center"><h2>Announcement Manager</h3></div> ';
-    if($config->adminLvl >= 50 || strcmp(strtoupper($_SESSION['userName']), "SSZEKELY") == 0){
+    if($config->adminLvl >= 30){
         $editorDisplay = isset($_GET['editAnnounce']) ? $_GET['editAnnounce'] : false;
         
         if(!$editorDisplay && !isset($_POST['addAnnounce'])){
