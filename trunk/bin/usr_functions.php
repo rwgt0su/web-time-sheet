@@ -103,7 +103,7 @@ function loginUser($user,$pass){
             //check password entry with stored password
             if (strcmp(trim($resultAssoc['PASSWD']), trim(saltyHash($pass))) == 0)
             {
-				$errorText .= " and Valid password ";
+                $errorText .= " and Valid password ";
                 $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
                 $_SESSION['userName'] = $user;
                 $_SESSION['admin'] = $admin;
@@ -186,6 +186,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $_SESSION['validUser'] = true;
                         $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
+                        session_regenerate_id();
                         $validUser = true;
                         $configNew = new Config();
                         $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
@@ -217,6 +218,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                     $_SESSION['validUser'] = true;
                     $_SESSION['isLDAP'] = false;
                     $_SESSION['timeout'] = time();
+                    session_regenerate_id();
                     $validUser = true;
                     $configNew = new Config();
                     $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
@@ -287,6 +289,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $_SESSION['validUser'] = true;
                         $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
+                        session_regenerate_id();
                         $validUser = true;
                         $configNew = new Config();
                         $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
