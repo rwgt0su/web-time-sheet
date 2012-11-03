@@ -442,7 +442,7 @@ else{
         }
 } // end displayLeaveForm()
 
-function displaySubmittedRequests(){  
+function displaySubmittedRequests($config){  
     /*
     * A report of recent leave requests with
     * different views according to admin level
@@ -450,6 +450,24 @@ function displaySubmittedRequests(){
 
     $mysqli = connectToSQL();
     $admin = $_SESSION['admin'];
+    
+    if(isset($_POST['totalRows'])){
+        $totalRows = $_POST['totalRows'];
+        for($i=0;$i<=$totalRows;$i++){
+            if(isset($_POST['pendingBtn'.$i])){
+                $refNo = $_POST['requestID'.$i];
+                $myq = $myq="UPDATE REQUEST 
+                    SET STATUS='PENDING',
+                    `HRAPP_IS` = '0',
+                    APPROVEDBY=''
+                    WHERE REFER=".$refNo;
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result, $myq);
+                addLog($config, 'Ref# '.$refNo.' status was changed to pending');
+                break;
+            }
+        }
+    }
 
     //what pay period are we currently in?
     $payPeriodQuery = "SELECT * FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
@@ -743,8 +761,12 @@ function displaySubmittedRequests(){
                         else
                             echo '<td></td>';
                     }
-                    else //load results
+                    else{ //load results
+                        if(($resultArray[$y-2] == 'APPROVED' || $resultArray[$y-2] == 'DENIED') && !$resultArray['isHRApproved']){
+                            echo '<td>'. $resultArray[$y-2].'<input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" /></td>';
+                        }
                         echo '<td>'. $resultArray[$y-2].'</td>';
+                    }
                 }//end if EXPUNGED
             }//end for loop
         } //end admin table

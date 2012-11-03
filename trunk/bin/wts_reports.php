@@ -214,6 +214,18 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
                 $refNo = $_POST['refNo'.$i];
                 break;
             }
+            if(isset($_POST['pendingBtn'.$i])){
+                $refNo = $_POST['refNo'.$i];
+                $myq = $myq="UPDATE REQUEST 
+                    SET STATUS='PENDING',
+                    `HRAPP_IS` = '0',
+                    APPROVEDBY=''
+                    WHERE REFER=".$refNo;
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result, $myq);
+                addLog($config, 'Ref# '.$refNo.' status was changed to pending');
+                break;
+            }
         }
     }
     if(!empty($refNo)){
@@ -224,6 +236,7 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
             `HRAPP_TIME` = NOW( ) WHERE `REQUEST`.`REFER` =".$refNo;
          $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
+        addLog($config, 'HR Approved Request with ref# '.$refNo);
     }
     
     $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
@@ -292,10 +305,27 @@ function empTimeReportByPay($config, $startDate, $endDate, $empID){
             $theTable[$x][$y] = $row['Subtype']; $y++;
             $theTable[$x][$y] = $row['Calloff']; $y++;
             $theTable[$x][$y] = $row['Comment']; $y++;
-            $theTable[$x][$y] = $row['Status']; $y++;
+            if($row['Status'] != 'PENDING' && $config->adminLvl >=25){
+                $theTable[$x][$y] = $row['Status'].'<input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
+            }
+            else
+                $theTable[$x][$y] = $row['Status']; 
+            $y++;
             $theTable[$x][$y] = $row['ApprovedBy']; $y++;
             $theTable[$x][$y] = $row['approveTS']; $y++;
             $theTable[$x][$y] = $row['Reason'];
+        }
+        if(empty($empName)){
+            $myq = "SELECT REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name'
+                FROM EMPLOYEE REQ
+                WHERE REQ.IDNUM='".$empID." LIMIT 1'
+                ";
+            $result = $mysqli->query($myq);
+            SQLerrorCatch($mysqli, $result, $myq);
+            $row = $result->fetch_assoc();
+            $empMunis = $row['Munis'];
+            $empName = $row['Name'];
+            
         }
         echo '<div align="center"><h3>Employee: '.$empName.'</h3>Munis# '.$empMunis.'</div>';
         
