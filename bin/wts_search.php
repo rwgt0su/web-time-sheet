@@ -362,6 +362,24 @@ function searchTimeReqByRef($config, $searchInput){
     echo 'Search Results for Reference #'.$searchInput;
     echo '<br/><br/><h2>Results for Time Requests</h2>';
     $mysqli = $config->mysqli;
+    
+    if(isset($_POST['totalRows'])){
+        $totalRows = $_POST['totalRows'];
+        for($i=0;$i<=$totalRows;$i++){
+            if(isset($_POST['pendingBtn'.$i])){
+                $refNo = $_POST['refNo'.$i];
+                $myq = $myq="UPDATE REQUEST 
+                    SET STATUS='PENDING',
+                    `HRAPP_IS` = '0',
+                    APPROVEDBY=''
+                    WHERE REFER=".$refNo;
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result, $myq);
+                addLog($config, 'Ref# '.$refNo.' status was changed to pending');
+                break;
+            }
+        }
+    }
     if($config->adminLvl < 25){
         //only allow to search own reference numbers
         $searchInput .= "'
@@ -438,11 +456,17 @@ function searchTimeReqByRef($config, $searchInput){
             $theTable[$x][$y] = $row['Subtype']; $y++;
             $theTable[$x][$y] = $row['Calloff']; $y++;
             $theTable[$x][$y] = $row['Comment']; $y++;
-            $theTable[$x][$y] = $row['Status']; $y++;
+            if($row['Status'] != 'PENDING' && $config->adminLvl >=25){
+                $theTable[$x][$y] = $row['Status'].'<input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
+            }
+            else
+                $theTable[$x][$y] = $row['Status']; 
+            $y++;
             $theTable[$x][$y] = $row['ApprovedBy']; $y++;
             $theTable[$x][$y] = $row['approveTS']; $y++;
             $theTable[$x][$y] = $row['Reason'];
         }
+        echo '<input type="hidden" name="searchInput" value="'.$searchInput.'" />';
         showSortableTable($theTable, 7, "hrDetails", array(2));
 }
 

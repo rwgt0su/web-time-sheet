@@ -30,7 +30,7 @@ function displayContent($wts_content, $config){
         }
         if($wts_content->isSubmittedRequests){
             ?>
-            <div class="post"><?php displaySubmittedRequests(); ?><div class="clear"></div></div><div class="divider"></div>
+            <div class="post"><?php displaySubmittedRequests($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
         if($wts_content->isLeaveApproval){
