@@ -96,10 +96,12 @@ function hrPayrolReportByEmployee($config){
         
         <?php
         $viewBtn = isset($_POST['viewDetailsBtn']) ? true : false;
+        $viewBtn = isset($_POST['backBtn']) ? false : $viewBtn;
         if($viewBtn){
-            echo '<div align="center"><a href="'.$_SERVER['REQUEST_URI'].'">Back</a></div>';
+            //echo '<div align="center"><a href="'.$_SERVER['REQUEST_URI'].'">Back</a></div>';
             $empID = isset($_POST['empID']) ? $_POST['empID'] : '';
             echo '<form method="POST">';
+            echo '<div align="center"><input type="submit" name="backBtn" value="Back" /></div><Br/>';
             empTimeReportByPay($config, $startDate, $endDate, $empID);
         }
         else{
