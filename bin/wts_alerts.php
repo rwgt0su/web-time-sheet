@@ -39,7 +39,7 @@ function alert_VerifyUsers($config){
     } 
 }
 function alert_PostPayrollValidation($config){
-    if($config->adminLvl >=50){
+    if($config->adminLvl == 50){
         $dismiss = isset($_POST['dismissPostValidBtn']) ? true : false;
         $dismiss = isset($_GET['postPayrollValid']) ? true : $dismiss;
         //No dismissal session variable for real time alerting
