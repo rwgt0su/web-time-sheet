@@ -27,7 +27,7 @@ function displayRadioLog($config, $isApprovePage = false){
             $editBtn = isset($_POST['editBtn']) ? True : false;
             $radioLogID = isset($_POST['radioLogID']) ? $_POST['radioLogID'] : false;
             $keyLogID = isset($_POST['keyLogID']) ? $_POST['keyLogID'] : false;
-            $finalRows = isset($_POST['finalRows']) ? $_POST['finalRows'] : false;
+            $finalRows = isset($_POST['finalRows']) ? $_POST['finalRows'] : false; 
             $checkInKey = isset($_POST['checkInKey']) ? true : false;
             $updateRadioLog = isset($_POST['updateRadioLog']) ? true : false;
             $updateKeyLog = isset($_POST['updateKeyLog']) ? true : false;
@@ -57,7 +57,18 @@ function displayRadioLog($config, $isApprovePage = false){
                 $goBtn = true;
                 $exchangeLogID = '';
             }
-            if(!$isApprovePage && !isset($_POST['exchangeLogID'])){
+            $exchangeBtnINV = false;
+            for($i=1;$i<=$totalRows;$i++){
+                if(isset($_POST['exchangeBtnINV'.$i])){
+                    $exchangeLogID = $_POST['refNum'.$i];
+                    $finalRows = 0;
+                    $checkoutKeyBtn = false;
+                    $exchangeBtnINV = true;
+                    $_POST['num_deputies'] = 0;
+                    break;
+                }
+            }
+            if(!$isApprovePage && (!isset($_POST['exchangeLogID']) || !$exchangeBtnINV)){
                 if(!$changeDateBtn && !$dateSelect){
                     //default to today's date
                     $dateSelect = date('m/d/Y');
@@ -184,7 +195,7 @@ function displayRadioLog($config, $isApprovePage = false){
                         $counter += showRadioLog($config, $dateSelect, $counter, "LOANER", false, $isApprovePage=true);
                         $counter += showRadioLog($config, $dateSelect, $counter, "SHIFT", false);
                         $counter += showRadioLog($config, $dateSelect, $counter, "PERM");
-                    }
+                    }                   
                 }
                 if($foundEditBtn){
 //                    if($itemLogType == "RADIO")
@@ -1091,10 +1102,10 @@ function selectRadioInventory($config, $inputName, $selectedValue=false, $onChan
         $itemDesc = '';
         if(!empty($row['DESCR']))
             $itemDesc = ' ('.$row['DESCR'].')';
-        if($row['IDNUM'] == $selectedValue)
-            echo '<option value="'.$row['IDNUM'].'" SELECTED>'.$row['OTHER_SN'].$itemDesc.'</option>';
-        else
-            echo '<option value="'.$row['IDNUM'].'">'.$row['OTHER_SN'].$itemDesc.'</option>';
+            if($row['IDNUM'] == $selectedValue)
+                echo '<option value="'.$row['IDNUM'].'" SELECTED>'.$row['OTHER_SN'].$itemDesc.'</option>';
+            else
+                echo '<option value="'.$row['IDNUM'].'">'.$row['OTHER_SN'].$itemDesc.'</option>';
         
     }
     
@@ -1172,6 +1183,13 @@ function checkOutItem($config, $deputyID, $radioCallNum, $itemID, $itemTypeID, $
 function showItemExchange($config, $radioLogID){
     $mysqli = $config->mysqli;
     
+    $dbgTrace = debug_backtrace();
+    $dbgMsg = "<table><tr><th>Debug backtrace begin:</th></tr>";
+    foreach($dbgTrace as $dbgIndex => $dbgInfo) {
+        $dbgMsg .= '<tr width=300><td>'.$dbgInfo['file'].' (line '.$dbgInfo['line'].') -> '.$dbgInfo['function'].'</td></tr>';
+    }
+    $dbgMsg .= "<tr><td> </td></tr><tr><th>Debug backtrace end</th></tr></table>";
+    //popUpMessage($dbgMsg);
     //get radioLog duplicating information
     $myq = "SELECT R.RADIOID, R.TYPE, INV.OTHER_SN, ITYPE.IDNUM 'itemTypeID', ITYPE.DESCR 'itemType', CONCAT_WS(', ', EMP.LNAME, EMP.FNAME) 'deputyName'
         FROM WTS_RADIOLOG R
