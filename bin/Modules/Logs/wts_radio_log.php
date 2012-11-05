@@ -302,7 +302,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut', R.COMMENTS,
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
                     DATE_FORMAT(R.AUDIT_IN_TS,'%m/%d/%y %H%i') 'checkIn', 
-                    CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', 
+                    CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', INV.DESCR 'itemDesc', 
                     CONCAT_WS(', ',SUP.LNAME,SUP.FNAME) 'SUP_ID', DATE_FORMAT(SUP_TS,'%m/%d/%y %H%i') 'SUP_TIME'
                 FROM WTS_RADIOLOG R
                 INNER JOIN EMPLOYEE AS SEC ON R.DEPUTYID=SEC.IDNUM
@@ -322,7 +322,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     DATE_FORMAT(R.AUDIT_OUT_TS,'%m/%d/%y %H%i') 'checkOut', R.COMMENTS,
                     CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID',
                     DATE_FORMAT(R.AUDIT_IN_TS,'%m/%d/%y %H%i') 'checkIn', 
-                    CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', 
+                    CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', INV.DESCR 'itemDesc',
                     CONCAT_WS(', ',SUP.LNAME,SUP.FNAME) 'SUP_ID', DATE_FORMAT(SUP_TS,'%m/%d/%y %H%i') 'SUP_TIME'
                 FROM WTS_RADIOLOG R
                 INNER JOIN RESERVE AS SEC ON R.DEPUTYID=SEC.IDNUM
@@ -497,6 +497,7 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
             $theTable[$x][$y] = "Edit"; $y++;
             $theTable[$x][$y] = "Type"; $y++;
             $theTable[$x][$y] = "Serial Number"; $y++;
+            $theTable[$x][$y] = "Details"; $y++;
             $theTable[$x][$y] = "Deputy "; $y++;
             $theTable[$x][$y] = "Radio Call#"; $y++;
             $theTable[$x][$y] = "Type"; $y++;
@@ -646,7 +647,8 @@ function showRadioLog($config, $dateSelect, $counter, $logType, $radioLogID, $is
                     <input type="hidden" name="radioLogID'.$counter.'" value="'.$row['REFNUM'].'" />'; $y++; 
                 }
                 $theTable[$x][$y] = $row['itemType'].'<input type="hidden" name="itemLogType'.$counter.'" value="'.$row['itemType'].'" />'; $y++;
-                $theTable[$x][$y] = $row['OTHER_SN']; $y++;
+                $theTable[$x][$y] = $row['OTHER_SN']; $y++; 
+                $theTable[$x][$y] = $row['itemDesc']; $y++;
                 if($config->adminLvl >=25)
                     $theTable[$x][$y] = 'All Inventory for <br/><input type="submit" value="'.$row['DEPUTYID'].'" name="viewDeputyInv'.$x.'" />';
                 else
