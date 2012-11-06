@@ -405,16 +405,14 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
             }
             $('#floatingTH').fixheadertable({ 
                     caption : 'Choose From', 
-                    showhide : true,
-                    <?php if(!empty($selectedValues)) echo 'startHide : true,'; ?>
-                    colratio : [50,100,100,250,200 <?php if($selectOnly) echo ',100,100'; else echo ',200'; ?>], 
+                    showhide : true<?php if(!empty($selectedValues)) echo ',startHide : true'; ?>,
+                    colratio : [100,100,100,200<?php if($selectOnly) echo ',100,100'; else echo ',200'; ?>], 
                     height : <?php echo $tableHeight; ?>, 
                     width : 700,
                     minWidthAuto   : true,
                     whiteSpace : 'normal',
                     zebra : true, 
                     sortable : true,
-                    //sortedColId : 1, 
                     resizeCol : true,
                     pager : false,
                     rowsPerPage	 : 10, //default
