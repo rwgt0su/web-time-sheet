@@ -476,31 +476,61 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false, $myI
         $selectedRow = '';
     }
     if(!$selectOnly){
-//        $myq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE 
-//                FROM WTS_INVENTORY I
-//                JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
-//                WHERE IS_ACTIVE = 1
-//                AND IS_DEPRECIATED = 0
-//                AND NOT 
-//                    (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
-//                    >= 
-//                    (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM);";
-         
-        $myq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE ,
-                R.CHECKEDOUT, R.TYPE 'checkoutType', CONCAT_WS(', ', E.LNAME, E.FNAME) 'DEPUTYNAME',
-                R.REFNUM
+        $myq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE 
                 FROM WTS_INVENTORY I
-                LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
-                RIGHT JOIN WTS_RADIOLOG R ON R.RADIOID=I.IDNUM
-                LEFT JOIN EMPLOYEE E ON E.IDNUM=R.DEPUTYID
-                WHERE I.IS_ACTIVE = 1
-                AND I.IS_DEPRECIATED = 0
-                GROUP BY I.IDNUM
-                ORDER BY I.OTHER_SN, T.DESCR DESC
-                ;";
+                JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
+                WHERE IS_ACTIVE = 1
+                AND IS_DEPRECIATED = 0
+                AND NOT 
+                    (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
+                    >= 
+                    (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM);";
+         
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result, $myq);
+        
+        //DISPLAY AVAILABLE ITEMS
+        while($row = $result->fetch_assoc()){
+            $itemDesc = '';
+            if(!empty($row['DESCR']))
+                $itemDesc = ' ('.$row['DESCR'].')';
+//            if($row['CHECKEDOUT']){
+//                $theTable[$x][$y] = '<input type="hidden" name="refNum'.$counter.'"  value="'.$row['REFNUM'].'" />';
+//                if($row['checkoutType']!='PERM' || ($config->adminLvl > 25))
+//                    $theTable[$x][$y] .= '<input type="submit" name="exchangeBtnINV'.$counter.'" value="Exchange" />'; 
+//                $y++;
+//                $itemDesc = $row['checkoutType'].' CHECKOUT <br/>'.$row['DEPUTYNAME'];
+//            }
+//            else{
+                $theTable[$x][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
+                    <input type="checkbox" name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++; 
+//            }
+            $theTable[$x][$y] = '<input type="hidden" name="itemType'.$counter.'"  value="'.$row['TYPE'].'" />'.$row['itemType']; $y++;
+            $theTable[$x][$y] = $row['OTHER_SN']; $y++;
+            $theTable[$x][$y] = $itemDesc; $y++;
+            $theTable[$x][$y] = $row['PRIORITY_TYPE']; $y++;
+            $x++;
+            $counter++;
+            $y=0;
 
+        }
+        $checkedoutq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE ,
+            R.CHECKEDOUT, R.TYPE 'checkoutType', CONCAT_WS(', ', E.LNAME, E.FNAME) 'DEPUTYNAME',
+            R.REFNUM
+            FROM WTS_INVENTORY I
+            LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
+            RIGHT JOIN WTS_RADIOLOG R ON R.RADIOID=I.IDNUM
+            LEFT JOIN EMPLOYEE E ON E.IDNUM=R.DEPUTYID
+            WHERE I.IS_ACTIVE = 1
+            AND I.IS_DEPRECIATED = 0
+            AND R.CHECKEDOUT = 1
+            GROUP BY I.IDNUM
+            ORDER BY I.OTHER_SN, T.DESCR DESC
+            ;";
+        $result = $mysqli->query($checkedoutq);
+        SQLerrorCatch($mysqli, $result, $checkedoutq);
+        
+        //DISPLAY CHECKED OUT ITEMS FOR EXCHANGE
         while($row = $result->fetch_assoc()){
             $itemDesc = '';
             if(!empty($row['DESCR']))
@@ -512,10 +542,10 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false, $myI
                 $y++;
                 $itemDesc = $row['checkoutType'].' CHECKOUT <br/>'.$row['DEPUTYNAME'];
             }
-            else{
-                $theTable[$x][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
-                    <input type="checkbox" name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++; 
-            }
+//            else{
+//                $theTable[$x][$y] = '<input type="hidden" name="itemID'.$counter.'"  value="'.$row['IDNUM'].'" />
+//                    <input type="checkbox" name="itemIDcheckbox'.$counter.'" onclick="Move(this,'.$counter.');" />'; $y++; 
+//            }
             $theTable[$x][$y] = '<input type="hidden" name="itemType'.$counter.'"  value="'.$row['TYPE'].'" />'.$row['itemType']; $y++;
             $theTable[$x][$y] = $row['OTHER_SN']; $y++;
             $theTable[$x][$y] = $itemDesc; $y++;
@@ -523,7 +553,6 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false, $myI
             $x++;
             $counter++;
             $y=0;
-
         }
     }
     
