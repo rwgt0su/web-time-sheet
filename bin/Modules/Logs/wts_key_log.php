@@ -491,11 +491,12 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false, $myI
                 R.REFNUM
                 FROM WTS_INVENTORY I
                 LEFT JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
-                INNER JOIN WTS_RADIOLOG R ON R.RADIOID=I.IDNUM
+                RIGHT JOIN WTS_RADIOLOG R ON R.RADIOID=I.IDNUM
                 LEFT JOIN EMPLOYEE E ON E.IDNUM=R.DEPUTYID
                 WHERE I.IS_ACTIVE = 1
                 AND I.IS_DEPRECIATED = 0
-                ORDER BY T.DESCR DESC
+                GROUP BY I.IDNUM
+                ORDER BY I.OTHER_SN, T.DESCR DESC
                 ;";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result, $myq);
@@ -526,7 +527,7 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false, $myI
         }
     }
     
-    moveTablesOnSelect($theTable, $selectedRow, $rowToSort = 1, $selectOnly, $tableHeight);
+    moveTablesOnSelect($theTable, $selectedRow, $rowToSort = 0, $selectOnly, $tableHeight);
     //echo '</select>';
 }
 function showInventoryGroups($config, $keyLogID, $deputyID=''){
