@@ -400,7 +400,7 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
                 echo '<input type="radio" name="checkOutType" value="PERM">PERMANENT</input>';
         }
         echo '<br/><br/><input type="hidden" name="checkoutKeyBtn" value="true" />
-            <input type="submit" name="addKeyLog" value="Check Out Key" />
+            <input type="submit" name="addKeyLog" value="Check Out Selected Items" />
             <input type="submit" name="goBtn" value="Cancel" />';
     }
 }
