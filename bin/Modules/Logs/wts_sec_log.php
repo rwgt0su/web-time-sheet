@@ -563,6 +563,9 @@ function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=fals
                     if(strcmp($newRow['TIMEOUT'],"00:00:00")==0){
                         $depTable[$x][$y] = '<input type="submit" value="Update" name="updateSecLog'.$x.'" />
                                 <input type="submit" value="LogOut" name="logoutSecLog'.$x.'" /><br/>'; $y++;
+                        if($config->adminLvl >=25){
+                            $depTable[$x][$y] .= '<input type="submit" name="changeDeputy1" value="Change Deputy" />';
+                        }
                     }
                     else{
                         if($config->adminLvl >=25){
@@ -579,9 +582,26 @@ function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=fals
 
             }
             else{
-                 echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
-                    Deputy: '.$row['DEPUTYNAME'].'<br/>
-                    Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" /><br/>';
+                $x=0;
+                $y=0;
+                $depTable = array(array());
+                $depTable[$x][$y] = "Reference#"; $y++;
+                $depTable[$x][$y] = "Deputy"; $y++;
+                $depTable[$x][$y] = "Radio#"; $y++;
+                $depTable[$x][$y] = "Action"; $y++;
+                
+                $x++;
+                $y=0;
+                $depTable[$x][$y] = $secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" />'; $y++;
+                $depTable[$x][$y] = $row['DEPUTYNAME']; $y++;
+                $depTable[$x][$y] = $row['DEPUTYNAME']; $y++;
+                $depTable[$x][$y] = '<input type="submit" name="changeDeputy1" value="Change Deputy" />'; $y++;
+                
+                showSortableTable($depTable, 1);
+//                 echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
+//                    Deputy: '.$row['DEPUTYNAME'].'<br/>
+//                    Radio#: <input type="text" name="radioNum" value="'.$row['RADIO'].'" />
+//                        <input type="submit" name="changeDeputy1" value="Change Deputy" /><br/>';
             }
             echo '<div align="left">Add Deputy: <button type="button"  name="searchBtn" 
                 value="Lookup Employee" onClick="this.form.action=' . "'?userLookup=true'" . ';this.form.submit()" >
