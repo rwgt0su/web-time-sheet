@@ -43,35 +43,43 @@ function alert_PostPayrollValidation($config){
         $dismiss = isset($_POST['dismissPostValidBtn']) ? true : false;
         $dismiss = isset($_GET['postPayrollValid']) ? true : $dismiss;
         //No dismissal session variable for real time alerting
-        //$dismiss = isset($_SESSION['dismissPostValid']) ? true : $dismiss;
+        $dismissTime = isset($_SESSION['dismissPayrollValid']) ? $_SESSION['dismissPayrollValid'] : false;
         if(!$dismiss){
-            $mysqli = $config->mysqli;
-            //Get approved time request submitted to HR if date of use is prior to last pay period and 
-            //current date is after end of payperiod
-            
-            //determine last day of last approved pay period
-            $today = date('Y-m-d');
-            $myq = "SELECT COUNT(REFER), MAX(USEDATE) 'endDate', MIN(USEDATE) 'startDate'
-                FROM REQUEST
-                WHERE (STATUS='APPROVED' OR STATUS='DENIED')
-                AND HRAPP_IS = '0'
-                AND USEDATE <= (SELECT PPEND FROM PAYPERIOD WHERE PPEND = (SELECT PPBEG-1 FROM PAYPERIOD WHERE '".$today."' BETWEEN PPBEG AND PPEND))";
+            $current_timestamp=strtotime(date('Y-m-d H:i'));
+            $compare_timestamp=strtotime("-30 minute", $current_timestamp);
+            if(strtotime($dismissTime) >= $compare_timestamp){
+                //popUpMessage('Will not display message '.strtotime($dismissTime). ' vs '.$compare_timestamp);
+            }
+            else{
+                $mysqli = $config->mysqli;
+                //Get approved time request submitted to HR if date of use is prior to last pay period and 
+                //current date is after end of payperiod
 
-            $result = $mysqli->query($myq);
-            SQLerrorCatch($mysqli, $result, $myq);
+                //determine last day of last approved pay period
+                $today = date('Y-m-d');
+                $myq = "SELECT COUNT(REFER), MAX(USEDATE) 'endDate', MIN(USEDATE) 'startDate'
+                    FROM REQUEST
+                    WHERE (STATUS='APPROVED' OR STATUS='DENIED')
+                    AND HRAPP_IS = '0'
+                    AND USEDATE <= (SELECT PPEND FROM PAYPERIOD WHERE PPEND = (SELECT PPBEG-1 FROM PAYPERIOD WHERE '".$today."' BETWEEN PPBEG AND PPEND))";
 
-            if($result->num_rows > 0){
-                $row = $result->fetch_assoc();
-                popUpMessage('<div align="center"><form name="verifyAlert" method="POST" action="?hrEmpRep=true&cust=true&postPayrollValid=true">
-                    New Time Request after validation!
-                    <input type="submit" name="dismissPostValidBtn" value="Go to Alert" />
-                    <input type="hidden" name="start" value="'.$row['startDate'].'" />
-                    <input type="hidden" name="end" value="'.$row['endDate'].'" />
-                    </form></div>', 'ALERT');
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result, $myq);
+
+                if($result->num_rows > 0){
+                    $_SESSION['dismissPayrollValid'] = date('Y-m-d H:i');
+                    $row = $result->fetch_assoc();
+                    popUpMessage('<div align="center"><form name="verifyAlert" method="POST" action="?hrEmpRep=true&cust=true&postPayrollValid=true">
+                        New Time Request after validation!
+                        <input type="submit" name="dismissPostValidBtn" value="Go to Alert" />
+                        <input type="hidden" name="start" value="'.$row['startDate'].'" />
+                        <input type="hidden" name="end" value="'.$row['endDate'].'" />
+                        </form></div>', 'ALERT');
+                }
             }
         }
         else{
-            //$_SESSION['dismissPostValid'] = "1";
+            $_SESSION['dismissPayrollValid'] = date('Y-m-d H:i');
         }
     }
 }
