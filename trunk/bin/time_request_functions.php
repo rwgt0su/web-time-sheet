@@ -898,7 +898,7 @@ function displayLeaveApproval($config){
                         WHERE R.TIMETYPEID=T.TIMETYPEID
                         AND   R.IDNUM=E.IDNUM
                         AND STATUS='PENDING'
-                        ORDER BY RADIO DESC, REFER";
+                        ORDER BY USEDATE";
         }
         else{
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
@@ -911,7 +911,7 @@ function displayLeaveApproval($config){
                         AND   R.IDNUM=E.IDNUM
                         AND STATUS='PENDING'
                         AND E.DIVISIONID IN (".$divisionID.")
-                        ORDER BY RADIO DESC, REFER";
+                        ORDER BY USEDATE";
         }
         
         
