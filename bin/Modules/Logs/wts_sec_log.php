@@ -114,6 +114,22 @@ function displaySecondaryLog($config, $isApprovePage = false){
 
                     $editBtn = true;
                 }
+                else if(isset($_POST['changeDeputy'.$i])){
+                    $secLogID = $_POST['secLogID'.$i];
+                    $radioNum = isset($_POST['radioNum'.$i]) ? $mysqli->real_escape_string($_POST['radioNum'.$i]) : '';
+                    $address = isset($_POST['address']) ? $mysqli->real_escape_string($_POST['address']) : '';
+                    $city = isset($_POST['city']) ? $mysqli->real_escape_string($_POST['city']) : '';
+                    $phone = isset($_POST['phone']) ? $mysqli->real_escape_string($_POST['phone']) : '';
+                    $shiftStart1 = isset($_POST['shiftStart1']) ? $mysqli->real_escape_string($_POST['shiftStart1']) : '';
+                    $shiftStart2 = isset($_POST['shiftStart2']) ? $mysqli->real_escape_string($_POST['shiftStart2']) : '';
+                    $shiftStart = $shiftStart1.$shiftStart2."00";
+                    $shiftEnd1 = isset($_POST['shiftEnd1']) ? $mysqli->real_escape_string($_POST['shiftEnd1']) : '';
+                    $shiftEnd2 = isset($_POST['shiftEnd2']) ? $mysqli->real_escape_string($_POST['shiftEnd2']) : '';
+                    $shiftEnd = $shiftEnd1.$shiftEnd2."00";
+                    $dress = isset($_POST['dress']) ? $mysqli->real_escape_string($_POST['dress']) : '';
+                    
+                    $editBtn = true;
+                }
                 $approveBtn[$i] = isset($_POST['secLogApproved'.$i]) ? true : false;
                 if($approveBtn[$i]){
                     $secLogID = $_POST['secLogID'.$i];
@@ -562,10 +578,11 @@ function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=fals
                     $depTable[$x][$y] = '<input type="text" name="radioNum'.$x.'" value="'.$newRow['RADIO'].'" />'; $y++;
                     if(strcmp($newRow['TIMEOUT'],"00:00:00")==0){
                         $depTable[$x][$y] = '<input type="submit" value="Update" name="updateSecLog'.$x.'" />
-                                <input type="submit" value="LogOut" name="logoutSecLog'.$x.'" /><br/>'; $y++;
+                                <input type="submit" value="LogOut" name="logoutSecLog'.$x.'" /><br/>'; 
                         if($config->adminLvl >=25){
-                            $depTable[$x][$y] .= '<input type="submit" name="changeDeputy1" value="Change Deputy" />';
+                            $depTable[$x][$y] .= '<input type="submit" name="changeDeputy'.$x.'" value="Change Deputy" />';
                         }
+                        $y++;
                     }
                     else{
                         if($config->adminLvl >=25){
@@ -595,7 +612,11 @@ function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=fals
                 $depTable[$x][$y] = $secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" />'; $y++;
                 $depTable[$x][$y] = $row['DEPUTYNAME']; $y++;
                 $depTable[$x][$y] = $row['DEPUTYNAME']; $y++;
-                $depTable[$x][$y] = '<input type="submit" name="changeDeputy1" value="Change Deputy" />'; $y++;
+                if($config->adminLvl >= 25)
+                    $depTable[$x][$y] = '<input type="submit" name="changeDeputy1" value="Change Deputy" />'; 
+                else 
+                    $depTable[$x][$y] = '';
+                $y++;
                 
                 showSortableTable($depTable, 1);
 //                 echo 'Reference #: '.$secLogID.'<input type="hidden" name="secLogID" value="'.$secLogID.'" /><br />
@@ -730,7 +751,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=fals
             }//end for
         }
         if(empty($foundUserID) && $num_deputies == 0){
-            if($_SERVER['REMOTE_ADDR'] != '10.1.32.58'/*nslookup('mcjcbcast.sheriff.mahoning.local')*/){
+            if($_SERVER['REMOTE_ADDR'] != '10.1.32.72'/*nslookup('mcjcbcast.sheriff.mahoning.local')*/){
                 $foundUserID = $_SESSION['userIDnum'];
                 $foundUserIsReserve = false;
             }
