@@ -873,21 +873,52 @@ function displayLeaveApproval($config){
                 echo ' SELECTED ';
             echo '>'.$Divrow['DESCR'].'</option>';
         }
-        if(isset($_POST['divisionID'])){
-            if($divisionID == "All")
-                echo '<option value="All" SELECTED>All</option>';
-            else
-                echo '<option value="All">All</option>';
-        }
+        if($divisionID == "All")
+            echo '<option value="All" SELECTED>All</option>';
         else
             echo '<option value="All">All</option>';
+
         echo '</select>';
 
         echo    '</div><br />';
         
+        //Page Breaks Setup
+        $prevNum = isset($_POST['prevNum']) ? $_POST['prevNum'] : "0";
+        $nextNum = isset($_POST['nextNum']) ? $_POST['nextNum'] : "25";
+        $limit= isset($_POST['limit']) ? $_POST['limit'] : "25";
+
+        if(isset($_POST['prevBtn'])){
+            $prevNum = $prevNum - $limit;
+            $nextNum = $nextNum - $limit;
+        }
+        if(isset($_POST['nextBtn'])){
+            $prevNum = $prevNum + $limit;
+            $nextNum = $nextNum + $limit;
+        }
+
         //$shift = isset($_POST['shiftID']) ? $_POST['shiftID'] : '%';
         //  i did add this to a where clause, didn't seem to work: AND E.ASSIGN LIKE '%".$shift."%'
 
+        if(strcmp($divisionID, "All") == 0){
+            $myq = "SELECT *                         
+                        FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                        WHERE R.TIMETYPEID=T.TIMETYPEID
+                        AND   R.IDNUM=E.IDNUM
+                        AND STATUS='PENDING'";
+        }
+        else{
+            $myq = "SELECT *                         
+                        FROM REQUEST R, TIMETYPE T, EMPLOYEE E
+                        WHERE R.TIMETYPEID=T.TIMETYPEID
+                        AND   R.IDNUM=E.IDNUM
+                        AND STATUS='PENDING'
+                        AND E.DIVISIONID IN (".$divisionID.")";
+        }
+        
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $totalRows = $result->num_rows;
+        
         if(strcmp($divisionID, "All") == 0){
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
                             DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
@@ -898,7 +929,8 @@ function displayLeaveApproval($config){
                         WHERE R.TIMETYPEID=T.TIMETYPEID
                         AND   R.IDNUM=E.IDNUM
                         AND STATUS='PENDING'
-                        ORDER BY REFER";
+                        ORDER BY REFER 
+                        LIMIT ".$prevNum.",  ".$limit;
         }
         else{
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
@@ -911,67 +943,109 @@ function displayLeaveApproval($config){
                         AND   R.IDNUM=E.IDNUM
                         AND STATUS='PENDING'
                         AND E.DIVISIONID IN (".$divisionID.")
-                        ORDER BY REFER";
+                        ORDER BY REFER 
+                        LIMIT ".$prevNum.",  ".$limit;;
         }
         
         
         //echo $myq; //DEBUG
 
         $result = $mysqli->query($myq);
-        SQLerrorCatch($mysqli, $result);
+        SQLerrorCatch($mysqli, $result);        
         
         //build table
         //resultTable($mysqli, $result);
-        ?>
 
-        <table>
-            <!-- <tr><th>Ref #</th><th>Approve?</th><th>Reason</th></tr> -->
-            <tr>
-            <?php    
-            $result->data_seek(0);
-            while($finfo = $result->fetch_field()){
-                echo "<th>".$finfo->name."</th>";
-                } ?>
-            </tr>
-            <?php
-            //$refs = array();
-            
-            /*for ($i = 0; $assoc = $result->fetch_assoc(); $i++) {
-                $refs[$i] = $assoc['RefNo'];
-                echo "<tr><td>$refs[$i]</td>
-                    <td><input type='radio' name='approve$i' value='APPROVED' /> Approved 
-                        <input type='radio' name='approve$i' value='DENIED'> Denied</td>
-                        <td><input type='text' name='reason$i' size='50'/></td>";
-            }*/
-            //new & improved
-            $result = $mysqli->query($myq);
-            SQLerrorCatch($mysqli, $result);
-            $result->data_seek(0);
-            $rowCount = 0;
-            while ($row = $result->fetch_array(MYSQLI_NUM)) {
-                echo "<tr>";
-                //$refs[$rowCount] = $row[0]; //save ref # in an array
-                for ($i = 0; $i < $mysqli->field_count; $i++) {
-                    echo "<td style='white-space: nowrap'>";
-                    if($i==0)
-                        echo '<input type="hidden" name="refNum'.$rowCount.'" value="'.$row[$i].'" />';
-                    echo "$row[$i]</td>";                                      
+        $x = 0;
+        $y = 0;
+        $theTable = array(array());
+        
+        $echo  = '<table><tr>';
+        $result->data_seek(0);
+        while($finfo = $result->fetch_field()){
+            $echo .= "<th>".$finfo->name."</th>";
+            $theTable[$x][$y] = $finfo->name; $y++;
+        }
+        $x++;
+        $echo .= '</tr>';
+
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result);
+        $result->data_seek(0);
+        
+        $rowCount=0;
+        while ($row = $result->fetch_array(MYSQLI_NUM)) {
+            $echo .= "<tr>";
+            $refNo = '';
+            //$refs[$rowCount] = $row[0]; //save ref # in an array
+            for ($i = 0; $i < $mysqli->field_count; $i++) {
+                $echo .=  "<td style='white-space: nowrap'>";
+                if($i==0){
+                    $refNo = $row[$i];
+                    $echo .=  '<input type="hidden" name="refNum'.$rowCount.'" value="'.$row[$i].'" />';
+                    $theTable[$x][$i] = '<input type="hidden" name="refNum'.$rowCount.'" value="'.$row[$i].'" />'.$row[$i];
                 }
-                echo "</tr>";
-                echo "<td style='white-space: nowrap'></td><td>";
-                echo "<input type='radio' name='approve$rowCount' value='APPROVED' /> Approved</td> 
-                        <td style='white-space: nowrap'><input type='radio' name='approve$rowCount' value='DENIED'> Denied</td>
-                        <td style='white-space: nowrap' colspan='8'>Reason:<input type='text' name='reason$rowCount' size='50'/></td>";
-                $rowCount++;
+                $echo .=  "$row[$i]</td>"; 
+                $theTable[$x][$i] = $row[$i];
             }
-            echo '<input type="hidden" name="totalRows" value="'.$rowCount.'" />';
-            ?>
-           </table> <p><input type="submit" name="approveBtn" value="Save"></p>
-            </form>
-        
+            $echo .=  "</tr>";
+            $echo .=  "<td style='white-space: nowrap'></td><td>";
+            
+            $echo .=  "<input type='radio' name='approve$rowCount' value='APPROVED' /> Approved</td> 
+                    <td style='white-space: nowrap'><input type='radio' name='approve$rowCount' value='DENIED'> Denied</td>
+                    <td style='white-space: nowrap' colspan='8'>Reason:<input type='text' name='reason$rowCount' size='50'/></td>";
+            $x++;
+            $y = 0;
+            $theTable[$x][$y] = ''/*$refNo*/; $y++;
+            $theTable[$x][$y] = "<input type='radio' name='approve$rowCount' value='APPROVED' /> Approved"; $y++;
+            $theTable[$x][$y] = "<input type='radio' name='approve$rowCount' value='DENIED'> Denied"; $y++;
+            $theTable[$x][$y] = "<td colspan='8'>Reason:<input type='text' name='reason$rowCount' size='50'/>"; $y++;
+            $theTable[$x][$y] = ''; $y++;
+            
+            $rowCount++;
+            $x++;
+        }
+        $echo .=  '<input type="hidden" name="totalRows" value="'.$rowCount.'" />';
 
-        <?php 
+       $echo .= '</table> <p><input type="submit" name="approveBtn" value="Save"></p></form>';
         
+        echo '<hr />';
+        echo '<div align="center">Number of entries found in the reserve database is: ' . $totalRows.'</div>';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '<input type="hidden" name="searchFullTime" value="false" />';
+        echo '<input type="hidden" name="searchReserves" value="checked" />';
+        echo '<input type="hidden" name="prevNum" value="'.$prevNum.'" />';
+        echo '<input type="hidden" name="nextNum" value="'.$nextNum.'" />';
+        $lastRec = $prevNum + $limit;
+        echo '<br/>';
+        echo 'Showing Records '. $prevNum . ' to ' .$lastRec;
+        //Spacing characters
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        if(!$prevNum > 0){
+            echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+            echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        }
+        echo 'Records: <select name="limit" onChange="this.form.submit()" >
+            <option value="25"';
+        if(strcmp($limit, "25") ==0)
+            echo ' SELECTED';
+        echo '>25</option>
+            <option value="50"';
+        if(strcmp($limit, "50") ==0)
+            echo ' SELECTED';
+        echo '>50</option>
+            </select>';
+        if($prevNum > 0)
+            echo '<input type="submit" name="prevBtn" value="Previous" />';
+        if($limit == $rowCount)
+            echo '<input type="submit" name="nextBtn" value="Next" />';
+        echo '<br/><br/><br/>';
+        //echo $echo;
+        showSortableTable($theTable, 1, $tableID = 'timeApprove',$rowsToSortNext = array(), $noSort = true);
 
     }
     else
