@@ -853,21 +853,36 @@ function displaySecLogReport($config){
     echo '<h2>Secondary Employement Logs Reports By Date</h2>';
     
     if($config->adminLvl >=25){
-        $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : false;
-        //popupmessage("isset: ".isset($_POST['dateSelect']).' to '.$_POST['dateSelect']);
+        $dateFrom = isset($_POST['dateFrom']) ? $_POST['dateFrom'] : false;
+        $dateTo = isset($_POST['dateTo']) ? $_POST['dateTo'] : false;
+
         echo '<form method="POST" name="secLog">';
         
-        if(!$dateSelect){
-            $dateSelect = Date('m/d/Y', time());
-            echo 'Date: '; 
+        if(!$dateFrom){
+            $dateFrom = Date('m/d/Y', time());
+            $dateTo = Date('m/d/Y', time());
+            echo 'Date From '; 
             //echo '<input name="dateSelect" type="text" value="'.$dateSelect.'" />';
-            displayDateSelect("dateSelect", "dateSel",false,false,true,true);
-            echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
+            displayDateSelect("dateFrom", "dateSel",false,false,true,false);
+            echo ' To ';
+            displayDateSelect("dateTo", "dateSel2",false,false,true,false);
+            echo ' <input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
         }
         else{
+            if($dateTo < $dateFrom){
+                echo '<font color="red">Invalid Entry! "To" Date must be greater than or equal to "From" Date</font></br></br>';
+            }
             echo '<h3>Date: ';
-            displayDateSelect("dateSelect", "dateSel",$dateSelect,false,false,true);
-            echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />';
+            displayDateSelect("dateFrom", "dateSel",$dateFrom,false,false,false);
+            echo ' To ';
+            if($dateTo < $dateFrom){
+                $dateTo = $dateFrom;
+                displayDateSelect("dateTo", "dateSel2",$dateTo,true,false,false);
+            }
+            else{
+                displayDateSelect("dateTo", "dateSel2",$dateTo,false,false,false);
+            }
+            echo ' <input id="goBtn" type=submit name="goBtn" value="Go" /><br />';
         }
 
         $mysqli = $config->mysqli;
@@ -888,7 +903,8 @@ function displaySecLogReport($config){
                 LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
-                WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
+                WHERE `SHIFTDATE` BETWEEN '".Date('Y-m-d', strtotime($dateFrom))."'
+                    AND '".Date('Y-m-d', strtotime($dateTo))."'
                 AND S.IS_RESERVE=0
 
                 UNION
@@ -906,7 +922,8 @@ function displaySecLogReport($config){
                 LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
                 LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
-                WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
+                WHERE `SHIFTDATE` BETWEEN '".Date('Y-m-d', strtotime($dateFrom))."'
+                    AND '".Date('Y-m-d', strtotime($dateTo))."'
                 AND S.IS_RESERVE=1
                 ORDER BY 'gpID'";
 
