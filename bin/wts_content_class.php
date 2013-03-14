@@ -29,6 +29,7 @@ Class wts_content {
     public $isOTRep;
     public $isRadioLog;
     public $isMyInv;
+    public $isSecLogRep;
     
     public function wts_content(){
         //get passed variables based on URL
@@ -60,7 +61,8 @@ Class wts_content {
         $this->isEventLogs = isset($_GET['eventLogs']) ? $_GET['eventLogs'] : false;
         $this->isOTRep = isset($_GET['OTRep']) ? $_GET['OTRep'] : false;
         $this->isRadioLog = isset($_GET['radioLog']) ? $_GET['radioLog'] : false;
-        $this->isMyInv = isset($_GET['myInv']) ? true : false;
+        $this->isMyInv = isset($_GET['myInv']) ? true : false; 
+        $this->isSecLogRep = isset($_GET['SecLogRep']) ? true : false;
         
         
         if(empty($_GET)){

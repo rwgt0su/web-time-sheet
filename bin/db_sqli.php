@@ -221,23 +221,30 @@ function dropDownMenu($mysqli, $fieldName, $tableName, $value, $formName) {
 
 //try/catch providing db errors in a pop-up window
 //returns true if an error is caught, false if not
-function SQLerrorCatch($mysqli, $result, $myq='') {
+function SQLerrorCatch($mysqli, $result, $myq='', $debug=false) {
+    $dbgTrace = debug_backtrace();
+    $dbgMsg = "<table><tr><th>Debug backtrace begin:</th></tr>";
+    foreach($dbgTrace as $dbgIndex => $dbgInfo) {
+        $dbgMsg .= '<tr width=300><td>'.$dbgInfo['file'].' (line '.$dbgInfo['line'].') -> '.$dbgInfo['function'].'</td></tr>';
+    }
+    $dbgMsg .= '<tr><td>Querey Used:</td></tr><tr><td>'.$myq.'</td></tr>';
+    $dbgMsg .= "<tr><td> </td></tr><tr><th>Debug backtrace end</th></tr></table>";
+    
+    $isError = false;
     try {
-            if (!$result) 
+        if (!$result) 
             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        }
-        catch (Exception $e) {
-            $message = $e->getMessage();
-            $dbgTrace = debug_backtrace();
-            $dbgMsg = "<table><tr><th>Debug backtrace begin:</th></tr>";
-            foreach($dbgTrace as $dbgIndex => $dbgInfo) {
-                $dbgMsg .= '<tr width=300><td>'.$dbgInfo['file'].' (line '.$dbgInfo['line'].') -> '.$dbgInfo['function'].'</td></tr>';
-            }
-            $dbgMsg .= '<tr><td>Querey Used:</td></tr><tr><td>'.$myq.'</td></tr>';
-            $dbgMsg .= "<tr><td> </td></tr><tr><th>Debug backtrace end</th></tr></table>";
-            popUpMessage($dbgMsg.'<br/><br/> '.$message, "Error Message");
-            return true;
-        }
+    }
+    catch (Exception $e) {
+        $message = $e->getMessage();
+        $isError = true;
+        popUpMessage($dbgMsg.'<br/><br/> '.$message, "Error Message");
+        return true;
+    }
+    if ($debug && !$isError){
+        popUpMessage($dbgMsg, "Debug Message");
+    }
+    
     return false;
 }
 function mergeEmployeeDB(){

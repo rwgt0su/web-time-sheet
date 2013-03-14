@@ -44,7 +44,7 @@ function displaySecondaryLog($config, $isApprovePage = false){
         }
         if(!$isApprovePage){
             if(!$dateSelect){
-                echo 'Select Date: ';
+                echo 'Select Date: ';                
                 displayDateSelect("dateSelect", "dateSel",false,false,true,true);
                 echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
             }
@@ -847,6 +847,155 @@ function updateSecLog($config, $secLogID, $radioNum, $address, $city, $phone, $s
     else
         echo '<h2>Results</h2>Failed to update Secondary Employment Log, try again.<br /><Br />';
 
+}
+
+function displaySecLogReport($config){
+    echo '<h2>Secondary Employement Logs Reports By Date</h2>';
+    
+    if($config->adminLvl >=25){
+        $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : false;
+        //popupmessage("isset: ".isset($_POST['dateSelect']).' to '.$_POST['dateSelect']);
+        echo '<form method="POST" name="secLog">';
+        
+        if(!$dateSelect){
+            $dateSelect = Date('m/d/Y', time());
+            echo 'Date: '; 
+            //echo '<input name="dateSelect" type="text" value="'.$dateSelect.'" />';
+            displayDateSelect("dateSelect", "dateSel",false,false,true,true);
+            echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />'; 
+        }
+        else{
+            echo '<h3>Date: ';
+            displayDateSelect("dateSelect", "dateSel",$dateSelect,false,false,true);
+            echo '<input id="goBtn" type=submit name="goBtn" value="Go" /><br />';
+        }
+
+        $mysqli = $config->mysqli;
+
+        /*query unions the results of joins on two different tables (EMPLOYEE and RESERVE)
+          depending on the value of SECLOG.IS_RESERVE */
+
+        $myq =  "SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO, 
+                    TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                    CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
+                    TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
+                    DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
+                    CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID', 
+                    CONCAT_WS(', ',SUP.LNAME,SUP.FNAME) 'SUP_ID', DATE_FORMAT(SUP_TIME,'%m/%d/%y %H%i') 'SUP_TIME',
+                    PHONE, S.IDNUM
+                FROM SECLOG S
+                INNER JOIN EMPLOYEE AS SEC ON S.DEPUTYID=SEC.IDNUM
+                LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
+                LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
+                LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
+                WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
+                AND S.IS_RESERVE=0
+
+                UNION
+
+                SELECT S.GPNUM 'gpID', CONCAT_WS(', ',SEC.LNAME,SEC.FNAME) 'DEPUTYID', S.RADIO,
+                    TIME_FORMAT(TIMEIN,'%H%i') 'TIMEIN',
+                    CONCAT_WS(', ',LOGIN.LNAME,LOGIN.FNAME) 'AUDIT_IN_ID', LOCATION, S.CITY,
+                    TIME_FORMAT(SHIFTSTART,'%H%i') 'SHIFTSTART', TIME_FORMAT(SHIFTEND,'%H%i') 'SHIFTEND',
+                    DRESS, TIME_FORMAT(TIMEOUT,'%H%i') 'TIMEOUT', 
+                    CONCAT_WS(', ',LOGOUT.LNAME,LOGOUT.FNAME) 'AUDIT_OUT_ID', 
+                    CONCAT_WS(', ',SUP.LNAME,SUP.FNAME) 'SUP_ID', DATE_FORMAT(SUP_TIME,'%m/%d/%y %H%i') 'SUP_TIME',
+                    PHONE, S.IDNUM
+                FROM SECLOG S
+                INNER JOIN RESERVE AS SEC ON S.DEPUTYID=SEC.IDNUM
+                LEFT JOIN EMPLOYEE AS LOGIN ON S.AUDIT_IN_ID=LOGIN.IDNUM
+                LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
+                LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
+                WHERE `SHIFTDATE` = '".Date('Y-m-d', strtotime($dateSelect))."' 
+                AND S.IS_RESERVE=1
+                ORDER BY 'gpID'";
+
+
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result, $myq, $debug=false);
+        $echo = '';
+        $x=0;
+        $y=0;
+        //resultTable($mysqli, $result, 'false');
+        $showAll = true;
+
+        $theTable = array(array());
+
+        $theTable[$x][$y] = "Action"; $y++;
+        $theTable[$x][$y] = "# in Group"; $y++;
+        $theTable[$x][$y] = "Deputy"; $y++;
+        $theTable[$x][$y] = "Radio#"; $y++;
+        $theTable[$x][$y] = "Log In"; $y++;
+        $theTable[$x][$y] = "C/Deputy"; $y++;
+        $theTable[$x][$y] = "Site Name/Address"; $y++;
+        $theTable[$x][$y] = "City/Twp"; $y++;
+        $theTable[$x][$y] = "Contact#"; $y++;
+        $theTable[$x][$y] = "Shift Start"; $y++;
+        $theTable[$x][$y] = "Shift End"; $y++;
+        $theTable[$x][$y] = "Dress"; $y++;
+        $theTable[$x][$y] = "Log Off"; $y++;
+        $theTable[$x][$y] = "C/Deputy"; $y++;
+        $theTable[$x][$y] = "Supervisor"; $y++;
+        $theTable[$x][$y] = "Sign Off"; $y++;
+ 
+
+        $lastGroupID = '';
+        $groupCounter = 0;
+        while($row = $result->fetch_assoc()) {
+            if($row['gpID'] == $lastGroupID && $lastGroupID != 0){
+                    $gpCountSQL = $config->mysqli;
+                    $gpCountq = "SELECT GPNUM FROM SECLOG WHERE GPNUM='".$row['gpID']."'";
+                    $gpCountresult = $mysqli->query($gpCountq);
+                    SQLerrorCatch($gpCountSQL, $gpCountresult);
+                    $theTable[$x][0] .= ', '.$row['IDNUM'];
+                    $theTable[$x][2] = $gpCountresult->num_rows;
+            }//end if last group ID
+            else{
+                $groupCounter = 1;
+                if(strcmp($row['TIMEOUT'], "0000") == 0 || $showAll || (strcmp($row['SUP_TIME'], "00/00/00 0000") == 0)){
+                    $x++;
+
+                    if((strcmp($row['SUP_TIME'], "00/00/00 0000") == 0)){
+//                        $theTable[$x][0] = '<input type="submit" name="secLogApproved'.$x.'" value="Approve" />
+//                            <input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />
+//                                <input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />';
+                        $theTable[$x][0] = 'Ref# '.$row['IDNUM'];
+                    }
+                    else{
+                        $theTable[$x][0] = 'Ref# '.$row['IDNUM'];
+                        //$theTable[$x][0] .= '<input type="submit" value="Edit/View" name="secLogRadio'.$x.'" />
+                        //<input type="hidden" name="secLogID'.$x.'" value="'.$row['IDNUM'].'" />';
+                    }
+
+                    $y = 1;
+                    $theTable[$x][$y] = $groupCounter; $y++;
+                    $theTable[$x][$y] = $row['DEPUTYID']; $y++;
+                    $theTable[$x][$y] = $row['RADIO']; $y++;
+                    $theTable[$x][$y] = $row['TIMEIN']; $y++;
+                    $theTable[$x][$y] =$row['AUDIT_IN_ID']; $y++;
+                    $theTable[$x][$y] =$row['LOCATION']; $y++;
+                    $theTable[$x][$y] =$row['CITY']; $y++;
+                    $theTable[$x][$y] =$row['PHONE']; $y++;
+                    $theTable[$x][$y] =$row['SHIFTSTART']; $y++;
+                    $theTable[$x][$y] =$row['SHIFTEND']; $y++;
+                    $theTable[$x][$y] =$row['DRESS']; $y++;
+                    $theTable[$x][$y] =$row['TIMEOUT']; $y++;
+                    $theTable[$x][$y] =$row['AUDIT_OUT_ID']; $y++;
+                    $theTable[$x][$y] =$row['SUP_ID']; $y++;
+                    $theTable[$x][$y] =$row['SUP_TIME']; $y++;
+                    
+                    $lastGroupID = $row['gpID'];
+                }
+            }
+        }//end while loop
+        showSortableTable($theTable, 3);
+        $echo .= '<input type="hidden" name="editRows" value="'.$x.'" />';
+
+        echo $echo;
+    }
+    else{
+        echo 'Access Denied';
+    }
 }
 
 ?>

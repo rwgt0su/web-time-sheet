@@ -14,6 +14,7 @@ function displayReportMenu($config){
         echo '<li><a href="?hrEmpRep=true">Approved and Denied Requests by Employee by Payperiod</a></li>';
         echo '<li><a href="?sickEmpRep=true">Sick Request Reports by Date </a></li>';
         echo '<li><a href="?OTRep=true">OverTime Request Reports by Date </a></li>';
+        echo '<li><a href="?SecLogRep=true">Secondary Log Reports by Date</a></li>';
         echo '</ul>';
     }
 }

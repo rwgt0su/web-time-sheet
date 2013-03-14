@@ -680,7 +680,7 @@ function displayDateSelect($inputName, $id, $oldValue = false, $required = false
         });
     </script>
     <input name="<?php echo $inputName ?>" type="text" class="datepicker" <?php 
-        if($today) 
+        if($today && !$oldValue) 
             echo 'value="'. date('m/d/Y', strtotime('today')).'"'; 
         ?> id="<?php echo $id; ?>" <?php 
             if(!$oldValue){ 
