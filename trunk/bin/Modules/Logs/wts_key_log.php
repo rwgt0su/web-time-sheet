@@ -476,16 +476,27 @@ function selectInventory($config, $selectedValues=false, $selectOnly=false, $myI
         $selectedRow = '';
     }
     if(!$selectOnly){
+//        $myq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE 
+//                FROM WTS_INVENTORY I
+//                JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
+//                WHERE IS_ACTIVE = 1
+//                AND IS_DEPRECIATED = 0
+//                AND NOT 
+//                    (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
+//                    >= 
+//                    (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM);";
+//        
+//         //Updates Number of available items
+//        $myq = "UPDATE `WTS_INVENTORY` 
+//            SET `QUANTITY_AVAILABLE`=`QUANTITY` - 
+//            (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = `WTS_INVENTORY`.IDNUM)";
+        
         $myq = "SELECT I.IDNUM, I.TYPE, T.DESCR 'itemType', I.OTHER_SN, I.DESCR, I.PRIORITY_TYPE 
-                FROM WTS_INVENTORY I
-                JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
-                WHERE IS_ACTIVE = 1
-                AND IS_DEPRECIATED = 0
-                AND NOT 
-                    (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = I.IDNUM) 
-                    >= 
-                    (SELECT QUANTITY FROM WTS_INVENTORY INV WHERE INV.IDNUM=I.IDNUM);";
-         
+                    FROM WTS_INVENTORY I
+                    JOIN WTS_INV_TYPE AS T ON T.IDNUM=I.TYPE
+                    WHERE I.IS_ACTIVE = 1
+                    AND I.IS_DEPRECIATED = 0
+                    AND I.QUANTITY_AVAILABLE > 0";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result, $myq);
         
