@@ -378,6 +378,12 @@ function searchTimeReqByRef($config, $searchInput){
                 addLog($config, 'Ref# '.$refNo.' status was changed to pending');
                 break;
             }
+            if(isset($_POST['approve'.$i])){
+                approveLeaveRequest($config, $_POST['refNo'.$i], "APPROVED", $_POST['reason'.$i]);
+            }
+            if(isset($_POST['deny'.$i])){                
+                approveLeaveRequest($config, $_POST['refNo'.$i], "DENIED", $_POST['reason'.$i]);
+            }
         }
     }
     if($config->adminLvl < 25){
@@ -459,8 +465,15 @@ function searchTimeReqByRef($config, $searchInput){
             if($row['Status'] != 'PENDING' && $config->adminLvl >=25){
                 $theTable[$x][$y] = $row['Status'].'<input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
             }
-            else
-                $theTable[$x][$y] = $row['Status']; 
+            elseif ($row['Status'] == 'PENDING' && $config->adminLvl >=25){
+                $theTable[$x][$y] = $row['Status'];
+                $theTable[$x][$y] .= "<br/><input type='submit' name='approve$x' value='APPROVED' size='15'/> ";
+                $theTable[$x][$y] .= "<input type='submit' name='deny$x' value='DENIED' size='15'><br/>";
+                $theTable[$x][$y] .= "Reason:<br/><input type='text' name='reason$x' size='50'/>";
+            }
+            else{
+                 $theTable[$x][$y] = $row['Status'];
+            }
             $y++;
             $theTable[$x][$y] = $row['ApprovedBy']; $y++;
             $theTable[$x][$y] = $row['approveTS']; $y++;

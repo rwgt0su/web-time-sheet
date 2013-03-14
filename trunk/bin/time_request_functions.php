@@ -805,39 +805,47 @@ function displaySubmittedRequests($config){
     //show a print button. printed look defined by print.css
     echo '<a href="javascript:window.print()">Print</a>';
 } //end displaySubmittedRequests()
-?>
 
-<?php
-function displayLeaveApproval($config){ 
+function approvePOSTLeaveRequests($config){
     $mysqli = $config->mysqli;
     if (isset($_POST['approveBtn'])) {
         echo '<h3>';
         for ($j=0; $j < $_POST['totalRows']; $j++) {
-            $refs[$j] = $_POST['refNum'.$j];
             if (isset($_POST['approve' . $j])) {
-               
-                $approveQuery="UPDATE REQUEST 
-                                SET STATUS='".$_POST['approve'.$j]."',
-                                    REASON='".$mysqli->real_escape_string($_POST['reason' . $j])."',
-                                    APPROVEDBY='".$_SESSION['userIDnum']."', ApprovedTS=NOW() 
-                                WHERE REFER='$refs[$j]'";
-                //echo $approveQuery; //DEBUG
-                $approveResult = $mysqli->query($approveQuery);
-                $logMsg = 'Approved Time Request with Ref# '.$refs[$j];
-                addLog($config, $logMsg);
-                if(!SQLerrorCatch($mysqli, $approveResult, $approveQuery))
-                        echo "Approved Reference ".$refs[$j]."<br/>";
-
+               approveLeaveRequest($config, $_POST['refNum'.$j],$_POST['approve'.$j], $_POST['reason'.$j]);
+                
             }
         }
-        echo '</h3><br/>';
-    }/*
+    }
+}
+function approveLeaveRequest($config, $refNo, $status, $reason){
+    $mysqli = $config->mysqli;
+    $refNo = $mysqli->real_escape_string($refNo);
+    $approveQuery="UPDATE REQUEST 
+                    SET STATUS='".$mysqli->real_escape_string($status)."',
+                        REASON='".$mysqli->real_escape_string($reason)."',
+                        APPROVEDBY='".$mysqli->real_escape_string($_SESSION['userIDnum'])."', ApprovedTS=NOW() 
+                    WHERE REFER='".$refNo."'";
+    //echo $approveQuery; //DEBUG
+    $approveResult = $mysqli->query($approveQuery);
+    $logMsg = 'Approved Time Request with Ref# '.$refNo;
+    addLog($config, $logMsg);
+    if(!SQLerrorCatch($mysqli, $approveResult, $approveQuery)){
+            echo '<h6>'.$status." Reference ".$refNo."</h6>";
+    }
+}
+function displayLeaveApproval($config){ 
+    $mysqli = $config->mysqli;
+    ?><form method="post" name="approveBtn"><?php
+    
+    echo '<h3>Leave Requests Pending Approval</h3>';
+    
+    approvePOSTLeaveRequests($config);
+    /*
     * Form used to approve leave
     * 
     */
-    ?><form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post" name="approveBtn"><?php
     
-    echo '<h3>Leave Requests Pending Approval</h3>';
     $admin = $_SESSION['admin'];
     if($admin >= 25) { 
         $divisionID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
