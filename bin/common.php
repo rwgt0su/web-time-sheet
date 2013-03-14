@@ -281,7 +281,7 @@ function showTimeSelector($inputName, $input1, $input2, $required=true){
         }
         echo '</select>';
 }
-function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowsToSortNext = array()){
+function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowsToSortNext = array(), $noSort = false){
     
     //two dim array is $table.  Place any html code within any cell
     //do not pass this with a form
@@ -300,23 +300,47 @@ function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowsToSortN
         for($x;$x<sizeof($table);$x++){
             $echo .= '<tr>';
             for($y=0;$y<sizeof($table[$x]);$y++){
-                $echo .= '<td>'.$table[$x][$y].'</td>';
+                $pos = strpos($table[$x][$y], '<td');
+                if($pos !== false){
+                    $temps = explode('<td', $table[$x][$y]);
+                    $i = 0;
+                    $ftemp = '';
+                    foreach ($temps as $temp){
+                        if($i > 0)
+                            $ftemp .= $temp;
+                        $i++;
+                    } 
+                    $temps = explode('>', $ftemp);
+                    $i = 0;
+                    $ftemp = '';
+                    foreach ($temps as $temp){
+                        if($i > 0)
+                            $ftemp .= $temp;
+                        $i++;
+                    } 
+                    $echo .= '<td '.$temps[0].'>'.$ftemp.'</td>';
+                }else{      
+                    $echo .= '<td>'.$table[$x][$y].'</td>';
+                }
             }
             $echo .= '</tr>
                 ';
         }
         $echo = '<input type="hidden" name="totalRows" value="'.$x.'" />'.$echo;
-        $echo .= '</table></div>
-            <script type="text/javascript">
-                var '.$tableID.'=new table.sorter("'.$tableID.'");
-                '.$tableID.'.init("'.$tableID.'",'.$rowToSort.');';
-        $count = count($rowsToSortNext);
-        if($count > 0){
-            for ($i = 0; $i < $count; $i++) {
-                $echo .= $tableID.'.work('.$rowsToSortNext[$i].');';
+        $echo .= '</table></div>';
+        
+        if(!$noSort){            
+            $echo .= '<script type="text/javascript">
+                    var '.$tableID.'=new table.sorter("'.$tableID.'");
+                    '.$tableID.'.init("'.$tableID.'",'.$rowToSort.');';
+            $count = count($rowsToSortNext);
+            if($count > 0){
+                for ($i = 0; $i < $count; $i++) {
+                    $echo .= $tableID.'.work('.$rowsToSortNext[$i].');';
+                }
             }
+            $echo .= '</script>';
         }
-        $echo .= '</script>';
         echo $echo;
 }
 function nslookup ($hostname) {
