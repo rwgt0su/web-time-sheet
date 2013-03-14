@@ -1044,13 +1044,25 @@ function checkInRadioLog($config, $radioLogID, $noLog=false){
     }
     
     $myq = "UPDATE WTS_RADIOLOG SET CHECKEDOUT = '0', `AUDIT_IN_ID` = '".$_SESSION['userIDnum']."', `AUDIT_IN_TS` = NOW(),
-        `AUDIT_IN_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE WTS_RADIOLOG.REFNUM = ".$radioLogID." LIMIT 1 ;";
+        `AUDIT_IN_IP` = INET_ATON('".$_SERVER['REMOTE_ADDR']."') WHERE WTS_RADIOLOG.REFNUM = ".$radioLogID." LIMIT 1";
+          
+     $myUpdate = "UPDATE `WTS_INVENTORY` SET `QUANTITY_AVAILABLE`=`QUANTITY_AVAILABLE` + 1 
+          WHERE IDNUM = (SELECT RADIOID FROM WTS_RADIOLOG WHERE WTS_RADIOLOG.REFNUM = ".$radioLogID.") LIMIT 1;";
     $result = $mysqli->query($myq);
-    if(!SQLerrorCatch($mysqli, $result)){
+    if(!SQLerrorCatch($mysqli, $result, $myq)){
+        $resultUpdate = $mysqli->query($myUpdate);
+        if(!SQLerrorCatch($mysqli, $resultUpdate, $myUpdate)){
             if(!$noLog){
                 echo '<font color="red">Successfully checked item back in with Reference Number: '.$radioLogID.'</font><br /><br/>';
                 addLog($config, 'Radio log #'.$radioLogID.' checked back in');
             }
+        }else{
+             //Attempt to fix Error
+            $myupdate = "UPDATE `WTS_INVENTORY` 
+                SET `QUANTITY_AVAILABLE`=`QUANTITY` - 
+                (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND WTS_RADIOLOG.RADIOID = `WTS_INVENTORY`.IDNUM)";
+            $result = $mysqli->query($myupdate);
+        }
     }
     else
         echo '<h2>Results</h2><font color="red">Failed to check radio back in, try again.</font><br /><Br />';  
@@ -1058,10 +1070,16 @@ function checkInRadioLog($config, $radioLogID, $noLog=false){
 function updateRadioLog($config, $radioLogID, $radioCallNum, $radioID, $checkOutType, $comments='', $ereason=''){
     $mysqli = $config->mysqli;
 
-    $myq = "UPDATE WTS_RADIOLOG 
+    $myq = "UPDATE `WTS_INVENTORY` SET `QUANTITY_AVAILABLE`=`QUANTITY_AVAILABLE` + 1 
+          WHERE IDNUM = (SELECT RADIOID FROM WTS_RATIOLOG WHERE RADIOLOG.REFNUM = ".$radioLogID." LIMIT 1;
+        
+            UPDATE WTS_RADIOLOG 
             SET RADIO_CALLNUM = '".$radioCallNum."', TYPE = '".$checkOutType."', RADIOID='".$radioID."',
                 COMMENTS = '".$comments."', EREASON = '".$ereason."' 
-            WHERE REFNUM = ".$radioLogID;
+            WHERE REFNUM = ".$radioLogID.";
+                
+            UPDATE `WTS_INVENTORY` SET `QUANTITY_AVAILABLE`=`QUANTITY_AVAILABLE` - 1 
+            WHERE IDNUM = (SELECT RADIOID FROM WTS_RATIOLOG WHERE RADIOLOG.REFNUM = ".$radioLogID." LIMIT 1;";
     $result = $mysqli->query($myq);
     if(!SQLerrorCatch($mysqli, $result)){
             echo '<font color="red">Successfully Updated Radio Log #'.$radioLogID.'</font><br />';
@@ -1093,11 +1111,20 @@ function selectRadioInventory($config, $inputName, $selectedValue=false, $onChan
     else
         echo '<option value=""></option>';
             
+//    $myq = "SELECT IDNUM, OTHER_SN, DESCR 
+//            FROM WTS_INVENTORY INV
+//            WHERE IS_ACTIVE = 1
+//            AND IS_DEPRECIATED = 0
+//            AND NOT (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = INV.IDNUM) > 0
+//            AND TYPE = (SELECT IDNUM FROM WTS_INV_TYPE WHERE DESCR = 'Radio');";
+//  
+//  Updates Availability based on what is currently checked out
+    // $myq = "UPDATE `WTS_INVENTORY` SET `IS_AVAILABLE`=0 WHERE (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = IDNUM) > 0";
     $myq = "SELECT IDNUM, OTHER_SN, DESCR 
             FROM WTS_INVENTORY INV
             WHERE IS_ACTIVE = 1
             AND IS_DEPRECIATED = 0
-            AND NOT (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND RADIOID = INV.IDNUM) > 0
+            AND IS_AVAILABLE = 1
             AND TYPE = (SELECT IDNUM FROM WTS_INV_TYPE WHERE DESCR = 'Radio');";
     $result = $mysqli->query($myq);
     SQLerrorCatch($mysqli, $result);
@@ -1172,9 +1199,22 @@ function checkOutItem($config, $deputyID, $radioCallNum, $itemID, $itemTypeID, $
         $result = $mysqli->query($myq);
         if(!SQLerrorCatch($mysqli, $result, $myq)) {
             $inventoryLogID = $mysqli->insert_id;
-            if(!$noLog){
-                addLog($config, $itemType.' Checked out Ref#'.$inventoryLogID.' Added');
-                echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br/>';
+            $myupdate = "UPDATE `WTS_INVENTORY` SET `QUANTITY_AVAILABLE`=`QUANTITY_AVAILABLE` - 1 
+                WHERE IDNUM = (SELECT RADIOID FROM WTS_RADIOLOG WHERE WTS_RADIOLOG.REFNUM = ".$inventoryLogID.") LIMIT 1;";
+            $resultUpdate = $mysqli->query($myupdate);
+            if(!SQLerrorCatch($mysqli, $resultUpdate, $myupdate)) {
+                if(!$noLog){
+                    addLog($config, $itemType.' Checked out Ref#'.$inventoryLogID.' Added');
+                    echo '<font color="red">Successfully Checked Out '.$itemType.' with Reference Number: '.$inventoryLogID.'</font><br/>';
+                } 
+            }else{
+                echo '<font color="red">FATAL ERROR!!! with Reference Number: '.$inventoryLogID.'. Call IT Immediately at ext.14943
+                    <br/>Error: Was not able to checkout item from available inventory</font><br/>';
+                //Attempt to fix
+                $myupdate = "UPDATE `WTS_INVENTORY` 
+                    SET `QUANTITY_AVAILABLE`=`QUANTITY` - 
+                    (SELECT COUNT(CHECKEDOUT) FROM WTS_RADIOLOG WHERE CHECKEDOUT = 1 AND WTS_RADIOLOG.RADIOID = `WTS_INVENTORY`.IDNUM)";
+                $result = $mysqli->query($myupdate);
             }
         }
         else
