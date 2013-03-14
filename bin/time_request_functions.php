@@ -984,9 +984,10 @@ function displayLeaveApproval($config){
                     $refNo = $row[$i];
                     $echo .=  '<input type="hidden" name="refNum'.$rowCount.'" value="'.$row[$i].'" />';
                     $theTable[$x][$i] = '<input type="hidden" name="refNum'.$rowCount.'" value="'.$row[$i].'" />'.$row[$i];
+                }else{
+                    $echo .=  "$row[$i]</td>"; 
+                    $theTable[$x][$i] = $row[$i];
                 }
-                $echo .=  "$row[$i]</td>"; 
-                $theTable[$x][$i] = $row[$i];
             }
             $echo .=  "</tr>";
             $echo .=  "<td style='white-space: nowrap'></td><td>";
@@ -1005,9 +1006,6 @@ function displayLeaveApproval($config){
             $rowCount++;
             $x++;
         }
-        $echo .=  '<input type="hidden" name="totalRows" value="'.$rowCount.'" />';
-
-       $echo .= '</table> <p><input type="submit" name="approveBtn" value="Save"></p></form>';
         
         echo '<hr />';
         echo '<div align="center">Number of entries found in the reserve database is: ' . $totalRows.'</div>';
@@ -1043,9 +1041,13 @@ function displayLeaveApproval($config){
             echo '<input type="submit" name="prevBtn" value="Previous" />';
         if($limit == $rowCount)
             echo '<input type="submit" name="nextBtn" value="Next" />';
-        echo '<br/><br/><br/>';
+        echo '<br/>';
         //echo $echo;
         showSortableTable($theTable, 1, $tableID = 'timeApprove',$rowsToSortNext = array(), $noSort = true);
+        
+        echo '<input type="hidden" name="totalRows" value="'.$rowCount.'" />';
+
+       echo '</table> <p><input type="submit" name="approveBtn" value="Save"></p></form>';
 
     }
     else
