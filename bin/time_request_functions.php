@@ -765,7 +765,9 @@ function displaySubmittedRequests($config){
                         if(($resultArray[$y-2] == 'APPROVED' || $resultArray[$y-2] == 'DENIED') && !$resultArray['isHRApproved']){
                             echo '<td>'. $resultArray[$y-2].'<input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" /></td>';
                         }
-                        echo '<td>'. $resultArray[$y-2].'</td>';
+                        else{
+                            echo '<td>'. $resultArray[$y-2].'</td>';
+                        }
                     }
                 }//end if EXPUNGED
             }//end for loop
@@ -1663,5 +1665,144 @@ function selectTimeType($config, $inputName, $selected=false, $onChangeSubmit=fa
     }
     
     echo '</select>';
+}
+function showTimeRequestTable($config, $filters, $orderBy = 'ORDER BY REFER'){
+    $mysqli = $config->mysqli;
+    
+    if(isset($_POST['timeRequestTableRows'])){
+        $totalRows = $_POST['timeRequestTableRows'];
+        $btnPushed = false;
+        for($i=0;$i<=$totalRows;$i++){
+            if(isset($_POST['pendingBtn'.$i])){
+                $refNo = $_POST['refNo'.$i];
+                $myq = $myq="UPDATE REQUEST 
+                    SET STATUS='PENDING',
+                    `HRAPP_IS` = '0',
+                    APPROVEDBY=''
+                    WHERE REFER=".$refNo;
+                $result = $mysqli->query($myq);
+                SQLerrorCatch($mysqli, $result, $myq, $debut=false);
+                addLog($config, 'Ref# '.$refNo.' status was changed to pending');
+                $btnPushed = true;
+            }
+            if(isset($_POST['approve'.$i])){
+                approveLeaveRequest($config, $_POST['refNo'.$i], "APPROVED", $_POST['reason'.$i]);
+                $btnPushed = true;
+                
+            }
+            if(isset($_POST['deny'.$i])){                
+                approveLeaveRequest($config, $_POST['refNo'.$i], "DENIED", $_POST['reason'.$i]);
+                $btnPushed = true;
+            }
+            if($btnPushed){
+                echo "<script language=\"javascript\" >
+                    document.body.onload = new  function () {
+                        window.location.hash = '#editBtn".$i."';
+                    }
+                </script>
+
+                ";
+                //
+                break;
+            }
+        }
+    }
+    if($config->adminLvl < 25){
+        //only allow to search own reference numbers
+        $filters = "'WHERE REQUEST.IDNUM = '".$_SESSION['userIDnum'];
+    }
+    $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
+                DATE_FORMAT(USEDATE,'%b %d, %Y - %a') 'Used', STATUS 'Status',
+                    DATE_FORMAT(BEGTIME,'%H%i') 'Start',
+                    DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                    T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
+                    APR.LNAME 'ApprovedBy', 
+                    DATE_FORMAT(REQUEST.ApprovedTS,'%b %d, %Y') 'approveTS',
+                    REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
+                FROM REQUEST
+                LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
+                LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
+                LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.HRAPP_ID
+                INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
+                ".$filters."
+                ".$orderBy."
+                ";
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result, $myq);
+
+        $theTable = array(array());
+        $x = 0;
+        $y = 0;
+        if($config->adminLvl >=50 && $config->adminLvl !=75){
+            $theTable[$x][$y] = "HR Approve"; $y++;
+        }
+        else{
+            $theTable[$x][$y] = "Edit"; $y++;
+        }
+        $theTable[$x][$y] = "Ref#"; $y++;
+        $theTable[$x][$y] = "Employee"; $y++;
+        $theTable[$x][$y] = "Date_of_Use"; $y++;
+        $theTable[$x][$y] = "Start Time"; $y++;
+        $theTable[$x][$y] = "End Time"; $y++;
+        $theTable[$x][$y] = "Hours"; $y++;
+        $theTable[$x][$y] = "Type"; $y++;
+        $theTable[$x][$y] = "Subtype"; $y++;
+        $theTable[$x][$y] = "Call Off"; $y++;
+        $theTable[$x][$y] = "Comment"; $y++;
+        $theTable[$x][$y] = 'Status'; $y++;
+        $theTable[$x][$y] = 'Approved By'; $y++;
+        $theTable[$x][$y] = 'Approved Time'; $y++;
+        $theTable[$x][$y] = 'Reason';
+        $x++;
+
+        while($row = $result->fetch_assoc()) {
+            $y=0;
+            if($config->adminLvl >=50 && $config->adminLvl !=75){
+                if(!$row['HR_Approved'])
+                    $theTable[$x][$y] = 'Pending';
+                else
+                    $theTable[$x][$y] = '<div align="center"><h3><font color="red">Approved</font></h3></div>';
+            }
+            $theTable[$x][$y] = '<input type="submit" id="editBtn'.$x.'" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
+                 '<input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
+                  <input type="hidden" value="2" name="totalRows" />';$y++;
+            $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
+            $empMunis = $row['Munis'];
+            $empName = $row['Name'];
+            $theTable[$x][$y] = $empName; $y++;
+            $theTable[$x][$y] = $row['Used']; $y++;
+            $theTable[$x][$y] = $row['Start']; $y++;
+            $theTable[$x][$y] = $row['End']; $y++;
+            $theTable[$x][$y] = $row['Hrs']; $y++;
+            $theTable[$x][$y] = $row['Type']; $y++;
+            $theTable[$x][$y] = $row['Subtype']; $y++;
+            $theTable[$x][$y] = $row['Calloff']; $y++;
+            $theTable[$x][$y] = $row['Comment']; $y++;
+            if($row['Status'] != 'PENDING' && $config->adminLvl >=25){
+                $theTable[$x][$y] = $row['Status'].'<Br/><input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
+            }
+            elseif ($row['Status'] == 'PENDING' && $config->adminLvl >=25){
+                $theTable[$x][$y] = $row['Status'];
+                $theTable[$x][$y] .= "<br/><input type='submit' name='approve$x' value='APPROVED' size='15'/> ";
+                $theTable[$x][$y] .= "<input type='submit' name='deny$x' value='DENIED' size='15'><br/>";
+                $theTable[$x][$y] .= "Reason:<br/><input type='text' name='reason$x' size='50'/>";
+            }
+            else{
+                 $theTable[$x][$y] = $row['Status'];
+            }
+            $y++;
+            $theTable[$x][$y] = $row['ApprovedBy']; $y++;
+            $theTable[$x][$y] = $row['approveTS']; $y++;
+            $theTable[$x][$y] = $row['Reason'];
+            $x++;
+        }
+        if($config->adminLvl >=50 && $config->adminLvl !=75)
+            showSortableTable($theTable, 7, "timeRequestTable", array(2));
+        else
+            showSortableTable($theTable, 2, "timeRequestTable");
+        echo '<input type="hidden" name="timeRequestTableRows" value="'.$x.'" />';
+}
+function getTimeRequestFilterByEmpID($empID){
+    return "REQUEST.IDNUM = '".$empID."'";
 }
 ?>

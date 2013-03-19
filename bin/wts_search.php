@@ -2,25 +2,33 @@
 
 function searchPage($config) {
     $searchInput = isset($_POST['searchInput']) ? $_POST['searchInput'] : false;
-    if ($searchInput) {
-        if(is_numeric($searchInput)){
-            echo '<form name="numericSearch" method="POST">
-                <input type="hidden" value="submittedRequests" name="formName">';
-            searchTimeReqByRef($config, $searchInput);
-            echo '</form>';
+    echo '<form name="numericSearch" method="POST">
+                    <input type="hidden" value="submittedRequests" name="formName">';
+    echo '<input type="hidden" name="searchInput" value="'.$searchInput.'" />';
+    $showActionResultsOnly = searchPOSTActions($config);
+    if (!$showActionResultsOnly){
+        if ($searchInput) {
+            if(is_numeric($searchInput)){
+                searchTimeReqByRef($config, $searchInput);
+                echo '</form>';
+            }
+            else{
+                echo '<h3>Results for: ' . $searchInput . '</h3>';
+                //Active Directory Turned Off Currently
+                //$rowCount1 = selectUserSearch($config, $searchInput, 1);
+                $rowCount1 = 0;
+                $rowCount2 = searchDatabase($config, $searchInput, $rowCount1, true, false);
+                $rowCount3 = $rowCount1 + $rowCount2;
+                $rowCount3 = searchReserves($config, $searchInput, $rowCount3, false);
+                $rowCount3 = $rowCount1 + $rowCount2 + $rowCount3;
+                echo "Total Number of entries found is " . $rowCount3 . "<br /><br /><hr />";
+            }
+        } else {
+            echo 'No information provided';
         }
-        else{
-            echo '<h3>Results for: ' . $searchInput . '</h3>';
-            $rowCount1 = selectUserSearch($config, $searchInput, 1);
-            $rowCount2 = searchDatabase($config, $searchInput, $rowCount1, true, false);
-            $rowCount3 = $rowCount1 + $rowCount2;
-            $rowCount3 = searchReserves($config, $searchInput, $rowCount3, false);
-            $rowCount3 = $rowCount1 + $rowCount2 + $rowCount3;
-            echo "Total Number of entries found is " . $rowCount3 . "<br /><br /><hr />";
-        }
-    } else {
-        echo 'No information provided';
     }
+    echo '</form>';
+
 }
 
 function selectUserSearch($config, $userToFind, $rowCount, $select = false) {
@@ -138,7 +146,9 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching = true, $i
             if ($isSearching) {
                 $echo .= '<div align="center"><table width="400"><tr><td>';
                 if ($isSelect)
-                    $echo .= '<input name="foundUser' . $rowCount . '" type="radio" onClick="this.form.action=\'?' . $_POST['formName'] . "=true'" . ';this.form.submit()" />Select</td><td>';
+                    $echo .= '<input name="foundUser' . $rowCount . '" type="submit" onClick="this.form.action=\'?' . $_POST['formName'] . "=true'" . '" value="Select" /></td><td>';
+                else
+                    $echo .= '<input name="viewRequestBtn' . $rowCount . '" type="submit" value="View Requests" /></td><td>';
                 $echo .= '<input type="hidden" name="foundUserFNAME' . $rowCount . '" value="' . $row['FNAME'] . '" /> First name: ' . $row['FNAME'] . "<br />";
                 $echo .= '<input type="hidden" name="foundUserLNAME' . $rowCount . '" value="' . $row['LNAME'] . '" /> Last Name: ' . $row['LNAME'] . "<br />";
                 $echo .= '<input type="hidden" name="foundUserName' . $rowCount . '" value="' . $row['ID'] . '" /> Username: ' . $row['ID'] . '<br />';
@@ -154,6 +164,7 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching = true, $i
     if ($rowsAdded > 0) {
         if ($isSearching)
             echo "Number of entries found in the Full Time Employee database is " . $rowsAdded . "<br /><br /><hr />";
+        echo '<input type="hidden" name="searchRows" value="'.$rowsAdded.'" />';
         echo $echo;
     }
 
@@ -361,126 +372,31 @@ function displayUserLookup($config) {
 function searchTimeReqByRef($config, $searchInput){
     echo 'Search Results for Reference #'.$searchInput;
     echo '<br/><br/><h2>Results for Time Requests</h2>';
-    $mysqli = $config->mysqli;
     
-    if(isset($_POST['totalRows'])){
-        $totalRows = $_POST['totalRows'];
-        for($i=0;$i<=$totalRows;$i++){
-            if(isset($_POST['pendingBtn'.$i])){
-                $refNo = $_POST['refNo'.$i];
-                $myq = $myq="UPDATE REQUEST 
-                    SET STATUS='PENDING',
-                    `HRAPP_IS` = '0',
-                    APPROVEDBY=''
-                    WHERE REFER=".$refNo;
-                $result = $mysqli->query($myq);
-                SQLerrorCatch($mysqli, $result, $myq);
-                addLog($config, 'Ref# '.$refNo.' status was changed to pending');
-                break;
-            }
-            if(isset($_POST['approve'.$i])){
-                approveLeaveRequest($config, $_POST['refNo'.$i], "APPROVED", $_POST['reason'.$i]);
-            }
-            if(isset($_POST['deny'.$i])){                
-                approveLeaveRequest($config, $_POST['refNo'.$i], "DENIED", $_POST['reason'.$i]);
+    $filter = "WHERE REQUEST.REFER='".$searchInput."'";
+    showTimeRequestTable($config, $filters);
+}
+function searchPOSTActions($config){
+    $useAction = false;
+    if(!isset($_POST['BackBtn'])){
+        if(isset($_POST['searchRows'])){
+            $totalRows = $_POST['searchRows'];
+            for($i=0;$i<=$totalRows;$i++){
+                if(isset($_POST['viewRequestBtn'.$i])){
+                    echo '<h3>Showing Requests for '.$_POST['foundUserLNAME'.$i].', '.$_POST['foundUserFNAME'.$i].' 
+                        <input type="submit" name="BackBtn" value="Back to Search" /></h3>';
+                    $filters = "WHERE ";
+                    $filters .= getTimeRequestFilterByEmpID($config->mysqli->real_escape_string($_POST['foundUserID'.$i]));
+                    echo '<input type="hidden" name="searchRows" value="2" />';
+                    echo '<input type="hidden" name="viewRequestBtn1" value="true" />';
+                    echo '<input type="hidden" name="foundUserID1" value="'.$config->mysqli->real_escape_string($_POST['foundUserID'.$i]).'" />';
+                    showTimeRequestTable($config, $filters);
+                    $useAction = true;
+                }
             }
         }
     }
-    if($config->adminLvl < 25){
-        //only allow to search own reference numbers
-        $searchInput .= "'
-            AND REQUEST.IDNUM = '".$_SESSION['userIDnum'];
-    }
-    $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
-                DATE_FORMAT(USEDATE,'%a %b %d %Y') 'Used', STATUS 'Status',
-                    DATE_FORMAT(BEGTIME,'%H%i') 'Start',
-                    DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                    T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
-                    APR.LNAME 'ApprovedBy', 
-                    DATE_FORMAT(REQUEST.ApprovedTS,'%a %b %d %Y') 'approveTS',
-                    REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
-                FROM REQUEST
-                LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
-                LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
-                LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.HRAPP_ID
-                INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
-                WHERE REQUEST.REFER='".$searchInput."'
-                ";
-        $result = $mysqli->query($myq);
-        SQLerrorCatch($mysqli, $result);
-
-        $theTable = array(array());
-        $x = 0;
-        $y = 0;
-        if($config->adminLvl >=50 && $config->adminLvl !=75){
-            $theTable[$x][$y] = "HR Approve"; $y++;
-        }
-        else{
-            $theTable[$x][$y] = "Edit"; $y++;
-        }
-        $theTable[$x][$y] = "Ref #"; $y++;
-        $theTable[$x][$y] = "Employee"; $y++;
-        $theTable[$x][$y] = "Date of Use"; $y++;
-        $theTable[$x][$y] = "Start Time"; $y++;
-        $theTable[$x][$y] = "End Time"; $y++;
-        $theTable[$x][$y] = "Hours"; $y++;
-        $theTable[$x][$y] = "Type"; $y++;
-        $theTable[$x][$y] = "Subtype"; $y++;
-        $theTable[$x][$y] = "Call Off"; $y++;
-        $theTable[$x][$y] = "Comment"; $y++;
-        $theTable[$x][$y] = 'Status'; $y++;
-        $theTable[$x][$y] = 'ApprovedBy'; $y++;
-        $theTable[$x][$y] = 'Approved Time'; $y++;
-        $theTable[$x][$y] = 'Reason';
-
-        while($row = $result->fetch_assoc()) {
-            $x++;
-            $y=0;
-            if($config->adminLvl >=50 && $config->adminLvl !=75){
-                if(!$row['HR_Approved'])
-                    $theTable[$x][$y] = 'Pending';
-                else
-                    $theTable[$x][$y] = '<div align="center"><h3><font color="red">Approved</font></h3></div>';
-                $theTable[$x][$y] .= '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
-                     '<input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
-                      <input type="hidden" value="2" name="totalRows" />';$y++;
-            }
-            else{
-                $theTable[$x][$y] = '<input type="submit" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
-                     '<input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
-                      <input type="hidden" value="2" name="totalRows" />';$y++;
-            }
-            $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
-            $empMunis = $row['Munis'];
-            $empName = $row['Name'];
-            $theTable[$x][$y] = $empName; $y++;
-            $theTable[$x][$y] = $row['Used']; $y++;
-            $theTable[$x][$y] = $row['Start']; $y++;
-            $theTable[$x][$y] = $row['End']; $y++;
-            $theTable[$x][$y] = $row['Hrs']; $y++;
-            $theTable[$x][$y] = $row['Type']; $y++;
-            $theTable[$x][$y] = $row['Subtype']; $y++;
-            $theTable[$x][$y] = $row['Calloff']; $y++;
-            $theTable[$x][$y] = $row['Comment']; $y++;
-            if($row['Status'] != 'PENDING' && $config->adminLvl >=25){
-                $theTable[$x][$y] = $row['Status'].'<input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
-            }
-            elseif ($row['Status'] == 'PENDING' && $config->adminLvl >=25){
-                $theTable[$x][$y] = $row['Status'];
-                $theTable[$x][$y] .= "<br/><input type='submit' name='approve$x' value='APPROVED' size='15'/> ";
-                $theTable[$x][$y] .= "<input type='submit' name='deny$x' value='DENIED' size='15'><br/>";
-                $theTable[$x][$y] .= "Reason:<br/><input type='text' name='reason$x' size='50'/>";
-            }
-            else{
-                 $theTable[$x][$y] = $row['Status'];
-            }
-            $y++;
-            $theTable[$x][$y] = $row['ApprovedBy']; $y++;
-            $theTable[$x][$y] = $row['approveTS']; $y++;
-            $theTable[$x][$y] = $row['Reason'];
-        }
-        echo '<input type="hidden" name="searchInput" value="'.$searchInput.'" />';
-        showSortableTable($theTable, 7, "hrDetails", array(2));
+    return $useAction;
 }
 
 ?>
