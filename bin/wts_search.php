@@ -147,7 +147,7 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching = true, $i
                 $echo .= '<div align="center"><table width="400"><tr><td>';
                 if ($isSelect)
                     $echo .= '<input name="foundUser' . $rowCount . '" type="submit" onClick="this.form.action=\'?' . $_POST['formName'] . "=true'" . '" value="Select" /></td><td>';
-                else
+                elseif($config->adminLvl >=25)
                     $echo .= '<input name="viewRequestBtn' . $rowCount . '" type="submit" value="View Requests" /></td><td>';
                 $echo .= '<input type="hidden" name="foundUserFNAME' . $rowCount . '" value="' . $row['FNAME'] . '" /> First name: ' . $row['FNAME'] . "<br />";
                 $echo .= '<input type="hidden" name="foundUserLNAME' . $rowCount . '" value="' . $row['LNAME'] . '" /> Last Name: ' . $row['LNAME'] . "<br />";
@@ -378,20 +378,24 @@ function searchTimeReqByRef($config, $searchInput){
 }
 function searchPOSTActions($config){
     $useAction = false;
-    if(!isset($_POST['BackBtn'])){
-        if(isset($_POST['searchRows'])){
-            $totalRows = $_POST['searchRows'];
-            for($i=0;$i<=$totalRows;$i++){
-                if(isset($_POST['viewRequestBtn'.$i])){
-                    echo '<h3>Showing Requests for '.$_POST['foundUserLNAME'.$i].', '.$_POST['foundUserFNAME'.$i].' 
-                        <input type="submit" name="BackBtn" value="Back to Search" /></h3>';
-                    $filters = "WHERE ";
-                    $filters .= getTimeRequestFilterByEmpID($config->mysqli->real_escape_string($_POST['foundUserID'.$i]));
-                    echo '<input type="hidden" name="searchRows" value="2" />';
-                    echo '<input type="hidden" name="viewRequestBtn1" value="true" />';
-                    echo '<input type="hidden" name="foundUserID1" value="'.$config->mysqli->real_escape_string($_POST['foundUserID'.$i]).'" />';
-                    showTimeRequestTable($config, $filters);
-                    $useAction = true;
+    if($config->adminLvl >= 25){
+        if(!isset($_POST['BackBtn'])){
+            if(isset($_POST['searchRows'])){
+                $totalRows = $_POST['searchRows'];
+                for($i=0;$i<=$totalRows;$i++){
+                    if(isset($_POST['viewRequestBtn'.$i])){
+                        echo '<h3>Showing Requests for '.$_POST['foundUserLNAME'.$i].', '.$_POST['foundUserFNAME'.$i].'
+                            <input type="hidden" name="foundUserLNAME'.$i.'" value="'.$_POST['foundUserLNAME'.$i].'" />
+                            <input type="hidden" name="foundUserFNAME'.$i.'" value="'.$_POST['foundUserFNAME'.$i].'" />
+                            <input type="submit" name="BackBtn" value="Back to Search" /></h3>';
+                        $filters = "WHERE ";
+                        $filters .= getTimeRequestFilterByEmpID($config->mysqli->real_escape_string($_POST['foundUserID'.$i]));
+                        echo '<input type="hidden" name="searchRows" value="2" />';
+                        echo '<input type="hidden" name="viewRequestBtn1" value="true" />';
+                        echo '<input type="hidden" name="foundUserID1" value="'.$config->mysqli->real_escape_string($_POST['foundUserID'.$i]).'" />';
+                        showTimeRequestTable($config, $filters);
+                        $useAction = true;
+                    }
                 }
             }
         }

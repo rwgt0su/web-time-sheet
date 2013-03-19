@@ -1666,7 +1666,7 @@ function selectTimeType($config, $inputName, $selected=false, $onChangeSubmit=fa
     
     echo '</select>';
 }
-function showTimeRequestTable($config, $filters, $orderBy = 'ORDER BY REFER'){
+function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC"){
     $mysqli = $config->mysqli;
     
     if(isset($_POST['timeRequestTableRows'])){
@@ -1681,7 +1681,7 @@ function showTimeRequestTable($config, $filters, $orderBy = 'ORDER BY REFER'){
                     APPROVEDBY=''
                     WHERE REFER=".$refNo;
                 $result = $mysqli->query($myq);
-                SQLerrorCatch($mysqli, $result, $myq, $debut=false);
+                SQLerrorCatch($mysqli, $result, $myq, $debug=true); 
                 addLog($config, 'Ref# '.$refNo.' status was changed to pending');
                 $btnPushed = true;
             }
@@ -1728,7 +1728,7 @@ function showTimeRequestTable($config, $filters, $orderBy = 'ORDER BY REFER'){
                 ".$orderBy."
                 ";
         $result = $mysqli->query($myq);
-        SQLerrorCatch($mysqli, $result, $myq);
+        SQLerrorCatch($mysqli, $result, $myq, $debug=FALSE);
 
         $theTable = array(array());
         $x = 0;
@@ -1797,7 +1797,7 @@ function showTimeRequestTable($config, $filters, $orderBy = 'ORDER BY REFER'){
             $x++;
         }
         if($config->adminLvl >=50 && $config->adminLvl !=75)
-            showSortableTable($theTable, 7, "timeRequestTable", array(2));
+            showSortableTable($theTable, 2, "timeRequestTable");
         else
             showSortableTable($theTable, 2, "timeRequestTable");
         echo '<input type="hidden" name="timeRequestTableRows" value="'.$x.'" />';
