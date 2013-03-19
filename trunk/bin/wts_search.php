@@ -5,7 +5,7 @@ function searchPage($config) {
     echo '<form name="numericSearch" method="POST">
                     <input type="hidden" value="submittedRequests" name="formName">';
     echo '<input type="hidden" name="searchInput" value="'.$searchInput.'" />';
-    $showActionResultsOnly = searchPOSTActions($config);
+    $showActionResultsOnly = searchPOSTActions($config, $searchInput);
     if (!$showActionResultsOnly){
         if ($searchInput) {
             if(is_numeric($searchInput)){
@@ -376,26 +376,29 @@ function searchTimeReqByRef($config, $searchInput){
     $filter = "WHERE REQUEST.REFER='".$searchInput."'";
     showTimeRequestTable($config, $filters);
 }
-function searchPOSTActions($config){
+function searchPOSTActions($config, $searchInput){
     $useAction = false;
     if($config->adminLvl >= 25){
         if(!isset($_POST['BackBtn'])){
             if(isset($_POST['searchRows'])){
                 $totalRows = $_POST['searchRows'];
                 for($i=0;$i<=$totalRows;$i++){
-                    if(isset($_POST['viewRequestBtn'.$i])){
-                        echo '<h3>Showing Requests for '.$_POST['foundUserLNAME'.$i].', '.$_POST['foundUserFNAME'.$i].'
-                            <input type="hidden" name="foundUserLNAME'.$i.'" value="'.$_POST['foundUserLNAME'.$i].'" />
-                            <input type="hidden" name="foundUserFNAME'.$i.'" value="'.$_POST['foundUserFNAME'.$i].'" />
-                            <input type="submit" name="BackBtn" value="Back to Search" /></h3>';
-                        $filters = "WHERE ";
-                        $filters .= getTimeRequestFilterByEmpID($config->mysqli->real_escape_string($_POST['foundUserID'.$i]));
-                        echo '<input type="hidden" name="searchRows" value="2" />';
-                        echo '<input type="hidden" name="viewRequestBtn1" value="true" />';
-                        echo '<input type="hidden" name="foundUserID1" value="'.$config->mysqli->real_escape_string($_POST['foundUserID'.$i]).'" />';
-                        showTimeRequestTable($config, $filters);
-                        $useAction = true;
-                    }
+                        if(isset($_POST['viewRequestBtn'.$i])){
+                            echo '<h3>Showing Requests for '.$_POST['foundUserLNAME'.$i].', '.$_POST['foundUserFNAME'.$i];
+                            echo '<input type="submit" name="BackBtn" value="Back to Search" /></h3>';
+                            $hiddenInputs = '<input type="hidden" name="searchInput" value="'.$searchInput.'" />
+                                <input type="hidden" name="foundUserLNAME'.$i.'" value="'.$_POST['foundUserLNAME'.$i].'" />
+                                <input type="hidden" name="foundUserFNAME'.$i.'" value="'.$_POST['foundUserFNAME'.$i].'" />';                            
+                            $filters = "WHERE ";
+                            $filters .= getTimeRequestFilterByEmpID($config, $_POST['foundUserID'.$i]);
+                            $hiddenInputs .= '<input type="hidden" name="searchRows" value="2" />';
+                            $hiddenInputs .= '<input type="hidden" name="viewRequestBtn1" value="true" />';
+                            $hiddenInputs .= '<input type="hidden" name="foundUserID1" value="'.$config->mysqli->real_escape_string($_POST['foundUserID'.$i]).'" />';
+                            echo $hiddenInputs;
+                            showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
+                            $useAction = true;
+                            break;
+                        }
                 }
             }
         }
