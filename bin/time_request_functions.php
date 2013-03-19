@@ -28,7 +28,7 @@ function displayLeaveForm($config){
                 LNAME, FNAME
                 FROM REQUEST, EMPLOYEE
                 WHERE EMPLOYEE.IDNUM=REQUEST.IDNUM
-                AND REFER='.$referNum;
+                AND REFER='.$config->mysqli->real_escape_string($referNum);
             $result = $mysqli->query($myq);
             SQLerrorCatch($mysqli, $result);
             $row = $result->fetch_assoc();
@@ -175,7 +175,9 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
                        echo '<font color="red">Can not submit for Overtime or Comp Time Gain unless it is on or after the date of use</font>'; 
                     }
                     else{
-                        $myq="INSERT INTO REQUEST (IDNUM, USEDATE, BEGTIME, ENDTIME, HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, AUDITID, IP, CALLOFF)
+                        $myq="INSERT INTO REQUEST (IDNUM, USEDATE, BEGTIME, ENDTIME, 
+                            HOURS, TIMETYPEID, SUBTYPE, NOTE, STATUS, REQDATE, 
+                            AUDITID, IP, CALLOFF)
                                 VALUES ('$ID', '".$usedate->format('Y-m-d')."', '$beg', '$end', '$hours', '$type', '$subtype', 
                                         '$comment', 'PENDING', NOW(),'$auditid',INET_ATON('${_SERVER['REMOTE_ADDR']}'), '$calloff')";
                         //echo $myq; //DEBUG
@@ -207,11 +209,17 @@ if (isset($_POST['submit']) || isset($_POST['update'])) {
 
 //update an existing record instead of inserting a new one
     if(isset($_POST['update'])){
-        $myq="UPDATE REQUEST SET USEDATE='".$usedate->format('Y-m-d')."', 
-                BEGTIME='$beg', ENDTIME='$end', HOURS='$hours', 
-                TIMETYPEID='$type', SUBTYPE='$subtype', NOTE='$comment', 
-                AUDITID='$auditid', IP=INET_ATON('".$_SERVER['REMOTE_ADDR']."'), CALLOFF='$calloff'
-                WHERE REFER=".$_POST['referNum'];
+        $myq="UPDATE REQUEST SET USEDATE='".$config->mysqli->real_escape_string($usedate->format('Y-m-d'))."', 
+                BEGTIME='".$config->mysqli->real_escape_string($beg)."', 
+                ENDTIME='".$config->mysqli->real_escape_string($end)."', 
+                HOURS='".$config->mysqli->real_escape_string($hours)."', 
+                TIMETYPEID='".$config->mysqli->real_escape_string($type)."', 
+                SUBTYPE='".$config->mysqli->real_escape_string($subtype)."', 
+                NOTE='".$config->mysqli->real_escape_string($comment)."', 
+                AUDITID='".$config->mysqli->real_escape_string($auditid)."', 
+                IP=INET_ATON('".$config->mysqli->real_escape_string($_SERVER['REMOTE_ADDR'])."'), 
+                CALLOFF='".$config->mysqli->real_escape_string($calloff)."'
+                WHERE REFER=".$config->mysqli->real_escape_string($_POST['referNum']);
         //echo $myq; //DEBUG
                 
                 $result = $mysqli->query($myq);
@@ -239,10 +247,10 @@ else{
       <input type='hidden' name='formName' value='leave' />
      <?php  
      if ( isset($_POST['referNum']) )
-         echo '<input type="hidden" name="referNum" value="'.$_POST['referNum'].'" />';
+         echo 'Reference Request #'.$_POST['referNum'].'<input type="hidden" name="referNum" value="'.$_POST['referNum'].'" />';
              
         $type  = isset($_POST['type']) ? $_POST['type'] : ''; 
-        $myq = "SELECT DESCR FROM TIMETYPE WHERE TIMETYPEID='".$type."'";
+        $myq = "SELECT DESCR FROM TIMETYPE WHERE TIMETYPEID='".$config->mysqli->real_escape_string($type)."'";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
         $typeDescr = $result->fetch_assoc();
@@ -339,12 +347,11 @@ else{
                 else { //allow any user to be picked for a calloff entry
                     $isCallOff = "";
                     if(isset($_POST['calloff'])){
-                        $isCallOff = "CHECKED ";
-                    }
-                    echo '<input type="checkbox" id="calloff" name="calloff" 
-                        value="YES" '.$isCallOff;
+                        echo '<input type="checkbox" id="calloff" name="calloff" value="YES" CHECKED />';
+                    }else
+                        echo '<input type="checkbox" id="calloff" name="calloff" value="YES" />';
                     //echo 'onclick=\'addLookupButton("leave");\'';
-                    echo ' /> Call Off (ie. REPORT OFF)<br/>';
+                    echo 'Call Off (ie. REPORT OFF)<br/>';
                     echo "Employee: ";
                     //user ID passed from search
                     if($totalRows > 0) { 
@@ -354,7 +361,7 @@ else{
                         //dropDownMenu($mysqli, 'FULLNAME', 'EMPLOYEE', $postID, 'ID');
                         $myq = "SELECT `IDNUM` , `LNAME` , `FNAME` 
                             FROM `EMPLOYEE`
-                            WHERE `IDNUM` = ".$postID;
+                            WHERE `IDNUM` = ".$config->mysqli->real_escape_string($postID);
                         $result = $mysqli->query($myq);
                         SQLerrorCatch($mysqli, $result);
                         $row = $result->fetch_assoc(); 
@@ -460,7 +467,7 @@ function displaySubmittedRequests($config){
                     SET STATUS='PENDING',
                     `HRAPP_IS` = '0',
                     APPROVEDBY=''
-                    WHERE REFER=".$refNo;
+                    WHERE REFER=".$config->mysqli->real_escape_string($refNo);
                 $result = $mysqli->query($myq);
                 SQLerrorCatch($mysqli, $result, $myq);
                 addLog($config, 'Ref# '.$refNo.' status was changed to pending');
@@ -533,7 +540,7 @@ function displaySubmittedRequests($config){
                     $myDivID = "All"; 
                 }
                 else{
-                    $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
+                    $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $config->mysqli->real_escape_string($_SESSION['userIDnum'])."'";
                     $myDivResult = $mysqli->query($mydivq);
                     SQLerrorCatch($mysqli, $myDivResult);
                     $temp = $myDivResult->fetch_assoc();
@@ -560,7 +567,10 @@ function displaySubmittedRequests($config){
                 else
                     echo '<option value="All">All</option>';
             }
-            echo '</select></div>';
+            echo '</select><br/><br/>';
+            
+            $shiftTimeID = showShiftDropDown($config, $myDivID, $onChangeSubmit=true);
+            echo '</div>';
     }
         echo "</form>";
         //overwrite current period date variables with 
@@ -577,11 +587,9 @@ function displaySubmittedRequests($config){
     <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
     <h3><center>Gain/Use Requests for pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
     <?php 
-    } ?>
+    } 
 
-    <?php
-
-        switch($admin) { //switch to show different users different reports
+    switch($admin) { //switch to show different users different reports
             case 0: //normal user, list only user's own reqs
 
             $myq = "SELECT REFER 'RefNo', DATE_FORMAT(REQDATE,'%b %d %Y %H%i') 'Requested', 
@@ -593,7 +601,8 @@ function displaySubmittedRequests($config){
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
                         WHERE REQUEST.IDNUM=" . $_SESSION['userIDnum'] . 
-                        " AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        " AND USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                         ORDER BY REFER";
 
                 break;
@@ -608,11 +617,12 @@ function displaySubmittedRequests($config){
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                         AND REQ.DIVISIONID IN
                             (SELECT DIVISIONID 
                             FROM EMPLOYEE E
-                            WHERE E.IDNUM='" . $_SESSION['userIDnum'] . "')
+                            WHERE E.IDNUM='" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) . "')
                         ORDER BY REFER";
                 break;
             case 50: //HR
@@ -625,7 +635,8 @@ function displaySubmittedRequests($config){
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                         ORDER BY REFER";
                 break;
             case 99: //Sheriff
@@ -639,7 +650,8 @@ function displaySubmittedRequests($config){
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                         ORDER BY REFER";
                 break;
             case 100: //full admin, complete raw dump
@@ -653,7 +665,8 @@ function displaySubmittedRequests($config){
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                         ORDER BY REFER";
                 break;
     } //end switch
@@ -669,7 +682,8 @@ function displaySubmittedRequests($config){
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                         ORDER BY REFER";
         }
         else{
@@ -682,9 +696,10 @@ function displaySubmittedRequests($config){
                         INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
                         INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                        WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                         AND REQ.DIVISIONID IN (".
-                            $divisionID.
+                            $config->mysqli->real_escape_string($divisionID).
                         ") ORDER BY REFER";
         }
     }
@@ -827,7 +842,7 @@ function approveLeaveRequest($config, $refNo, $status, $reason){
                     SET STATUS='".$mysqli->real_escape_string($status)."',
                         REASON='".$mysqli->real_escape_string($reason)."',
                         APPROVEDBY='".$mysqli->real_escape_string($_SESSION['userIDnum'])."', ApprovedTS=NOW() 
-                    WHERE REFER='".$refNo."'";
+                    WHERE REFER='".$config->mysqli->real_escape_string($refNo)."'";
     //echo $approveQuery; //DEBUG
     $approveResult = $mysqli->query($approveQuery);
     $logMsg = 'Approved Time Request with Ref# '.$refNo;
@@ -866,7 +881,7 @@ function displayLeaveApproval($config){
                 $divisionID = "All"; 
             }
             else{
-                $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
+                $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $config->mysqli->real_escape_string($_SESSION['userIDnum'])."'";
                 $myDivResult = $mysqli->query($mydivq);
                 SQLerrorCatch($mysqli, $myDivResult);
                 $temp = $myDivResult->fetch_assoc();
@@ -922,7 +937,7 @@ function displayLeaveApproval($config){
                         WHERE R.TIMETYPEID=T.TIMETYPEID
                         AND   R.IDNUM=E.IDNUM
                         AND STATUS='PENDING'
-                        AND E.DIVISIONID IN (".$divisionID.")";
+                        AND E.DIVISIONID IN (".$config->mysqli->real_escape_string($divisionID).")";
         }
         
         $result = $mysqli->query($myq);
@@ -940,7 +955,7 @@ function displayLeaveApproval($config){
                         AND   R.IDNUM=E.IDNUM
                         AND STATUS='PENDING'
                         ORDER BY REFER 
-                        LIMIT ".$prevNum.",  ".$limit;
+                        LIMIT ".$config->mysqli->real_escape_string($prevNum).",  ".$config->mysqli->real_escape_string($limit);
         }
         else{
             $myq = "SELECT DISTINCT REFER 'RefNo', RADIO 'Radio', CONCAT_WS(', ',LNAME,FNAME) 'Employee', 
@@ -952,9 +967,9 @@ function displayLeaveApproval($config){
                         WHERE R.TIMETYPEID=T.TIMETYPEID
                         AND   R.IDNUM=E.IDNUM
                         AND STATUS='PENDING'
-                        AND E.DIVISIONID IN (".$divisionID.")
+                        AND E.DIVISIONID IN (".$config->mysqli->real_escape_string($divisionID).")
                         ORDER BY REFER 
-                        LIMIT ".$prevNum.",  ".$limit;;
+                        LIMIT ".$config->mysqli->real_escape_string($prevNum).",  ".$config->mysqli->real_escape_string($limit);
         }
         
         
@@ -1116,8 +1131,9 @@ function displayRequestLookup($config) {
                         INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
                         LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
-                        WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
-                        AND REQ.LNAME LIKE '%".$lname."%'";
+                        WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                            AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
+                        AND REQ.LNAME LIKE '%".$config->mysqli->real_escape_string($lname)."%'";
         
         else
             $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ', REQ.LNAME, REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%a %b %d %Y') 'Requested',
@@ -1129,7 +1145,7 @@ function displayRequestLookup($config) {
                         INNER JOIN TIMETYPE AS T ON R.TIMETYPEID=T.TIMETYPEID
                         LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
                         LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY                  
-                        WHERE REQ.LNAME LIKE '%".$lname."%'";
+                        WHERE REQ.LNAME LIKE '%".$config->mysqli->real_escape_string($lname)."%'";
         //popUpMessage($myq); //DEBUG
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
@@ -1224,7 +1240,8 @@ function displayTimeUseReport ($config) {
     $myq = "SELECT DIVISIONID 'Div', MUNIS, CONCAT_WS(', ',LNAME,FNAME) 'Name', T.DESCR 'Type', CAST(SUM(HOURS) as DECIMAL(5,2)) 'Total (hrs)'
             FROM REQUEST R, EMPLOYEE E, TIMETYPE T
             WHERE R.IDNUM=E.IDNUM AND T.TIMETYPEID = R.TIMETYPEID
-            AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+            AND USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."'
             AND STATUS='APPROVED'
             GROUP BY E.DIVISIONID, R.IDNUM, R.TIMETYPEID
             ORDER BY E.DIVISIONID, LNAME";
@@ -1306,7 +1323,8 @@ function approvedTimeUseReport ($config) {
             LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
             LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
             INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
-            WHERE USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."'
+            WHERE USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."'
             AND STATUS='APPROVED'
             ORDER BY REQ.LNAME";
     $result = $mysqli->query($myq);
@@ -1323,7 +1341,7 @@ function MUNISreport($config) {
     //a table looking similar to MUNIS entry for ease of use
     if(isset($_POST['ppselect'])) {
         $mysqli = $config->mysqli;
-        $myq = "SELECT * FROM PAYPERIOD WHERE ID='".$_POST['ppselect']."'";
+        $myq = "SELECT * FROM PAYPERIOD WHERE ID='".$config->mysqli->real_escape_string($_POST['ppselect'])."'";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result);
         $selectedPP = $result->fetch_assoc();
@@ -1343,8 +1361,8 @@ function MUNISreport($config) {
             $myq = "SELECT LNAME, FNAME, TIMETYPEID, HOURS
                     FROM EMPLOYEE E, REQUEST R
                     WHERE E.IDNUM=R.IDNUM
-                    AND USEDATE='".$date."'"
-                    ."AND LNAME='CHACHKO'";
+                    AND USEDATE='".$config->mysqli->real_escape_string($date)."'"
+                    ." ";
             $result = $mysqli->query($myq);
             SQLerrorCatch($mysqli, $result);
             echo "<td>";
@@ -1389,62 +1407,68 @@ function MUNISreport($config) {
 function expungeRequest($mysqli, $referNum, $unExpunge=false, $delBtnIndex=false, $totalRows=false, $extraInputs='') {
     $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
     
-    if($unExpunge && $_SESSION['admin']){
-        $myq="UPDATE REQUEST 
-            SET STATUS='PENDING'
-            WHERE REFER=".$referNum;
-        $result = $mysqli->query($myq);
-    
-        if(!SQLerrorCatch($mysqli, $result)){
-            $configNew = new Config();
-            $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
-            addLog($configNew, 'UnExpunged Time Request with Ref# '.$referNum);
-            popUpMessage ('Request '.$referNum.' Has been placed back into PENDING State. 
-                    <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
-                    '.$extraInputs.'                    
-                    <input type="submit" value="OK" />
-                    </form></div>');
+    if($unExpunge){
+        if(!isset($_POST['okBtn'])){
+            $myq="UPDATE REQUEST 
+                SET STATUS='PENDING'
+                WHERE REFER=".$mysqli->real_escape_string($referNum);
+            $result = $mysqli->query($myq);
+
+            if(!SQLerrorCatch($mysqli, $result, $myq, $debug=false)){
+                $configNew = new Config();
+                $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1); 
+                popUpMessage ('Request '.$referNum.' Has been placed back into PENDING State. 
+                        <div align="center"><form method="POST">
+                        '.$extraInputs.'                    
+                        <input type="submit" name="okBtn" value="OK" />
+                        </form></div>');
+                addLog($configNew->mysqli, 'UnExpunged Time Request with Ref# '.$referNum);
+            }
         }
     }
     else{
-        if($confirmBtn && !empty($_POST['expungedReason']) && $_SESSION['admin']){
-            $myq="UPDATE REQUEST 
-                SET STATUS='EXPUNGED',
-                EX_REASON='".$_POST['expungedReason']."',
-                AUDITID='".$_SESSION['userIDnum']."',
-                IP= INET_ATON('".$_SERVER['REMOTE_ADDR']."')
-                WHERE REFER=".$referNum;
-            $result = $mysqli->query($myq);
+        
+            if($confirmBtn && !empty($_POST['expungedReason']) && $_SESSION['admin']){
+                $myq="UPDATE REQUEST 
+                    SET STATUS='EXPUNGED',
+                    HRAPP_ID='0',
+                    EX_REASON='".$mysqli->real_escape_string($_POST['expungedReason'])."',
+                    AUDITID='".$mysqli->real_escape_string($_SESSION['userIDnum'])."',
+                    IP= INET_ATON('".$mysqli->real_escape_string($_SERVER['REMOTE_ADDR'])."')
+                    WHERE REFER='".$mysqli->real_escape_string($referNum)."'";
+                $result = $mysqli->query($myq);
 
-            if(!SQLerrorCatch($mysqli, $result, $myq)){
-                $configNew = new Config();
-                $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
-                addLog($configNew, 'Expunged Time Request with Ref# '.$referNum);
-                popUpMessage ('Request '.$referNum.' expunged. 
-                            <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
-                            '.$extraInputs.'                     
-                            <input type="submit" value="OK" />
-                            </form></div>');
+                if(!SQLerrorCatch($mysqli, $result, $myq, $debug=false)){
+                    $configNew = new Config();
+                    $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
+                    addLog($configNew, 'Expunged Time Request with Ref# '.$referNum);
+                    popUpMessage ('Request '.$referNum.' expunged. 
+                                <div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
+                                '.$extraInputs.'                     
+                                <input type="submit" name="okBtn" value="OK" />
+                                </form></div>');
+                }
             }
-        }
-        else{
-            $result ="";
-            if(isset($_POST['expungedReason'])){
-                if(empty($_POST['expungedReason']))
-                    $result = '<font color="red">Requires a Reason</font><br/>';
+            else{
+                if(!isset($_POST['okBtn'])){
+                $result ="";
+                if(isset($_POST['expungedReason'])){
+                    if(empty($_POST['expungedReason']))
+                        $result = '<font color="red">Requires a Reason</font><br/>';
+                }
+                $echo = '<div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
+                    <input name="deleteBtn'.$delBtnIndex.'" type="hidden" value="'.$referNum.'" />
+                    <input type="hidden" name="totalRows" value="'.$totalRows.'" />
+                    Request '.$referNum.' to be expunged<br/>   '.$result.'
+                    Reason:<textarea name="expungedReason"></textarea><br/>
+                    <input type="submit" name="confirmBtn" value="CONFIRM EXPUNGE" />
+                    <input type="submit" name="okBtn" value="CANCEL" />
+                    '.$extraInputs.' 
+                    </form></div>';
+                popUpMessage ($echo);
+                }
             }
-            $echo = '<div align="center"><form method="POST" action="'.$_SERVER['REQUEST_URI'].'">
-                <input name="deleteBtn'.$delBtnIndex.'" type="hidden" value="'.$referNum.'" />
-                <input type="hidden" name="totalRows" value="'.$totalRows.'" />
-                Request '.$referNum.' to be expunged<br/>   '.$result.'
-                Reason:<textarea name="expungedReason"></textarea><br/>
-                <input type="submit" name="confirmBtn" value="CONFIRM EXPUNGE" />
-                '.$extraInputs.' 
-                </form></div>';
-            popUpMessage ($echo);
-            
-        }
-    }       
+        }  
 }
 
 function displayMySubmittedRequests($config){   
@@ -1532,8 +1556,9 @@ else {
                     FROM REQUEST
                     LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
                     INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
-                    WHERE REQUEST.IDNUM=" . $_SESSION['userIDnum'] . 
-                    " AND USEDATE BETWEEN '". $startDate->format('Y-m-d')."' AND '".$endDate->format('Y-m-d')."' 
+                    WHERE REQUEST.IDNUM=" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) . 
+                    " AND USEDATE BETWEEN '". $config->mysqli->real_escape_string($startDate->format('Y-m-d'))."' 
+                    AND '".$config->mysqli->real_escape_string($endDate->format('Y-m-d'))."' 
                     ORDER BY REFER";
     
     $result = $mysqli->query($myq);
@@ -1666,7 +1691,7 @@ function selectTimeType($config, $inputName, $selected=false, $onChangeSubmit=fa
     
     echo '</select>';
 }
-function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC"){
+function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInput=''){
     $mysqli = $config->mysqli;
     
     if(isset($_POST['timeRequestTableRows'])){
@@ -1675,24 +1700,34 @@ function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC
         for($i=0;$i<=$totalRows;$i++){
             if(isset($_POST['pendingBtn'.$i])){
                 $refNo = $_POST['refNo'.$i];
-                $myq = $myq="UPDATE REQUEST 
-                    SET STATUS='PENDING',
-                    `HRAPP_IS` = '0',
-                    APPROVEDBY=''
-                    WHERE REFER=".$refNo;
-                $result = $mysqli->query($myq);
-                SQLerrorCatch($mysqli, $result, $myq, $debug=true); 
-                addLog($config, 'Ref# '.$refNo.' status was changed to pending');
+                $hrNotes = isset($_POST['hrReason'.$i]) ? $_POST['hrReason'.$i] : '';
+                sendRequestToPending($config, $refNo, $hrNotes);
                 $btnPushed = true;
             }
-            if(isset($_POST['approve'.$i])){
-                approveLeaveRequest($config, $_POST['refNo'.$i], "APPROVED", $_POST['reason'.$i]);
+            elseif(isset($_POST['approve'.$i])){
+                $postReason = isset($_POST['reason'.$i]) ? $_POST['reason'.$i] : '';
+                approveLeaveRequest($config, $_POST['refNo'.$i], "APPROVED", $postReason);
                 $btnPushed = true;
                 
             }
-            if(isset($_POST['deny'.$i])){                
+            elseif(isset($_POST['deny'.$i])){                
                 approveLeaveRequest($config, $_POST['refNo'.$i], "DENIED", $_POST['reason'.$i]);
                 $btnPushed = true;
+            }
+            elseif(isset($_POST['hrApproveBtn'.$i])){
+                $hrNotes = isset($_POST['hrReason'.$i]) ? $_POST['hrReason'.$i] : isset($_POST['hrOldNotes'.$i]) ? $_POST['hrOldNotes'.$i] : '';
+                hrApproveLeaveRequest($config, $_POST['refNo'.$i], $hrNotes);
+                $btnPushed = true;
+            }
+            elseif(isset($_POST['expungeBtn'.$i]) || isset($_POST['unExpungeBtn'.$i])){
+                $toExpungeRefNo = $_POST['refNo'.$i];
+                $toExpungeIndex = $i;
+                $toExpungeTotalRows = $totalRows;
+                $toExpunge = true;
+                $toUnExpunge = false;
+                if(isset($_POST['unExpungeBtn'.$i]))
+                        $toUnExpunge = true;
+               $btnPushed = true; 
             }
             if($btnPushed){
                 echo "<script language=\"javascript\" >
@@ -1700,16 +1735,14 @@ function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC
                         window.location.hash = '#editBtn".$i."';
                     }
                 </script>
-
                 ";
-                //
                 break;
             }
         }
     }
     if($config->adminLvl < 25){
         //only allow to search own reference numbers
-        $filters = "'WHERE REQUEST.IDNUM = '".$_SESSION['userIDnum'];
+        $filters = "'WHERE REQUEST.IDNUM = '".$config->mysqli->real_escape_string($_SESSION['userIDnum']);
     }
     $myq = "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
                 DATE_FORMAT(USEDATE,'%b %d, %Y - %a') 'Used', STATUS 'Status',
@@ -1718,14 +1751,14 @@ function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC
                     T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
                     APR.LNAME 'ApprovedBy', 
                     DATE_FORMAT(REQUEST.ApprovedTS,'%b %d, %Y') 'approveTS',
-                    REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName'
+                    REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName', REQUEST.HR_NOTES AS 'HRNOTES'
                 FROM REQUEST
                 LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
                 LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
                 LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.HRAPP_ID
                 INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
                 ".$filters."
-                ".$orderBy."
+                ".$config->mysqli->real_escape_string($orderBy)."
                 ";
         $result = $mysqli->query($myq);
         SQLerrorCatch($mysqli, $result, $myq, $debug=FALSE);
@@ -1733,12 +1766,8 @@ function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC
         $theTable = array(array());
         $x = 0;
         $y = 0;
-        if($config->adminLvl >=50 && $config->adminLvl !=75){
-            $theTable[$x][$y] = "HR Approve"; $y++;
-        }
-        else{
-            $theTable[$x][$y] = "Edit"; $y++;
-        }
+
+        $theTable[$x][$y] = "Actions"; $y++;
         $theTable[$x][$y] = "Ref#"; $y++;
         $theTable[$x][$y] = "Employee"; $y++;
         $theTable[$x][$y] = "Date_of_Use"; $y++;
@@ -1752,20 +1781,25 @@ function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC
         $theTable[$x][$y] = 'Status'; $y++;
         $theTable[$x][$y] = 'Approved By'; $y++;
         $theTable[$x][$y] = 'Approved Time'; $y++;
-        $theTable[$x][$y] = 'Reason';
+        $theTable[$x][$y] = 'Reason';$y++;
+        $theTable[$x][$y] = 'HR Approval';$y++;
+        $theTable[$x][$y] = 'HR Notes';$y++;
         $x++;
 
         while($row = $result->fetch_assoc()) {
             $y=0;
-            if($config->adminLvl >=50 && $config->adminLvl !=75){
+            
+            $theTable[$x][$y] = '<input type="submit" id="editBtn'.$x.'" name="editBtn'.$x.'" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
+                 '<input type="hidden" name="requestID'.$x.'" value="'.$row['RefNo'].'" />';
+            if($row['Status'] == "EXPUNGED")
+                $theTable[$x][$y] .= '';
+            else{
                 if(!$row['HR_Approved'])
-                    $theTable[$x][$y] = 'Pending';
-                else
-                    $theTable[$x][$y] = '<div align="center"><h3><font color="red">Approved</font></h3></div>';
+                      $theTable[$x][$y] .= '<input type="submit" name="expungeBtn'.$x.'" value="Delete" />';
+                if($row['HR_Approved'] && $config->adminLvl >=50 && $config->adminLvl !=75)
+                      $theTable[$x][$y] .= '<input type="submit" name="expungeBtn'.$x.'" value="Delete" />';
             }
-            $theTable[$x][$y] = '<input type="submit" id="editBtn'.$x.'" name="editBtn0" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />'.
-                 '<input type="hidden" name="requestID0" value="'.$row['RefNo'].'" />
-                  <input type="hidden" value="2" name="totalRows" />';$y++;
+            $y++;
             $theTable[$x][$y] = '<input type="hidden" name="refNo'.$x.'" value="'.$row['RefNo'].'" />'.$row['RefNo']; $y++;
             $empMunis = $row['Munis'];
             $empName = $row['Name'];
@@ -1779,21 +1813,53 @@ function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC
             $theTable[$x][$y] = $row['Calloff']; $y++;
             $theTable[$x][$y] = $row['Comment']; $y++;
             if($row['Status'] != 'PENDING' && $config->adminLvl >=25){
-                $theTable[$x][$y] = $row['Status'].'<Br/><input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
+                $theTable[$x][$y] = $row['Status'];
+                if(!empty($row['Reason']))
+                    $theTable[$x][$y] .= '<br/><font color="darkred">'.$row['Reason'].'</font>';
+                if(!$row['HR_Approved'])
+                    $theTable[$x][$y] .= '<Br/><input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
+                elseif($row['HR_Approved'] && $config->adminLvl >=50 && $config->adminLvl !=75)
+                    $theTable[$x][$y] .= '<Br/><input type="submit" name="pendingBtn'.$x.'" value="Send to Pending" />';
             }
             elseif ($row['Status'] == 'PENDING' && $config->adminLvl >=25){
                 $theTable[$x][$y] = $row['Status'];
                 $theTable[$x][$y] .= "<br/><input type='submit' name='approve$x' value='APPROVED' size='15'/> ";
                 $theTable[$x][$y] .= "<input type='submit' name='deny$x' value='DENIED' size='15'><br/>";
-                $theTable[$x][$y] .= "Reason:<br/><input type='text' name='reason$x' size='50'/>";
+                $theTable[$x][$y] .= 'Reason:<br/><textarea rows="2" cols="21" name="reason'.$x.'" ></textarea>';
             }
             else{
-                 $theTable[$x][$y] = $row['Status'];
+                 $theTable[$x][$y] = $row['Status'].'</br><font color="darkred">'.$row['Reason'].'</font>';
             }
             $y++;
             $theTable[$x][$y] = $row['ApprovedBy']; $y++;
             $theTable[$x][$y] = $row['approveTS']; $y++;
-            $theTable[$x][$y] = $row['Reason'];
+            $theTable[$x][$y] = $row['Reason'];$y++;
+            if(!$row['HR_Approved'] && $row['Status'] != "DENIED"){
+                    $theTable[$x][$y] = 'Pending';
+                if($row['Status'] == "APPROVED" && $config->adminLvl >=50 && $config->adminLvl !=75){
+                    $theTable[$x][$y] = '<font color="darkred">Pending</font>';
+                    $theTable[$x][$y] .= '<input type="submit" name="hrApproveBtn'.$x.'" value="HR Approve" />';$y++;
+                    $theTable[$x][$y] = '<textarea rows="2" cols="21" name="hrReason'.$x.'" ></textarea>';
+                }
+                else{
+                    $y++;
+                    $theTable[$x][$y] = '';
+                }
+            }
+            elseif($row['Status'] == "DENIED"){
+                $theTable[$x][$y] = 'No Action Required';$y++;
+                $theTable[$x][$y] = '<font color="darkred">
+                    <input type="hidden" name="hrOldNotes'.$x.'" value="'.$row['HRNOTES'].'" />'.$row['HRNOTES'].'</font>';
+            }                
+            else{
+                $theTable[$x][$y] = '<div align="center"><h3><font color="darkred">Approved</font></h3></div>';$y++;
+                $theTable[$x][$y] = '<font color="darkred">
+                    <input type="hidden" name="hrOldNotes'.$x.'" value="'.$row['HRNOTES'].'" />'.$row['HRNOTES'].'</font>';
+            }
+            $y++;
+            
+            
+
             $x++;
         }
         if($config->adminLvl >=50 && $config->adminLvl !=75)
@@ -1801,8 +1867,100 @@ function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC
         else
             showSortableTable($theTable, 2, "timeRequestTable");
         echo '<input type="hidden" name="timeRequestTableRows" value="'.$x.'" />';
+        
+        if($toExpunge){
+            echo '</form>';
+            $hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
+                <input type="hidden" name="expungeBtn1" value="true" />
+                <input type="hidden" name="refNo1" value="'.$toExpungeRefNo.'" />
+                ';
+           expungeRequest($config->mysqli, $toExpungeRefNo, $toUnExpunge, $toExpungeIndex, $toExpungeTotalRows, $hiddenInput);
+           echo '<form method=POST name="requestTable">';
+        }
+        
 }
-function getTimeRequestFilterByEmpID($empID){
-    return "REQUEST.IDNUM = '".$empID."'";
+function getTimeRequestFilterByEmpID($config, $empID){
+    return "REQUEST.IDNUM = '".$config->mysqli->real_escape_string($empID)."'";
 }
+function  showShiftDropDown($config, $divID, $onchangeSubmit){
+    $shiftTimeID = '';
+    
+    if(isset($_POST['shiftTime'])){
+        $shiftTimeID = $config->mysqli->real_escape_string($_POST['shiftTime']); 
+    }
+    else{
+        $currentTime = time();
+        $dayShiftStart = mktime(7,00,0);
+        $nightShiftStart = mktime(19,00,0);
+        
+        if($currentTime < $dayShiftStart || $currentTime >= $nightShiftStart){
+            //Between midnight and 0659 or 1900 and midnight
+            $shiftTimeID = "2";
+        }
+        elseif($currentTime >= $dayShiftStart && $currentTime < $nightShiftStart){
+            //Between 0700 and 1859
+            $shiftTimeID = "1";
+        }
+    }
+        
+    //Get all possible values
+    $myq = "SELECT IDNUM, NAME, 
+            DATE_FORMAT(BEGTIME,'%H%i') AS 'BEG_TIME',
+            DATE_FORMAT(ENDTIME ,'%H%i') AS 'END_TIME'
+        FROM SHIFT
+        WHERE DIVISION_ID = '".$config->mysqli->real_escape_string($divID)."' AND
+            ENDDATE IS NULL
+        ORDER BY SORT";
+    $result = $config->mysqli->query($myq);
+    SQLerrorCatch($config->mysqli, $result, $myq, $debug=FALSE);
+    if($result->num_rows > 0){
+        echo '<select name="shiftTime"';
+        if($onchangeSubmit)
+            echo ' onchange="this.form.submit()" ';
+        echo '>';
+
+        while($row = $result->fetch_assoc()) {
+            if($shiftTimeID == $row['IDNUM'])
+                echo '<option value="'.$row['IDNUM'].'" SELECTED>'.$row['NAME'].' ('.$row['BEG_TIME'].'-'.$row['END_TIME'].')</option>';
+            else
+                echo '<option value="'.$row['IDNUM'].'">'.$row['NAME'].' ('.$row['BEG_TIME'].'-'.$row['END_TIME'].')</option>';
+
+        }
+
+        echo '</select>';
+    }
+    
+    return $shiftTimeID;
+}
+function hrApproveLeaveRequest($config, $refNo, $reason){
+    $mysqli = $config->mysqli;
+    $refNo = $mysqli->real_escape_string($refNo);
+    $approveQuery= "UPDATE REQUEST SET `TSTAMP` = NOW( ) ,
+            `HRAPP_IS` = '1',
+            `HRAPP_ID` = '".$config->mysqli->real_escape_string($_SESSION['userIDnum'])."',
+            `HRAPP_IP` = INET_ATON('".$config->mysqli->real_escape_string($_SERVER['REMOTE_ADDR'])."'),
+            `HR_NOTES` = '".$config->mysqli->real_escape_string($reason)."',
+            `HRAPP_TIME` = NOW( ) WHERE `REQUEST`.`REFER` =".$config->mysqli->real_escape_string($refNo);
+    $approveResult = $mysqli->query($approveQuery);
+    $logMsg = 'Approved Time Request with Ref# '.$refNo;
+    addLog($config, $logMsg);
+    if(!SQLerrorCatch($mysqli, $approveResult, $approveQuery,$debug=false)){
+            echo '<h6>HR Approval for Reference '.$refNo."</h6>";
+    }
+    
+}
+function sendRequestToPending($config, $refNo, $hrNotes=''){
+    if(!empty($hrNotes))
+        $updateNotes = "`HR_NOTES` = '".$config->mysqli->real_escape_string($hrNotes)."',";
+    $myq = $myq="UPDATE REQUEST 
+        SET STATUS='PENDING',
+        `HRAPP_IS` = '0',
+        ".$hrNotes."
+        APPROVEDBY=''
+        WHERE REFER=".$config->mysqli->real_escape_string($refNo);
+    $result = $config->mysqli->query($myq);
+    SQLerrorCatch($config->mysqli, $result, $myq, $debug=false); 
+    addLog($config, 'Ref# '.$refNo.' status was changed to pending');
+}
+
 ?>
