@@ -126,6 +126,7 @@ class request_class {
             }
         }
     }
+    
     private function prepareTimeTable(){
         $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
         $theTable = array(array());
@@ -258,7 +259,7 @@ class request_class {
                 if (empty($this->hrNotes))
                     $result = '<font color="red">Requires a Reason</font><br/>';
                 $echo = '<div align="center"><form method="POST" name="confirmBackToPending">
-                <input name="deleteBtn' . $this->toSendToPendingIndexx . '" type="hidden" value="' . $this->refNo . '" />
+                <input name="deleteBtn' . $this->toSendToPendingIndex . '" type="hidden" value="' . $this->refNo . '" />
                 <input type="hidden" name="totalRows" value="' . $this->toSendToPendingIndex . '" />
                 Request ' . $this->refNo . ' will be sent back to pending<br/>   ' . $result . '
                 Reason:<textarea name="hrNotes">'.$this->hrNotes.'</textarea><br/>
@@ -284,27 +285,6 @@ class request_class {
         }
     }
 
-    public function selectTimeType($inputName, $selected = false, $onChangeSubmit = false) {
-        //assumes to be part of a form
-        //provides a drop down selection for time type.
-        if ($onChangeSubmit)
-            echo '<select name="' . $inputName . '" onchange="this.form.submit()">';
-        else
-            echo '<select name="' . $inputName . '" >';
-
-        //$myq = getTimeTypes();
-        $result = getQueryResult($this->config, $myq, $debug=false);
-
-        while ($row = $result->fetch_assoc()) {
-            if ($row['TIMETYPEID'] == $selected)
-                echo '<option value="' . $row['TIMETYPEID'] . '" SELECTED>' . $row['DESCR'] . '</option>';
-            else
-                echo '<option value="' . $row['TIMETYPEID'] . '">' . $row['DESCR'] . '</option>';
-        }
-
-        echo '</select>';
-    }
-
     public function approveLeaveRequest($status) {
         $myq = getApproveRequest($this->config, $this->refNo, $status, $this->supReason);
         $result = getQueryResult($this->config, $myq, $this->debug);
@@ -317,13 +297,15 @@ class request_class {
 
     public function expungeRequest($extraInputs = '') {
         $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
-    
-        if ($this->unExpunge) {
-            if (!isset($_POST['okBtn'])) {
-                $myq = getSendToPending($this->config, $this->toExpungeRefNo, $this->hrNotes);
-                $result = getQueryResult($this->config, $myq, $debug=false);
 
-                if (!$result) {
+        if ($this->toUnExpunge) {
+            if (!isset($_POST['okBtn'])) {
+                $myq = "UPDATE REQUEST 
+                SET STATUS='PENDING'
+                WHERE REFER=" . $this->config->mysqli->real_escape_string($this->toExpungeRefNo);
+                $result = $this->mysqli->query($myq);
+
+                if (!SQLerrorCatch($this->config->mysqli, $result, $myq, $debug = false)) {
                     popUpMessage('Request ' . $this->toExpungeRefNo . ' Has been placed back into PENDING State. 
                         <div align="center"><form method="POST">
                         ' . $extraInputs . '                    
@@ -335,10 +317,16 @@ class request_class {
         } else {
 
             if ($confirmBtn && !empty($_POST['expungedReason']) && $_SESSION['admin']) {
-                $myq = getExpungeRequest($this->config, $this->toExpungeRefNo, $_POST['expungedReason']);
-                $result = getQueryResult($this->config, $myq, $debug=false);
+                $myq = "UPDATE REQUEST 
+                    SET STATUS='EXPUNGED',
+                    HRAPP_ID='0',
+                    EX_REASON='" . $this->config->mysqli->real_escape_string($_POST['expungedReason']) . "',
+                    AUDITID='" . $this->config->mysqli->real_escape_string($_SESSION['userIDnum']) . "',
+                    IP= INET_ATON('" . $this->config->mysqli->real_escape_string($_SERVER['REMOTE_ADDR']) . "')
+                    WHERE REFER='" . $this->config->mysqli->real_escape_string($this->toExpungeRefNo) . "'";
+                $result = $this->config->mysqli->query($myq);
 
-                if ($result) {
+                if (!SQLerrorCatch($this->config->mysqli, $result, $myq, $debug = false)) {
                     addLog($this->config, 'Expunged Time Request with Ref# ' . $this->toExpungeRefNo);
                     popUpMessage('Request ' . $this->toExpungeRefNo . ' expunged. 
                                 <div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
@@ -353,11 +341,11 @@ class request_class {
                         if (empty($_POST['expungedReason']))
                             $result = '<font color="red">Requires a Reason</font><br/>';
                     }
-                    $echo = '<div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
-                    <input name="deleteBtn' . $this->delBtnIndex . '" type="hidden" value="' . $this->toExpungeRefNo . '" />
+                    $echo = '<div align="center"><form method="POST">
+                    <input name="deleteBtn' . $this->toExpungeIndex . '" type="hidden" value="' . $this->toExpungeRefNo . '" />
                     <input type="hidden" name="totalRows" value="' . $this->toExpungeTotalRows . '" />
-                    Request ' . $this->toExpungeRefNo . ' will be expunged<br/>   ' . $result . '
-                    Reason:<br/><textarea name="expungedReason"></textarea><br/>
+                    Request ' . $this->toExpungeRefNo . ' to be expunged<br/>   ' . $result . '
+                    Reason:<textarea name="expungedReason"></textarea><br/>
                     <input type="submit" name="confirmBtn" value="CONFIRM EXPUNGE" />
                     <input type="submit" name="okBtn" value="CANCEL" />
                     ' . $extraInputs . ' 
