@@ -31,6 +31,12 @@ class request_class {
     private $toExpunge;
     private $toUnExpunge;
     public $debug;
+    private $hiddenInput;
+    private $prevNum;
+    private $nextNum;
+    private $limit;
+    private $currentLimit;
+    private $currentTable;
     
     public function request_class(){
         $this->config = '';
@@ -55,30 +61,34 @@ class request_class {
         echo '<input type="hidden" name="formName" value="submittedRequests" />';
         $this->config = $config;
         $this->currentFilters = $filters;
+        $this->hiddenInput = $hiddenInput;
         $this->handlePOSTVariables();
         if ($this->config->adminLvl < 25) {
             //users only allowed to search own reference numbers
             $this->currentFilters = getFilterLoggedInUserRequestID();
         }
-        $this->currentQuery = getTimeRequestTable($this->config, $this->currentFilters, $orderBy);
+        $this->currentLimit = $this->getCurrentPageLimits();
+        $this->currentQuery = getTimeRequestTable($this->config, $this->currentFilters, $orderBy, $this->currentLimit);
         $this->prepareTimeTable();
+        $this->showPageLimitOptions();
+        $this->showTable();
 
         if($this->isSendToPending){
             echo '</form>';
-            $hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
+            $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
                     <input type="hidden" name="pendingBtn1" value="true" />
                     <input type="hidden" name="refNo1" value="' . $this->refNo . '" />
                     ';
-            $this->sendRequestToPending($hiddenInput);
+            $this->sendRequestToPending($this->hiddenInput);
         }
 
         if ($this->toExpunge) {
             echo '</form>';
-            $hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
+            $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
                     <input type="hidden" name="expungeBtn1" value="true" />
                     <input type="hidden" name="refNo1" value="' . $this->toExpungeRefNo . '" />
                     ';
-            $this->expungeRequest($hiddenInput);
+            $this->expungeRequest($this->hiddenInput);
         }
     }
     private function handlePOSTVariables(){
@@ -127,6 +137,60 @@ class request_class {
         }
     }
     
+    private function getCurrentPageLimits(){
+        //Page Breaks Setup
+        $this->prevNum = isset($_POST['prevNum']) ? $_POST['prevNum'] : "0";
+        $this->nextNum = isset($_POST['nextNum']) ? $_POST['nextNum'] : "25";
+        $this->limit= isset($_POST['limit']) ? $_POST['limit'] : "25";
+
+        if(isset($_POST['prevBtn'])){
+            //$this->prevNum = $this->prevNum - $this->limit;
+            $this->nextNum = $this->nextNum - $this->limit;
+        }
+        if(isset($_POST['nextBtn'])){
+            $this->prevNum = $this->prevNum + $this->limit;
+            $this->nextNum = $this->nextNum + $this->limit;
+        }
+                
+        $this->hiddenInput .= '<input type="hidden" name="prevNum" value="'.$this->prevNum.'" />';
+        $this->nextNum .= '<input type="hidden" name="nextNum" value="'.$this->nextNum.'" />';
+        $this->hiddenInput .= '<input type="hidden" name="limit" value="'.$this->limit.'" />';
+        
+        return getLimitFilter($this->config, $this->prevNum, $this->limit);
+    }
+    private function showPageLimitOptions(){
+        echo '<hr />';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        $lastRec = $this->prevNum + $this->limit;
+        echo '<br/>';
+        echo 'Showing Records '. $this->prevNum . ' to ' .$lastRec;
+        //Spacing characters
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        if(!$this->prevNum > 0){
+            echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+            echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        }
+        echo 'Records: <select name="limit" onChange="this.form.submit()" >
+            <option value="25"';
+        if(strcmp($this->limit, "25") ==0)
+            echo ' SELECTED';
+        echo '>25</option>
+            <option value="50"';
+        if(strcmp($this->limit, "50") ==0)
+            echo ' SELECTED';
+        echo '>50</option>
+            </select>';
+        if($this->prevNum > 0)
+            echo '<input type="submit" name="prevBtn" value="Previous" />';
+        if($this->limit <= $this->currentRow)
+            echo '<input type="submit" name="nextBtn" value="Next" />';
+        echo '<br/>';
+    }
+    
     private function prepareTimeTable(){
         $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
         $theTable = array(array());
@@ -144,6 +208,7 @@ class request_class {
         $theTable[$this->currentRow][$y] = "Subtype";$y++;
         $theTable[$this->currentRow][$y] = "Call Off";$y++;
         $theTable[$this->currentRow][$y] = "Comment";$y++;
+        $theTable[$this->currentRow][$y] = "Submit Date";$y++;
         $theTable[$this->currentRow][$y] = 'Status';$y++;
         $theTable[$this->currentRow][$y] = 'Approved By';$y++;
         $theTable[$this->currentRow][$y] = 'Approved Time';$y++;
@@ -176,6 +241,7 @@ class request_class {
             $theTable[$this->currentRow][$y] = $row['Subtype'];$y++;
             $theTable[$this->currentRow][$y] = $row['Calloff'];$y++;
             $theTable[$this->currentRow][$y] = $row['Comment'];$y++;
+            $theTable[$this->currentRow][$y] = $row['Request_Date'];$y++;
             if ($row['Status'] != 'PENDING' && $this->config->adminLvl >= 25) {
                 $theTable[$this->currentRow][$y] = $row['Status'];
                 if (!empty($row['Reason']))
@@ -225,10 +291,13 @@ class request_class {
             $this->currentRow++;
         }
         
+        $this->currentTable = $theTable;
+    }
+    private function showTable(){
         if ($this->config->adminLvl >= 50 && $this->config->adminLvl != 75)
-            showSortableTable($theTable, 2, "timeRequestTable");
+            showSortableTable($this->currentTable, 2, "timeRequestTable");
         else
-            showSortableTable($theTable, 2, "timeRequestTable");
+            showSortableTable($this->currentTable, 2, "timeRequestTable");
         echo '<input type="hidden" name="timeRequestTableRows" value="' . $this->currentRow . '" />';
     }
 
