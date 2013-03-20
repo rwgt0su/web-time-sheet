@@ -374,7 +374,8 @@ function searchTimeReqByRef($config, $searchInput){
     echo '<br/><br/><h2>Results for Time Requests</h2>';
     
     $filter = "WHERE REQUEST.REFER='".$searchInput."'";
-    showTimeRequestTable($config, $filters);
+    $requests = new request_class();
+    $requests->showTimeRequestTable($config, $filter);
 }
 function searchPOSTActions($config, $searchInput){
     $useAction = false;
@@ -389,18 +390,23 @@ function searchPOSTActions($config, $searchInput){
                             $hiddenInputs = '<input type="hidden" name="searchInput" value="'.$searchInput.'" />
                                 <input type="hidden" name="foundUserLNAME'.$i.'" value="'.$_POST['foundUserLNAME'.$i].'" />
                                 <input type="hidden" name="foundUserFNAME'.$i.'" value="'.$_POST['foundUserFNAME'.$i].'" />';                            
-                            $filters = "WHERE ";
-                            $filters .= getTimeRequestFilterByEmpID($config, $_POST['foundUserID'.$i]);
+                            $filters = "";
+                            $filters .= getTimeRequestFiltersByEmpID($config, $_POST['foundUserID'.$i]);
                             $hiddenInputs .= '<input type="hidden" name="searchRows" value="2" />';
                             $hiddenInputs .= '<input type="hidden" name="viewRequestBtn1" value="true" />';
                             $hiddenInputs .= '<input type="hidden" name="foundUserID1" value="'.$config->mysqli->real_escape_string($_POST['foundUserID'.$i]).'" />';
                             echo $hiddenInputs;
-                            showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
+                            $requests = new request_class();
+                            $requests->showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
                             $useAction = true;
                             break;
                         }
                 }
             }
+        }
+        else{
+            //Back Button Pressed
+            //clearGoToAnchor();
         }
     }
     return $useAction;
