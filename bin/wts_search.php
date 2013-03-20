@@ -374,8 +374,9 @@ function searchTimeReqByRef($config, $searchInput){
     echo '<br/><br/><h2>Results for Time Requests</h2>';
     
     $filter = " AND REQUEST.REFER='".$searchInput."'";
+    $hiddenInput = '<input type="hidden" name="searchInput" value="'.$searchInput.'" />';
     $requests = new request_class();
-    $requests->showTimeRequestTable($config, $filter);
+    $requests->showTimeRequestTable($config, $filter, $orderBy = "ORDER BY REFER DESC", $hiddenInput);
 }
 function searchPOSTActions($config, $searchInput){
     $useAction = false;
