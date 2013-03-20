@@ -94,14 +94,18 @@ class request_class {
                     $this->btnPushed = true;
                 } elseif (isset($_POST['approve' . $i])) {
                     $this->supReason = isset($_POST['reason' . $i]) ? $_POST['reason' . $i] : '';
-                    approveLeaveRequest($this->config, $_POST['refNo' . $i], "APPROVED", $this->supReason);
+                    $this->refNo = $_POST['refNo' . $i];
+                    $this->approveLeaveRequest("APPROVED");
                     $this->btnPushed = true;
                 } elseif (isset($_POST['deny' . $i])) {
-                    approveLeaveRequest($this->config, $_POST['refNo' . $i], "DENIED", $_POST['reason' . $i]);
+                    $this->refNo = $_POST['refNo' . $i];
+                    $this->supReason = $_POST['reason' . $i];
+                    $this->approveLeaveRequest("DENIED");
                     $this->btnPushed = true;
                 } elseif (isset($_POST['hrApproveBtn' . $i])) {
                     $this->hrNotes = isset($_POST['hrReason' . $i]) ? $_POST['hrReason' . $i] : isset($_POST['hrOldNotes' . $i]) ? $_POST['hrOldNotes' . $i] : '';
-                    hrApproveLeaveRequest($this->config, $_POST['refNo' . $i], $hrNotes);
+                    $this->refNo = $_POST['refNo' . $i];
+                    $this->hrApproveLeaveRequest();
                     $this->btnPushed = true;
                 } elseif (isset($_POST['expungeBtn' . $i]) || isset($_POST['unExpungeBtn' . $i])) {
                     $this->toExpungeRefNo = $_POST['refNo' . $i];
@@ -300,21 +304,10 @@ class request_class {
         echo '</select>';
     }
 
-    public function approvePOSTLeaveRequests() {
-        if (isset($_POST['approveBtn'])) {
-            echo '<h3>';
-            for ($j = 0; $j < $_POST['totalRows']; $j++) {
-                if (isset($_POST['approve' . $j])) {
-                    approveLeaveRequest($this->config, $_POST['refNum' . $j], $_POST['approve' . $j], $_POST['reason' . $j]);
-                }
-            }
-        }
-    }
-
     public function approveLeaveRequest($status) {
-        $myq = getApproveRequest($this->refNo, $status, $this->supReason);
-        $result = getQueryResult($this->config, $myq, $debug=false);
-        if (!$result) {
+        $myq = getApproveRequest($this->config, $this->refNo, $status, $this->supReason);
+        $result = getQueryResult($this->config, $myq, $this->debug);
+        if ($result) {
             $logMsg = 'Approved Time Request with Ref# ' . $this->refNo;
             addLog($this->config, $logMsg);
             echo '<h6>' . $status . " Reference " . $this->refNo . "</h6>";

@@ -20,11 +20,11 @@ function getCurrentPayPeriod(){
     return "SELECT PPBEG, PPEND FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
 }
 
-function getApproveRequest($refNo, $status, $reason) {
+function getApproveRequest($config, $refNo, $status, $reason) {
     return "UPDATE REQUEST 
-                    SET STATUS='" . $mysqli->real_escape_string($status) . "',
-                        REASON='" . $mysqli->real_escape_string($reason) . "',
-                        APPROVEDBY='" . $mysqli->real_escape_string($_SESSION['userIDnum']) . "', ApprovedTS=NOW() 
+                    SET STATUS='" . $config->mysqli->real_escape_string($status) . "',
+                        REASON='" . $config->mysqli->real_escape_string($reason) . "',
+                        APPROVEDBY='" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) . "', ApprovedTS=NOW() 
                     WHERE REFER='" . $config->mysqli->real_escape_string($refNo) . "'";
 }
 
