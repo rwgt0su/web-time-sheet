@@ -6,15 +6,18 @@
  */
 
 function getTimeRequestFiltersBetweenDates($config, $startDate, $endDate) {
-    return "USEDATE BETWEEN '" . $config->mysqli->real_escape_string($startDate->format('Y-m-d')) . "' 
-        AND '" . $config->mysqli->real_escape_string($endDate->format('Y-m-d')) . "'";
+    return " AND USEDATE BETWEEN '" . $config->mysqli->real_escape_string(date('Y-m-d', strtotime($startDate))) . "' 
+        AND '" . $config->mysqli->real_escape_string(date('Y-m-d', strtotime($endDate))) . "'";
 }
 
 function getTimeRequestFiltersByEmpID($config, $empID) {
-    return " REQUEST.IDNUM = '" . $config->mysqli->real_escape_string($empID) . "'";
+    return " AND REQUEST.IDNUM = '" . $config->mysqli->real_escape_string($empID) . "'";
 }
 function getFilterLoggedInUserRequestID($config) {
-    return " REQUEST.IDNUM = '" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) ."'";
+    return " AND REQUEST.IDNUM = '" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) ."'";
+}
+function getCurrentPayPeriod(){
+    return "SELECT PPBEG, PPEND FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
 }
 
 function getApproveRequest($refNo, $status, $reason) {
@@ -39,7 +42,7 @@ function getTimeRequestTable($config, $filters, $orderBy) {
                 LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
                 LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.HRAPP_ID
                 INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=REQUEST.TIMETYPEID
-                WHERE
+                WHERE 1
                 " . $filters . "
                 " . $config->mysqli->real_escape_string($orderBy) . "
                 ";
@@ -70,6 +73,19 @@ function getShiftsByDivision($config, $divID){
         WHERE DIVISION_ID = '" . $config->mysqli->real_escape_string($divID) . "' AND
             ENDDATE IS NULL
         ORDER BY SORT";
+}
+function getShiftsByID($config, $ID){
+    return "SELECT IDNUM, NAME, 
+            DATE_FORMAT(BEGTIME,'%H%i') AS 'BEG_TIME',
+            DATE_FORMAT(ENDTIME ,'%H%i') AS 'END_TIME'
+        FROM SHIFT
+        WHERE IDNUM = '" . $config->mysqli->real_escape_string($ID) . "' AND
+            ENDDATE IS NULL
+        ORDER BY SORT";
+}
+function getReqestsBetweenTimes($Start, $End){
+    return " AND TIME_FORMAT(BEGTIME, '%H%I') BETWEEN TIME_FORMAT('".$Start."00', '%H%I') AND TIME_FORMAT('".$End."00', '%H%I')";
+    
 }
 function getTimeTypes(){
     return "SELECT TIMETYPEID, DESCR FROM TIMETYPE";
