@@ -34,7 +34,7 @@ function getTimeRequestTable($config, $filters, $orderBy) {
                     DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                     DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                     T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
-                    APR.LNAME 'ApprovedBy', 
+                    APR.LNAME 'ApprovedBy', REQUEST.EX_REASON AS 'EXPUNGE_NOTES',
                     DATE_FORMAT(REQUEST.ApprovedTS,'%b %d, %Y') 'approveTS',
                     REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName', REQUEST.HR_NOTES AS 'HRNOTES'
                 FROM REQUEST
@@ -48,12 +48,11 @@ function getTimeRequestTable($config, $filters, $orderBy) {
                 ";
 }
 
-function getSendToPending($config, $refNo, $hrNotes) {
-    "`HR_NOTES` = '" . $config->mysqli->real_escape_string($hrNotes) . "',";
+function getSendToPending($config, $refNo, $hrNotes) {  
     return "UPDATE REQUEST 
         SET STATUS='PENDING',
         `HRAPP_IS` = '0',
-        " . $hrNotes . "
+        `HR_NOTES` = '" . $config->mysqli->real_escape_string($hrNotes) . "',
         APPROVEDBY=''
         WHERE REFER=" . $config->mysqli->real_escape_string($refNo);
 }
@@ -93,7 +92,7 @@ function getTimeTypes(){
 function getExpungeRequest($config, $refNo, $reason){
     return "UPDATE REQUEST SET STATUS='EXPUNGED',
                     HRAPP_ID='0',
-                    EX_REASON='" . $config->mysqli->real_escape_string() . "',
+                    EX_REASON='" . $config->mysqli->real_escape_string($reason) . "',
                     AUDITID='" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) . "',
                     IP= INET_ATON('" . $config->mysqli->real_escape_string($_SERVER['REMOTE_ADDR']) . "')
                     WHERE REFER='" . $config->mysqli->real_escape_string($refNo) . "'";
