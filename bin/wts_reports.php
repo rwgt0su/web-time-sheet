@@ -763,4 +763,12 @@ function overtimeReport($config){
         echo 'Access Denied';
     }
 }
+function empTimeReportByPayNew($config, $startDate, $endDate){
+                         
+    $filters = "WHERE ";
+    $filters .= getTimeRequestFilterBetweenDates($config, $startDate, $endDate);
+    $filters .= " AND (STATUS='APPROVED' OR STATUS='DENIED')";
+    $hiddenInputs = '';
+    showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
+}
 ?>
