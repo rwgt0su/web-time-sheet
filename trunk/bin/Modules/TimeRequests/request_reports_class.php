@@ -33,11 +33,32 @@ class request_reports {
         $this->showDivisionDropDown();
         $this->filters .= getTimeRequestFiltersBetweenDates($this->config, $this->startDate, $this->endDate);
         //$filters .= " AND (STATUS='APPROVED' OR STATUS='DENIED')";
-        $hiddenInputs = '';
+        $hiddenInputs = $this->setHiddenPostInputs();
         $requests->debug = FALSE;
         $requests->showTimeRequestTable($this->config, $this->filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
     }
 
+    private function setHiddenPostInputs(){
+        $hiddenInputs = '';
+        if (isset($_POST['customDate']))
+            $hiddenInputs .= '<input type="hidden" name="customDate" value="' . $_POST['customDate'] . '" />';
+        if (isset($_POST['GoBtn']))
+            $hiddenInputs .= '<input type="hidden" name="GoBtn" value="' . $_POST['GoBtn'] . '" />';
+        if (isset($_POST['usePayPeriodBtn']))
+            $hiddenInputs .= '<input type="hidden" name="usePayPeriodBtn" value="' . $_POST['usePayPeriodBtn'] . '" />';
+        if (isset($_POST['ppOffset']))
+            $hiddenInputs .= '<input type="hidden" name="ppOffset" value="' . $_POST['ppOffset'] . '" />';
+        if (isset($_POST['start']))
+            $hiddenInputs .= '<input type="hidden" name="start" value="' . $_POST['start'] . '" />';
+        if (isset($_POST['end']))
+            $hiddenInputs .= '<input type="hidden" name="end" value="' . $_POST['end'] . '" />';
+        if (isset($_POST['divisionID']))
+            $hiddenInputs .= '<input type="hidden" name="divisionID" value="' . $_POST['divisionID'] . '" />';
+        if (isset($_POST['shiftTime']))
+            $hiddenInputs .= '<input type="hidden" name="shiftTime" value="' . $_POST['shiftTime'] . '" />';
+        
+        return $hiddenInputs;
+    }
     public function getCurrentPayPeriods() {
         if (!isset($_POST['customDate']) && !isset($_POST['GoBtn']) || isset($_POST['usePayPeriodBtn'])) {
             //what pay period are we currently in?
