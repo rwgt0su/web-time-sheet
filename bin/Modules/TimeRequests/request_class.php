@@ -52,7 +52,7 @@ class request_class {
     }
 
     public function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInput = '') {
-        echo '<input type="hidden" name="formName" value="showTimeRequestTableForm" />';
+        echo '<input type="hidden" name="formName" value="submittedRequests" />';
         $this->config = $config;
         $this->currentFilters = $filters;
         $this->handlePOSTVariables();
