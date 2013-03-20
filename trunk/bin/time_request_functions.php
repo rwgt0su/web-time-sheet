@@ -17,7 +17,7 @@ function displayLeaveForm($config){
     $findBtn = isset($_POST['findBtn']) ?  true : false;
     $requestAccepted = false;
     //echo "updatingRequest = $updatingRequest"; //DEBUG
-
+   
     if($totalRows && $updatingRequest && !$findBtn) {
         for($i=0; $i<$totalRows; $i++){
             if(isset($_POST['editBtn'.$i]))
