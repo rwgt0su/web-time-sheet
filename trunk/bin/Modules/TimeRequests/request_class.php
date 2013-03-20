@@ -22,6 +22,9 @@ class request_class {
     private $refNo;
     private $hrReason;
     private $supReason;
+    private $toSendToPendingIndex;
+    private $toSendToPendingTotalRows;
+    private $isSendToPending;
     private $toExpungeRefNo;
     private $toExpungeIndex;
     private $toExpungeTotalRows;
@@ -39,9 +42,10 @@ class request_class {
         $this->refNo = '';
         $this->hrReason = '';
         $this->supReason = '';
+        $this->isSendToPending = false;
         $this->toExpungeRefNo = '';
         $this->toExpungeIndex = '';
-        $this->toExpungeTotalRows = '';
+        $this->toSendToPendingTotalRows = '';
         $this->toExpunge = FALSE;
         $this->toUnExpunge = FALSE;
         $this->debug = false;
@@ -58,7 +62,14 @@ class request_class {
         $this->currentQuery = getTimeRequestTable($this->config, $this->currentFilters, $orderBy);
         $this->prepareTimeTable();
 
-        
+        if($this->isSendToPending){
+            echo '</form>';
+            $hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
+                    <input type="hidden" name="pendingBtn1" value="true" />
+                    <input type="hidden" name="refNo1" value="' . $this->refNo . '" />
+                    ';
+            $this->sendRequestToPending($hiddenInput);
+        }
 
         if ($this->toExpunge) {
             echo '</form>';
@@ -66,8 +77,7 @@ class request_class {
                     <input type="hidden" name="expungeBtn1" value="true" />
                     <input type="hidden" name="refNo1" value="' . $this->toExpungeRefNo . '" />
                     ';
-            expungeRequest($this->config->mysqli, $this->toExpungeRefNo, $this->toUnExpunge, $this->toExpungeIndex, $this->toExpungeTotalRows, $hiddenInput);
-            echo '<form method=POST name="requestTable">';
+            $this->expungeRequest($hiddenInput);
         }
     }
     private function handlePOSTVariables(){
@@ -78,7 +88,9 @@ class request_class {
                 if (isset($_POST['pendingBtn' . $i])) {
                     $this->refNo = $_POST['refNo' . $i];
                     $this->hrNotes = isset($_POST['hrReason' . $i]) ? $_POST['hrReason' . $i] : '';
-                    sendRequestToPending($this->config, $this->refNo, $this->hrNotes);
+                    $this->toSendToPendingIndex = $i;
+                    $this->toSendToPendingTotalRows = $totalRows;
+                    $this->isSendToPending = true;
                     $this->btnPushed = true;
                 } elseif (isset($_POST['approve' . $i])) {
                     $this->supReason = isset($_POST['reason' . $i]) ? $_POST['reason' . $i] : '';
@@ -185,9 +197,14 @@ class request_class {
                     $theTable[$this->currentRow][$y] = '<font color="darkred">Pending</font>';
                     $theTable[$this->currentRow][$y] .= '<input type="submit" name="hrApproveBtn' . $this->currentRow . '" value="HR Approve" />';$y++;
                     $theTable[$this->currentRow][$y] = '<textarea rows="2" cols="21" name="hrReason' . $this->currentRow . '" ></textarea>';
-                } else {
+                }elseif ($row['Status'] == "EXPUNGED") {
                     $y++;
-                    $theTable[$this->currentRow][$y] = '';
+                    $theTable[$this->currentRow][$y] = '<font color="darkred"> '.$row['EXPUNGE_NOTES'] . '</font>';
+                } 
+                else {
+                    $y++;
+                    $theTable[$this->currentRow][$y] = '<font color="darkred">
+                        <input type="hidden" name="hrOldNotes' . $this->currentRow . '" value="' . $row['HRNOTES'] . '" />' . $row['HRNOTES'] . '</font>';
                 }
             } elseif ($row['Status'] == "DENIED") {
                 $theTable[$this->currentRow][$y] = 'No Action Required';$y++;
@@ -209,13 +226,47 @@ class request_class {
         echo '<input type="hidden" name="timeRequestTableRows" value="' . $this->currentRow . '" />';
     }
 
-    public function sendRequestToPending() {
-        if (!empty($this->hrNotes)){
-            $myq = getSendToPending($this->config, $this->refNo, $this->hrNotes);
-            $result = getQueryResult($this->config, $myq, $debug=false);
-            if(!$result)
-                addLog($this->config, 'Ref# ' . $this->refNo . ' status was changed to pending');
+    public function sendRequestToPending($extraInputs = '') {
+        $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
+        if ($confirmBtn && !empty($_POST['hrNotes']) && $_SESSION['admin']) {
+            $this->hrNotes = $_POST['hrNotes'];
+            if (!empty($this->hrNotes)){
+                $myq = getSendToPending($this->config, $this->refNo, $this->hrNotes);
+                $result = getQueryResult($this->config, $myq, $debug=false);
+                if($result){
+                    addLog($this->config, 'Ref# ' . $this->refNo . ' status was changed to pending');
+
+                    popUpMessage('Request ' . $this->refNo . ' is now Pending Status. 
+                                <div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
+                                ' . $extraInputs . '                     
+                                <input type="submit" name="okBtn" value="OK" />
+                                </form></div>');
+                }
+                else{popupmessage('Failed to add');}
+            }
+            else {popupmessage('Notes Requested');}
+            
+        } else {
+            if (!isset($_POST['okBtn'])) {
+                $result = "";
+                
+                if (empty($this->hrNotes))
+                    $result = '<font color="red">Requires a Reason</font><br/>';
+                $echo = '<div align="center"><form method="POST" name="confirmBackToPending">
+                <input name="deleteBtn' . $this->toSendToPendingIndexx . '" type="hidden" value="' . $this->refNo . '" />
+                <input type="hidden" name="totalRows" value="' . $this->toSendToPendingIndex . '" />
+                Request ' . $this->refNo . ' will be sent back to pending<br/>   ' . $result . '
+                Reason:<textarea name="hrNotes">'.$this->hrNotes.'</textarea><br/>
+                <input type="submit" name="confirmBtn" value="CONFIRM" />
+                <input type="submit" name="okBtn" value="CANCEL" />
+                ' . $extraInputs . ' 
+                </form></div>';
+                popUpMessage($echo, "Confirm Back To Pending");
+            }
         }
+        
+        
+       
     }
 
     public function hrApproveLeaveRequest() {
@@ -270,32 +321,32 @@ class request_class {
         }
     }
 
-    public function expungeRequest($unExpunge = false, $delBtnIndex = false, $totalRows = false, $extraInputs = '') {
+    public function expungeRequest($extraInputs = '') {
         $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
-
-        if ($unExpunge) {
+    
+        if ($this->unExpunge) {
             if (!isset($_POST['okBtn'])) {
-                $myq = getSendToPending($this->config, $this->refNo, $this->hrNotes);
+                $myq = getSendToPending($this->config, $this->toExpungeRefNo, $this->hrNotes);
                 $result = getQueryResult($this->config, $myq, $debug=false);
 
                 if (!$result) {
-                    popUpMessage('Request ' . $this->refNo . ' Has been placed back into PENDING State. 
+                    popUpMessage('Request ' . $this->toExpungeRefNo . ' Has been placed back into PENDING State. 
                         <div align="center"><form method="POST">
                         ' . $extraInputs . '                    
                         <input type="submit" name="okBtn" value="OK" />
                         </form></div>');
-                    addLog($this->config, 'UnExpunged Time Request with Ref# ' . $this->refNo);
+                    addLog($this->config, 'UnExpunged Time Request with Ref# ' . $this->toExpungeRefNo);
                 }
             }
         } else {
 
             if ($confirmBtn && !empty($_POST['expungedReason']) && $_SESSION['admin']) {
-                $myq = getExpungeRequest($this->config, $this->refNo, $_POST['expungedReason']);
+                $myq = getExpungeRequest($this->config, $this->toExpungeRefNo, $_POST['expungedReason']);
                 $result = getQueryResult($this->config, $myq, $debug=false);
 
-                if (!$result) {
-                    addLog($this->config, 'Expunged Time Request with Ref# ' . $this->refNo);
-                    popUpMessage('Request ' . $this->refNo . ' expunged. 
+                if ($result) {
+                    addLog($this->config, 'Expunged Time Request with Ref# ' . $this->toExpungeRefNo);
+                    popUpMessage('Request ' . $this->toExpungeRefNo . ' expunged. 
                                 <div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
                                 ' . $extraInputs . '                     
                                 <input type="submit" name="okBtn" value="OK" />
@@ -309,10 +360,10 @@ class request_class {
                             $result = '<font color="red">Requires a Reason</font><br/>';
                     }
                     $echo = '<div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
-                    <input name="deleteBtn' . $delBtnIndex . '" type="hidden" value="' . $this->refNo . '" />
-                    <input type="hidden" name="totalRows" value="' . $totalRows . '" />
-                    Request ' . $this->refNo . ' to be expunged<br/>   ' . $result . '
-                    Reason:<textarea name="expungedReason"></textarea><br/>
+                    <input name="deleteBtn' . $this->delBtnIndex . '" type="hidden" value="' . $this->toExpungeRefNo . '" />
+                    <input type="hidden" name="totalRows" value="' . $this->toExpungeTotalRows . '" />
+                    Request ' . $this->toExpungeRefNo . ' will be expunged<br/>   ' . $result . '
+                    Reason:<br/><textarea name="expungedReason"></textarea><br/>
                     <input type="submit" name="confirmBtn" value="CONFIRM EXPUNGE" />
                     <input type="submit" name="okBtn" value="CANCEL" />
                     ' . $extraInputs . ' 
