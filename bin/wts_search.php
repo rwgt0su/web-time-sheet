@@ -373,7 +373,7 @@ function searchTimeReqByRef($config, $searchInput){
     echo 'Search Results for Reference #'.$searchInput;
     echo '<br/><br/><h2>Results for Time Requests</h2>';
     
-    $filter = "WHERE REQUEST.REFER='".$searchInput."'";
+    $filter = " AND REQUEST.REFER='".$searchInput."'";
     $requests = new request_class();
     $requests->showTimeRequestTable($config, $filter);
 }
