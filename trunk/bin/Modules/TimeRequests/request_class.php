@@ -71,6 +71,7 @@ class request_class {
         $this->currentQuery = getTimeRequestTable($this->config, $this->currentFilters, $orderBy, $this->currentLimit);
         $this->prepareTimeTable();
         $this->showPageLimitOptions();
+        $this->showSortingOptions();
         $this->showTable();
 
         if($this->isSendToPending){
@@ -191,6 +192,9 @@ class request_class {
         echo '<br/>';
     }
     
+    private function showSortingOptions(){
+        echo '<br/><h3><center>Ordered from newest request to oldest request</center></h3>';
+    }
     private function prepareTimeTable(){
         $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
         $theTable = array(array());
