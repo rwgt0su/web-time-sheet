@@ -1888,7 +1888,7 @@ function getTimeRequestFilterBetweenDates($config, $startDate, $endDate){
 }
 function  showShiftDropDown($config, $divID, $onchangeSubmit){
     $shiftTimeID = '';
-    
+
     if(isset($_POST['shiftTime'])){
         $shiftTimeID = $config->mysqli->real_escape_string($_POST['shiftTime']); 
     }
@@ -1966,120 +1966,6 @@ function sendRequestToPending($config, $refNo, $hrNotes=''){
     SQLerrorCatch($config->mysqli, $result, $myq, $debug=false); 
     addLog($config, 'Ref# '.$refNo.' status was changed to pending');
 }
-function displaySubmittedRequestsNew($config){
-    $admin = $_SESSION['admin'];
-//what pay period are we currently in?
-    $payPeriodQuery = "SELECT * FROM PAYPERIOD WHERE NOW() BETWEEN PPBEG AND PPEND";
-    $ppResult = $config->mysqli->query($payPeriodQuery);
-    $ppArray = $ppResult->fetch_assoc();
 
-    /* $ppOffset stands for the number of pay periods to adjust the query by 
-    * relative to the current period
-    */
-    $ppOffset = isset($_GET['ppOffset']) ? $_GET['ppOffset'] : '0';
-    //set the right URI for link
-    if(isset($ppOffset))
-        //strip off the old GET variable and its value
-        $uri =  preg_replace("/&ppOffset=.*/", "", $_SERVER['REQUEST_URI'])."&ppOffset=";
-    else
-        $uri = $_SERVER['REQUEST_URI']."&ppOffset="; //1st time set
-
-    $startDate = new DateTime("{$ppArray['PPBEG']}");
-    if($ppOffset < 0)
-        //backward in time by $ppOffset number of periods
-        $startDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
-    else
-        //forward in time by $ppOffset number of periods
-        $startDate->add(new DateInterval("P".($ppOffset*14)."D"));
-
-    $endDate = new DateTime("{$ppArray['PPEND']}");
-    if($ppOffset < 0)
-        //backward in time by $ppOffset number of periods
-        $endDate->sub(new DateInterval("P".(abs($ppOffset)*14)."D"));
-    else
-        //forward in time by $ppOffset number of periods
-        $endDate->add(new DateInterval("P".($ppOffset*14)."D"));
-
-    ?>
-    <p><a href="<?php echo $_SERVER['REQUEST_URI'].'&cust=true'; ?>">Use Custom Date Range</a></br>
-    <?php 
-    echo "<form name='custRange' action='".$_SERVER['REQUEST_URI']."' method='post'>";
-    if (isset($_GET['cust'])) {
-        
-        echo "<p> Start";
-        if ( isset($_POST['start']) && isset($_POST['end']) ) {
-            displayDateSelect('start', 'date_1', $_POST['start'],false,false);   
-            echo "End";
-            displayDateSelect('end', 'date_2',$_POST['end'],false,false);
-        }
-        else{
-            displayDateSelect('start', 'date_1', false,false,true);   
-            echo "End";
-            displayDateSelect('end', 'date_2',false,false,true);
-        }
-        echo "<input type='submit' value='Go' /></p>";
-    }
-        if($admin >= 25){
-            echo '<div align="center">
-            Show Submitted Requests for the following division: 
-            <select name="divisionID" onchange="this.form.submit()">';
-
-            if(isset($_POST['divisionID'])){
-                $myDivID = $_POST['divisionID'];
-            }
-            else{
-                if($admin >= 50){
-                    $myDivID = "All"; 
-                }
-                else{
-                    $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $config->mysqli->real_escape_string($_SESSION['userIDnum'])."'";
-                    $myDivResult = $mysqli->query($mydivq);
-                    SQLerrorCatch($mysqli, $myDivResult);
-                    $temp = $myDivResult->fetch_assoc();
-                    $myDivID = $temp['DIVISIONID'];
-                }
-            }
-
-            $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
-            $allDivResult = $mysqli->query($alldivq);
-            SQLerrorCatch($mysqli, $allDivResult);
-            while($Divrow = $allDivResult->fetch_assoc()) {
-                echo '<option value="'.$Divrow['DIVISIONID'].'"';
-                if($Divrow['DIVISIONID']==$myDivID)
-                    echo ' SELECTED ';
-                echo '>'.$Divrow['DESCR'].'</option>';
-            }
-            if($admin >= 25){
-                if(isset($_POST['divisionID'])){
-                    if($myDivID == "All")
-                        echo '<option value="All" SELECTED>All</option>';
-                    else
-                        echo '<option value="All">All</option>';
-                }
-                else
-                    echo '<option value="All">All</option>';
-            }
-            echo '</select><br/><br/>';
-            
-            $shiftTimeID = showShiftDropDown($config, $myDivID, $onChangeSubmit=true);
-            echo '</div>';
-    }
-        echo "</form>";
-        //overwrite current period date variables with 
-        //those provided by user
-        if ( isset($_POST['start']) && isset($_POST['end']) ) {
-            $startDate =  new DateTime( $_POST['start'] );
-            $endDate =  new DateTime( $_POST['end'] );
-            ?> <h3><center>Gain/Use Requests for <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3> <?php
-        }
-        else {
-            ?>
-            <p><div style="float:left"><a href="<?php echo $uri.($ppOffset-1); ?>">Previous</a></div>  
-            <div style="float:right"><a href="<?php echo $uri.($ppOffset+1); ?>">Next</a></div></p>
-            <h3><center>Gain/Use Requests for pay period <?php echo $startDate->format('j M Y'); ?> through <?php echo $endDate->format('j M Y'); ?>.</center></h3>
-            <?php 
-        }
-        empTimeReportByPayNew($config, $startDate, $endDate);
-}
 
 ?>

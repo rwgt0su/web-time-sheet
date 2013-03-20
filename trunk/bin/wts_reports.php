@@ -9,6 +9,7 @@ function displayReportMenu($config){
         echo '<div class="divider"></div>';
         echo "<h2>Supervisor Menu</h2>";
         echo '<li><a href="?submittedRequests=true">Submitted Requests by Division and by Dates or Pay Period</a></li>';
+        echo '<li><a href="?submittedRequestsNEW=true">NEW Submitted Requests by Division and by Dates or Pay Period</a></li>';
         echo '<li><a href="?subReqCal=true">Submitted Requests Calendar</a></li>';
         echo '<li><a href="?lookup=true">Submitted Request by Employee by Date</a></li>';
         echo '<li><a href="?hrEmpRep=true">Approved and Denied Requests by Employee by Payperiod</a></li>';

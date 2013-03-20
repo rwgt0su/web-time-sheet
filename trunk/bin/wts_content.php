@@ -33,6 +33,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displaySubmittedRequests($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isSubmittedRequestsNEW){
+            ?>
+            <div class="post"><?php displaySubmittedRequestsNEW($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
         if($wts_content->isLeaveApproval){
             ?>
             <div class="post"><?php displayLeaveApproval($config); ?><div class="clear"></div></div><div class="divider"></div>

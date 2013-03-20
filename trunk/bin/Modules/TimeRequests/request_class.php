@@ -27,6 +27,7 @@ class request_class {
     private $toExpungeTotalRows;
     private $toExpunge;
     private $toUnExpunge;
+    public $debug;
     
     public function request_class(){
         $this->config = '';
@@ -43,6 +44,7 @@ class request_class {
         $this->toExpungeTotalRows = '';
         $this->toExpunge = FALSE;
         $this->toUnExpunge = FALSE;
+        $this->debug = false;
     }
 
     public function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInput = '') {
@@ -108,7 +110,7 @@ class request_class {
         }
     }
     private function prepareTimeTable(){
-        $result = getQueryResult($this->config, $this->currentQuery, $debug = false);
+        $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
         $theTable = array(array());
         $this->currentRow = 0;
         $y = 0;
@@ -224,47 +226,6 @@ class request_class {
             addLog($this->config, $logMsg);
             echo '<h6>HR Approval for Reference ' . $this->refNo . "</h6>";
         }
-    }
-
-    public function showShiftDropDown($divID, $onchangeSubmit) {
-        $shiftTimeID = '';
-
-        if (isset($_POST['shiftTime'])) {
-            $shiftTimeID = $this->config->mysqli->real_escape_string($_POST['shiftTime']);
-        } else {
-            $currentTime = time();
-            $dayShiftStart = mktime(7, 00, 0);
-            $nightShiftStart = mktime(19, 00, 0);
-
-            if ($currentTime < $dayShiftStart || $currentTime >= $nightShiftStart) {
-                //Between midnight and 0659 or 1900 and midnight
-                $shiftTimeID = "2";
-            } elseif ($currentTime >= $dayShiftStart && $currentTime < $nightShiftStart) {
-                //Between 0700 and 1859
-                $shiftTimeID = "1";
-            }
-        }
-
-        //Get all possible values
-        $myq = getShiftsByDivision($this->config, $divID);
-        $result = getQueryResult($this->config, $myq, $debug=false);
-        if ($result->num_rows > 0) {
-            echo '<select name="shiftTime"';
-            if ($onchangeSubmit)
-                echo ' onchange="this.form.submit()" ';
-            echo '>';
-
-            while ($row = $result->fetch_assoc()) {
-                if ($shiftTimeID == $row['IDNUM'])
-                    echo '<option value="' . $row['IDNUM'] . '" SELECTED>' . $row['NAME'] . ' (' . $row['BEG_TIME'] . '-' . $row['END_TIME'] . ')</option>';
-                else
-                    echo '<option value="' . $row['IDNUM'] . '">' . $row['NAME'] . ' (' . $row['BEG_TIME'] . '-' . $row['END_TIME'] . ')</option>';
-            }
-
-            echo '</select>';
-        }
-
-        return $shiftTimeID;
     }
 
     public function selectTimeType($inputName, $selected = false, $onChangeSubmit = false) {

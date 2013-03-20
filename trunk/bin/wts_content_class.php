@@ -4,6 +4,7 @@ Class wts_content {
     public $isLogout;
     public $isLeaveForm;
     public $isSubmittedRequests;
+    public $submittedRequestsNEW;
     public $isLeaveApproval;
     public $isHome;
     public $isUserMenu;
@@ -37,6 +38,7 @@ Class wts_content {
         $this->isLogout = isset($_GET['logout']) ? $_GET['logout'] : false;
         $this->isLeaveForm = isset($_GET['leave']) ? $_GET['leave'] : false;
         $this->isSubmittedRequests = isset($_GET['submittedRequests']) ? $_GET['submittedRequests'] : false;
+        $this->isSubmittedRequestsNEW = isset($_GET['submittedRequestsNEW']) ? $_GET['submittedRequestsNEW'] : false;
         $this->isLeaveApproval = isset($_GET['approve']) ? $_GET['approve'] : false;
         $this->isUserMenu = isset($_GET['usermenu']) ? $_GET['usermenu'] : false;
         $this->isAnounceAdmin = isset($_GET['isAnounceAdmin']) ? $_GET['isAnounceAdmin'] : false;

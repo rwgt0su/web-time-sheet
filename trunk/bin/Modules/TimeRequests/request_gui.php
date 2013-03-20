@@ -10,4 +10,11 @@ include_once 'bin/Modules/TimeRequests/request_db.php';
 include_once 'bin/Modules/TimeRequests/request_approvals_class.php';
 include_once 'bin/Modules/TimeRequests/request_reports_class.php';
 
+function displaySubmittedRequestsNEW($config){
+    $requestReports = new request_reports();
+    $requestReports->config = $config;
+    $hiddenInputs = '';
+    $requestReports->showTimeRequestsByDate($hiddenInputs);
+}
+
 ?>
