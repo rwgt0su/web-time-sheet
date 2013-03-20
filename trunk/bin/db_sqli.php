@@ -247,6 +247,13 @@ function SQLerrorCatch($mysqli, $result, $myq='', $debug=false) {
     
     return false;
 }
+function getQueryResult($config, $myq, $debug = false){
+    $result = $config->mysqli->query($myq);
+    if(!SQLerrorCatch($config->mysqli, $result, $myq, $debug))
+        return $result;
+    else
+        return false;    
+}
 function mergeEmployeeDB(){
     $myq= "UPDATE EMPLOYEE AS TARGET
     LEFT JOIN EMP_MERGE AS SOURCE

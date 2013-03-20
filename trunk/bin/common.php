@@ -63,6 +63,7 @@ require_once 'bin/wts_search.php';
 
 //Time gain/use (leave) request functions
 require_once 'bin/time_request_functions.php';
+include_once 'bin/Modules/TimeRequests/request_gui.php';
 
 //WTS Logs
     //Secondary Employment Logs
