@@ -82,8 +82,12 @@ function getShiftsByID($config, $ID){
             ENDDATE IS NULL
         ORDER BY SORT";
 }
-function getReqestsBetweenTimes($Start, $End){
-    return " AND TIME_FORMAT(BEGTIME, '%H%I') BETWEEN TIME_FORMAT('".$Start."00', '%H%I') AND TIME_FORMAT('".$End."00', '%H%I')";
+function getReqestsBetweenTimes($Start, $End, $useOR = false){
+    if(!$useOR)
+        $logic = " AND ";
+    else
+        $logic = " OR ";
+    return  $logic . "TIME_FORMAT(BEGTIME, '%H%I') BETWEEN TIME_FORMAT('".$Start."00', '%H%I') AND TIME_FORMAT('".$End."00', '%H%I')";
     
 }
 function getTimeTypes(){

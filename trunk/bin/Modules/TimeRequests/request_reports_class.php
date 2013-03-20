@@ -204,8 +204,13 @@ class request_reports {
             $this->shiftStart = $row['BEG_TIME'];
             $this->shiftEnd = $row['END_TIME'];
             
-            $this->filters .= getReqestsBetweenTimes($this->shiftStart, $this->shiftEnd);
-            popupmessage("hit".$this->filters);
+            if (strtotime($this->shiftStart) > strtotime($this->shiftEnd)){
+                //This time crosses past midnight
+                $this->filters .= getReqestsBetweenTimes($this->shiftEnd, "0000");
+                $this->filters .= getReqestsBetweenTimes("0000", $this->shiftStart, $useOR = true);
+            }else{
+                $this->filters .= getReqestsBetweenTimes($this->shiftStart, $this->shiftEnd);
+            }
         }
     }
 
