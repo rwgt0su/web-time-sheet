@@ -18,7 +18,7 @@ require_once('bin/common.php');
     <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
     
 </head>
-<body>
+<body>   
     <div class="header_cotainer">
         <div class="container_12">
             <div class="grid_3">
@@ -43,47 +43,135 @@ require_once('bin/common.php');
     </div>
 
     <!--Content Section -->
-    <div class="content_container">
-        <div class="container_12 content_highlight">
-            <!--Left Menu Section -->
-            <div class="grid_4">
-                <?php displayMenu($config); ?>
-            </div>
-            
-            <!--Center Content Section -->
-            <div class="grid_8">
-                <!--Content Login Section -->
-                <div class="login">
-                    <?php displayLogin($config); ?>
-                    <div class="clear"></div>
-                </div> 
-             
-                <div class="divider"></div>
-                
-                <!--Content Section -->
-                <?php displayContent($wts_content, $config); ?>
-                
-                <!--Content Post 2 Section -->
-                <!-- <div class="post">
-                    <div class="thumbnail"><a href="#"><img src="templetes/DarkTemp/images/image.jpg" alt="" /></a></div>
-                    <h3><a href="#">Sample Header</a></h3>
-                    <p>Sample content wouuld be placed within this paragraph</p>
-                    <div class="post_footer">
-                        <div class="comments">left column</div>
-                        <div class="more"><a href="#">right column</a></div>
-                    </div>
-                    <div class="clear"></div>
-                </div>
-                
-                <div class="divider"></div> -->
-                
+    <script language="javascript">
+        <script language="javascript" >
+                document.body.ready = new  function () {
+                        $("#Loading").hide();
+                        $("#animation").show();
+                    };
+                document.body.onload = new  function () {
+                        $("#Loading").show();
+                        $("#animation").hide();
+                    };
+        </script>
+    <script src="bin/jQuery/js/sonic.js"></script>
+    <script>
+        var loaders = [
+            {
+                    width: 100,
+                    height: 100,
 
-                
-               <!--End Content Post Section --> 
+                    stepsPerFrame: 1,
+                    trailLength: 1,
+                    pointDistance: .025,
+
+                    strokeColor: '#05E2FF',
+
+                    fps: 20,
+
+                    setup: function() {
+                            this._.lineWidth = 2;
+                    },
+                    step: function(point, index) {
+
+                            var cx = this.padding + 50,
+                                    cy = this.padding + 50,
+                                    _ = this._,
+                                    angle = (Math.PI/180) * (point.progress * 360);
+
+                            this._.globalAlpha = Math.max(.5, this.alpha);
+
+                            _.beginPath();
+                            _.moveTo(point.x, point.y);
+                            _.lineTo(
+                                    (Math.cos(angle) * 35) + cx,
+                                    (Math.sin(angle) * 35) + cy
+                            );
+                            _.closePath();
+                            _.stroke();
+
+                            _.beginPath();
+                            _.moveTo(
+                                    (Math.cos(-angle) * 32) + cx,
+                                    (Math.sin(-angle) * 32) + cy
+                            );
+                            _.lineTo(
+                                    (Math.cos(-angle) * 27) + cx,
+                                    (Math.sin(-angle) * 27) + cy
+                            );
+                            _.closePath();
+                            _.stroke();
+
+                    },
+                    path: [
+                            ['arc', 50, 50, 40, 0, 360]
+                    ]
+            }
+        ];
+
+        var d, a, container = document.getElementById('animation');
+
+        for (var i = -1, l = loaders.length; ++i < l;) {
+
+                d = document.createElement('div');
+                d.className = 'l';
+                a = new Sonic(loaders[i]);
+                d.appendChild(a.canvas);
+                container.appendChild(d);
+                a.canvas.style.marginTop = (150 - a.fullHeight) / 2 + 'px';
+                a.canvas.style.marginLeft = (150 - a.fullWidth) / 2 + 'px';
+                a.play();
+        }
+
+    </script> 
+    
+    <div id="animation" ></div>
+        <div class="content_container">
+            <div class="container_12 content_highlight">
+                <!--Left Menu Section -->
+                <div class="grid_4">
+                    <?php displayMenu($config); ?>
+                </div>
+
+                <!--Center Content Section -->
+                <div class="grid_8">
+                    <!--Content Login Section -->
+                    <div class="login">
+                        <?php displayLogin($config); ?>
+                        <div class="clear"></div>
+                    </div> 
+
+                    <div class="divider"></div>
+
+                    <!--Content Section -->
+                    
+                    <div id="Loading">
+                    <?php displayContent($wts_content, $config); ?>
+
+                    <!--Content Post 2 Section -->
+                    <!-- <div class="post">
+                        <div class="thumbnail"><a href="#"><img src="templetes/DarkTemp/images/image.jpg" alt="" /></a></div>
+                        <h3><a href="#">Sample Header</a></h3>
+                        <p>Sample content wouuld be placed within this paragraph</p>
+                        <div class="post_footer">
+                            <div class="comments">left column</div>
+                            <div class="more"><a href="#">right column</a></div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <div class="divider"></div> -->
+
+
+
+                   <!--End Content Post Section --> 
+                   </div><!--End Loading Section -->
+                </div>
+                <div class="clear"></div>
             </div>
-            <div class="clear"></div>
         </div>
-    </div>
+    
+    
     
     <!--Footer Section -->
     <div class="footer_container">
@@ -97,5 +185,8 @@ require_once('bin/common.php');
     </div>
 </body>
 </html>
-<?php $_SESSION['timeout'] = time(); //myAlerts($config); ?>
+<?php $_SESSION['timeout'] = time(); //myAlerts($config); 
+$config->goToAnchor();
+?>
+
  <meta http-equiv="refresh" content="1800;url='<?php echo $_SERVER['REQUEST_URI']; ?>'" />
