@@ -28,11 +28,12 @@ function getApproveRequest($config, $refNo, $status, $reason) {
                     WHERE REFER='" . $config->mysqli->real_escape_string($refNo) . "'";
 }
 
-function getTimeRequestTable($config, $filters, $orderBy) {
+function getTimeRequestTable($config, $filters, $orderBy, $limit = '') {
     return "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
-                DATE_FORMAT(USEDATE,'%b %d, %Y - %a') 'Used', STATUS 'Status',
+                    DATE_FORMAT(USEDATE,'%c-%d-%Y %a') 'Used', STATUS 'Status',
                     DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                     DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
+                    DATE_FORMAT(REQDATE,'%c-%d-%Y %H%i') 'Request_Date',
                     T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
                     APR.LNAME 'ApprovedBy', REQUEST.EX_REASON AS 'EXPUNGE_NOTES',
                     DATE_FORMAT(REQUEST.ApprovedTS,'%b %d, %Y') 'approveTS',
@@ -45,7 +46,11 @@ function getTimeRequestTable($config, $filters, $orderBy) {
                 WHERE 1
                 " . $filters . "
                 " . $config->mysqli->real_escape_string($orderBy) . "
+                " . $config->mysqli->real_escape_string($limit) . "  
                 ";
+}
+function getLimitFilter($config, $prevNum, $limit){
+    return " LIMIT ".$config->mysqli->real_escape_string($prevNum).",  ".$config->mysqli->real_escape_string($limit);
 }
 
 function getSendToPending($config, $refNo, $hrNotes) {  

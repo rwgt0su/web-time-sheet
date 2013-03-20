@@ -386,8 +386,8 @@ function searchPOSTActions($config, $searchInput){
                 $totalRows = $_POST['searchRows'];
                 for($i=0;$i<=$totalRows;$i++){
                         if(isset($_POST['viewRequestBtn'.$i])){
-                            echo '<h3>Showing Requests for '.$_POST['foundUserLNAME'.$i].', '.$_POST['foundUserFNAME'.$i];
-                            echo '<input type="submit" name="BackBtn" value="Back to Search" /></h3>';
+                            echo '<h3>Showing Requests for '.$_POST['foundUserLNAME'.$i].', '.$_POST['foundUserFNAME'.$i]. ' </h3>';
+                            echo ' <div align="center"><input type="submit" name="BackBtn" value="Back to Search" /></div>';
                             $hiddenInputs = '<input type="hidden" name="searchInput" value="'.$searchInput.'" />
                                 <input type="hidden" name="foundUserLNAME'.$i.'" value="'.$_POST['foundUserLNAME'.$i].'" />
                                 <input type="hidden" name="foundUserFNAME'.$i.'" value="'.$_POST['foundUserFNAME'.$i].'" />';                            
