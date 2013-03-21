@@ -751,7 +751,7 @@ function showSecLogDetails($config, $secLogID, $isEditing=false, $isApprove=fals
             }//end for
         }
         if(empty($foundUserID) && $num_deputies == 0){
-            if($_SERVER['REMOTE_ADDR'] != nslookup('WSRF14900')){ //'10.1.32.72'
+            if($_SERVER['REMOTE_ADDR'] != nslookup('WSRF14900.mahoningcountyoh.gov')){ //'10.1.32.72'
                 $foundUserID = $_SESSION['userIDnum'];
                 $foundUserIsReserve = false;
             }

@@ -974,7 +974,7 @@ function showRadioLogDetails($config, $radioLogID, $isEditing=false, $isApprove=
         }
         if(empty($foundUserID) && $num_deputies == 0){
             //security check for central control computer
-            if($_SERVER['REMOTE_ADDR'] != nslookup('WSRF14900')){ //'10.1.32.72'
+            if($_SERVER['REMOTE_ADDR'] != nslookup('WSRF14900.mahoningcountyoh.gov')){ //'10.1.32.72'
                 //Default first deputy to logged in user on first load
                 $foundUserID = $_SESSION['userIDnum'];
                 $foundUserIsReserve = false;
@@ -1345,7 +1345,7 @@ function showItemExchange($config, $radioLogID){
 //    }
     
     //Start to display information
-    if(empty($foundUserID) && !$removeBtn && $_SERVER['REMOTE_ADDR'] != nslookup('WSRF14900')){ //'10.1.32.72'
+    if(empty($foundUserID) && !$removeBtn && $_SERVER['REMOTE_ADDR'] != nslookup('WSRF14900.mahoningcountyoh.gov')){ //'10.1.32.72'
         //default to logged in deputy if remove button was not pressed and this is not the central computer
         $foundUserID = $_SESSION['userIDnum'];
         $foundUserIsReserve = false;
