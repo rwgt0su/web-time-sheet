@@ -343,7 +343,7 @@ function showKeyLogDetails($config, $keyLogID, $isEditing=false, $isApprove=fals
         }
         if(empty($foundUserID) && $num_deputies == 0){
             //security check for central control computer
-            if($_SERVER['REMOTE_ADDR'] != '10.1.32.72'/*nslookup('mcjcbcast.sheriff.mahoning.local')*/){
+            if($_SERVER['REMOTE_ADDR'] != nslookup('WSRF14900')){ //'10.1.32.72'
                 //Default first deputy to logged in user on first load
                 $foundUserID = $_SESSION['userIDnum'];
                 $foundUserIsReserve = false;
