@@ -344,9 +344,10 @@ function showSortableTable($table, $rowToSort, $tableID = 'sorter', $rowsToSortN
         }
         echo $echo;
 }
-function nslookup ($hostname) {
-    
- return gethostbyname($hostname);
+function nslookup ($hostname, $timeout = 3) {
+    $query = `nslookup -timeout=$timeout -retry=1 $hostname`;
+   if(preg_match('/\nAddress: (.*)\n/', $query, $matches))
+      return trim($matches[1]);
 }
 function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToSort = 1, $selectOnly=false, $tableHeight=200){
     ?>
