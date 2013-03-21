@@ -52,6 +52,9 @@ function getTimeRequestTable($config, $filters, $orderBy, $limit = '') {
 function getLimitFilter($config, $prevNum, $limit){
     return " LIMIT ".$config->mysqli->real_escape_string($prevNum).",  ".$config->mysqli->real_escape_string($limit);
 }
+function getFilerDivision($config, $divID){
+    return " AND REQ.DIVISIONID = '".$config->mysqli->real_escape_string($divID). "'";
+}
 
 function getSendToPending($config, $refNo, $hrNotes) {  
     return "UPDATE REQUEST 
