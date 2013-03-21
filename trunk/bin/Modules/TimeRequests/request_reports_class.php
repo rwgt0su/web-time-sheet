@@ -34,7 +34,7 @@ class request_reports {
         $this->filters .= getTimeRequestFiltersBetweenDates($this->config, $this->startDate, $this->endDate);
         //$filters .= " AND (STATUS='APPROVED' OR STATUS='DENIED')";
         $hiddenInputs = $this->setHiddenPostInputs();
-        $requests->debug = FALSE;
+        $requests->debug = false;
         $requests->showTimeRequestTable($this->config, $this->filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
     }
 
@@ -169,6 +169,7 @@ class request_reports {
             if ($myDivID != "All")
                 $this->showShiftDropDown($myDivID, $onChangeSubmit = true);
             echo '</div>';
+            $this->filters .= getFilerDivision($this->config, $myDivID);
         }
     }
 
