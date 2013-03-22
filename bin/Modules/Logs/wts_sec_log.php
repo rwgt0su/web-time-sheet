@@ -253,6 +253,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
                 WHERE AUDIT_OUT_ID != ''
+                AND SUP_ID = ''
                 AND S.IS_RESERVE=0
 
                 UNION
@@ -271,6 +272,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
                 LEFT JOIN EMPLOYEE AS LOGOUT ON S.AUDIT_OUT_ID=LOGOUT.IDNUM
                 LEFT JOIN EMPLOYEE AS SUP ON S.SUP_ID=SUP.IDNUM
                 WHERE AUDIT_OUT_ID != ''
+                AND SUP_ID = ''
                 AND S.IS_RESERVE=1
                 ORDER BY 'gpID'";
         echo '<input type="hidden" name="isApprove" value="true" />';
@@ -278,7 +280,7 @@ function showSecLog($config, $dateSelect, $secLogID, $isApprove=false){
     }
 
     $result = $mysqli->query($myq);
-    SQLerrorCatch($mysqli, $result);
+    SQLerrorCatch($mysqli, $result, $myq, $debug=false);
     $echo = '';
     $x=0;
     $y=0;
