@@ -228,8 +228,7 @@ class request_reports {
             
             if (strtotime($this->shiftStart) > strtotime($this->shiftEnd)){
                 //This time crosses past midnight
-                $this->filters .= getReqestsBetweenTimes($this->shiftEnd, "0000");
-                $this->filters .= getReqestsBetweenTimes("0000", $this->shiftStart, $useOR = true);
+                $this->filters .= getReqestsPastMidightTimes($this->shiftStart, $this->shiftEnd);
             }else{
                 $this->filters .= getReqestsBetweenTimes($this->shiftStart, $this->shiftEnd);
             }
