@@ -98,6 +98,9 @@ function getReqestsBetweenTimes($Start, $End, $useOR = false){
     return  $logic . "TIME_FORMAT(BEGTIME, '%H%I') BETWEEN TIME_FORMAT('".$Start."00', '%H%I') AND TIME_FORMAT('".$End."00', '%H%I')";
     
 }
+function getReqestsPastMidightTimes($Start, $End){
+    return " AND (TIME_FORMAT(BEGTIME, '%H%I') >= TIME_FORMAT('".$Start."00', '%H%I') OR TIME_FORMAT(BEGTIME, '%H%I') <= TIME_FORMAT('".$End."00', '%H%I'))";
+}
 function getTimeTypes(){
     return "SELECT TIMETYPEID, DESCR FROM TIMETYPE";
 }
