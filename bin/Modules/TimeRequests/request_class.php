@@ -56,7 +56,7 @@ class request_class {
         $this->toUnExpunge = FALSE;
         $this->debug = false;
     }
-
+   
     public function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInput = '') {
         echo '<input type="hidden" name="formName" value="submittedRequests" />';
         $this->config = $config;
@@ -108,6 +108,7 @@ class request_class {
                     $this->supReason = isset($_POST['reason' . $i]) ? $_POST['reason' . $i] : '';
                     $this->refNo = $_POST['refNo' . $i];
                     $this->approveLeaveRequest("APPROVED");
+                    $this->showPrintFriendlyRedirect();
                     $this->btnPushed = true;
                 } elseif (isset($_POST['deny' . $i])) {
                     $this->refNo = $_POST['refNo' . $i];
@@ -225,6 +226,7 @@ class request_class {
             $y = 0;
 
             $theTable[$this->currentRow][$y] = '<input type="submit" id="editBtn' . $this->currentRow . '" name="editBtn' . $this->currentRow . '" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />' .
+                    '<input type="submit" id="printBtn' . $this->currentRow . '" name="printBtn' . $this->currentRow . '" value="Print" onClick="window.open(\'printFriendly.php?printRequestNo='.$row['RefNo'].'\');" />'.
                     '<input type="hidden" name="requestID' . $this->currentRow . '" value="' . $row['RefNo'] . '" />';
             if ($row['Status'] == "EXPUNGED")
                 $theTable[$this->currentRow][$y] .= '';
@@ -428,7 +430,57 @@ class request_class {
             }
         }
     }
+    
+    private function showPrintFriendlyRedirect(){
+        echo '<script type="text/javascript" language="javascript">
+                window.open("printFriendly.php?printRequestNo='.$this->refNo.'");
+                </script>'; 
+    }
+    public function showPrintFriendlyRequest(){
+        $this->refNo = isset($_GET['printRequestNo']) ? $_GET['printRequestNo'] : '';
+        $this->refNo = isset($_POST['requestID']) ? $_POST['requestID'] : $this->refNo;
+        if(!empty($this->refNo)){
+            echo '<h2><center>Printer Friendly - Request for '.$this->refNo.'</center></h2>';
+            $this->filters = getFilterByRefNo($this->config, $this->refNo);
+            $this->currentQuery = getTimeRequestTable($this->config, $this->filters, $orderBy='', $limit = ' LIMIT 1');
+            $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
+            $req = $result->fetch_assoc();
+            $mydivq = getEmployeeInfo($this->config, $_SESSION['userIDnum']);
+            $myDivResult = getQueryResult($this->config, $mydivq, $debug = false);
+            $empInfo = $myDivResult->fetch_assoc();
 
-}
+            echo '<div align="right"> DATE FILED: '.$req['Request_Date'].'</div>';
+            echo '<h3>Employee Information</h3>';
+            echo 'EMPLOYEE NAME: '.$req['Name'].'<br/>';
+            echo 'Dvision: '.$empInfo['DESCR'].'<br/>';
+            echo 'RANK: '.$empInfo['RANK'].'<br/>';
+            echo '<br/><h3>Requested Information</h3>';
+            echo '<br/>';
+            echo 'TYPE OF REQUEST: '.$req['Type'].'<br/>';
+            echo 'SUBTYPE: '.$req['Subtype'].'<br/>';
+            echo 'DATE OF USE: '.$req['Used'].'<br/>';
+            echo 'START TIME: '.$req['Start'].'<br/>';
+            echo 'END TIME: '.$req['End'].'<br/>';
+            echo 'CALCULATED HOURS: '.$req['Hrs'].'<br/>';
+            echo 'EMPLOYEE NOTES: '.$req['Comment'].'<br/><br/><br/>';
+            echo '<h2>Employee Signature: _______________________________________  Date: _____________________</h2>';
+            echo '<div class="divider"></div>';
+            echo '<h3>O.I.C.</h3>';
+            echo 'REQUEST STATUS: '.$req['Status'].'<br/>';
+            echo 'SUPERVISOR NOTES: '.$req['Reason'].'<br/>';
+            echo 'SUPERVISOR FILED DATE: '.$req['approveTS'].'<br/>';
+            echo 'SUPERVISOR: '.$req['ApprovedBy'].'<br/><br/><br/>';
+            echo '<h2>Supervisor Signature: _______________________________________  Date: _____________________</h2>';
+            
+            
+            
+            
+        }
+        else{
+            echo 'Error Getting Reference Number to Print!';
+        }
+    }
+
+} //End of Request Class
 
 ?>

@@ -35,7 +35,7 @@ function getTimeRequestTable($config, $filters, $orderBy, $limit = '') {
                     DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                     DATE_FORMAT(REQDATE,'%c-%d-%Y %H%i') 'Request_Date',
                     T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', 
-                    APR.LNAME 'ApprovedBy', REQUEST.EX_REASON AS 'EXPUNGE_NOTES',
+                    CONCAT_WS(', ', APR.LNAME,APR.FNAME) 'ApprovedBy', REQUEST.EX_REASON AS 'EXPUNGE_NOTES',
                     DATE_FORMAT(REQUEST.ApprovedTS,'%b %d, %Y') 'approveTS',
                     REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName', REQUEST.HR_NOTES AS 'HRNOTES'
                 FROM REQUEST
@@ -48,6 +48,9 @@ function getTimeRequestTable($config, $filters, $orderBy, $limit = '') {
                 " . $config->mysqli->real_escape_string($orderBy) . "
                 " . $config->mysqli->real_escape_string($limit) . "  
                 ";
+}
+function getFilterEmpID($config, $empID){
+    return " AND REQ.IDNUM = '".$config->mysqli->real_escape_string($empID). "'";
 }
 function getLimitFilter($config, $prevNum, $limit){
     return " LIMIT ".$config->mysqli->real_escape_string($prevNum).",  ".$config->mysqli->real_escape_string($limit);
@@ -111,6 +114,17 @@ function getExpungeRequest($config, $refNo, $reason){
                     AUDITID='" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) . "',
                     IP= INET_ATON('" . $config->mysqli->real_escape_string($_SERVER['REMOTE_ADDR']) . "')
                     WHERE REFER='" . $config->mysqli->real_escape_string($refNo) . "'";
+}
+function getEmployeeInfo($config, $empID){
+    return "SELECT D.DESCR AS 'DESCR', RANK.DESCR AS 'RANK'
+        FROM EMPLOYEE AS EMP
+        LEFT JOIN `DIVISION` AS D ON EMP.DIVISIONID=D.DIVISIONID 
+        LEFT JOIN GRADE AS RANK ON RANK.ABBREV=EMP.GRADE
+        
+    WHERE EMP.IDNUM='" . $config->mysqli->real_escape_string($_SESSION['userIDnum']) . "'";
+}
+function getFilterByRefNo($config, $refNo){
+    return " AND REQUEST.REFER = '" . $config->mysqli->real_escape_string($refNo) . "'"; 
 }
 
 ?>

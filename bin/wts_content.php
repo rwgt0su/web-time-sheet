@@ -161,7 +161,13 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displaySecLogReport($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
-        
+        if($wts_content->isPrintRequestNo){
+            ?>
+            <div class="post"><?php $requests = new request_class(); $requests->config = $config; $requests->showPrintFriendlyRequest(); ?>
+                <div class="clear"></div></div><div class="divider"></div>
+            <?php
+        }
+                
         myAlerts($config, $wts_content); 
     }
     else{
