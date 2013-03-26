@@ -18,9 +18,10 @@ class request_reports {
     private $shiftStart;
     private $shiftEnd;
     private $request_class;
-    private $filters;
+    public $filters;
+    public $divisionID;
 
-    public function request_reports() {
+    public function request_reports($config = '') {
         $this->request_class = new request_class();
     }
 
@@ -131,14 +132,15 @@ class request_reports {
         }
     }
 
-    private function showDivisionDropDown() {
+    public function showDivisionDropDown() {
+        
         if ($this->config->adminLvl >= 25) {
-            echo '<div align="center">
-            Show for the following division: 
+            echo '<div align="center">Show for the following division: 
             <select name="divisionID" onchange="this.form.submit()">';
 
             if (isset($_POST['divisionID'])) {
                 $myDivID = $_POST['divisionID'];
+                popupmessage('isset '.$_POST['divisionID']);
             } else {
                 if ($this->config->adminLvl >= 50) {
                     $myDivID = "All";
@@ -169,7 +171,9 @@ class request_reports {
             if ($myDivID != "All")
                 $this->showShiftDropDown($myDivID, $onChangeSubmit = true);
             echo '</div>';
+            $this->divisionID = $myDivID;
             $this->filters .= getFilerDivision($this->config, $myDivID);
+
         }
     }
 
