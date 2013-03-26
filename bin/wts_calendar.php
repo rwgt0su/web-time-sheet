@@ -33,15 +33,9 @@ function viewClandar($config, $month, $year){
             $myDivID = $_POST['divisionID'];
         }
 	// Navigation for the monthly calender view
-        $Prenavigation = "<form action=\"".$_SERVER['REQUEST_URI']."\" method=\"post\"><input type=\"hidden\" name=\"mon\" value=\"$prev_month\">
-        <input type=\"hidden\" name=\"year\" value=\"$year\">
-        <input type=\"hidden\" name=\"divisionID\" value=\"$myDivID\">
-        <input type=\"submit\" value=\"<< ".$dtFirstDay."\" /></form>";
+        $Prenavigation = "<input type=\"submit\" name=\"prevMonth\"  value=\"<< ".$dtFirstDay."\" />";
 
-        $Nextnavigation = "<form action=\"".$_SERVER['REQUEST_URI']."\" method=\"POST\"><input type=\"hidden\" name=\"mon\" value=\"$next_month\">
-        <input type=\"hidden\" name=\"year\" value=\"$year\">
-        <input type=\"hidden\" name=\"divisionID\" value=\"$myDivID\">
-        <input type=\"submit\" value=\"".$dtLastDay." >>\" /></form>";
+        $Nextnavigation = "<input type=\"submit\" name=\"nextMonth\" value=\"".$dtLastDay." >>\" />";
 
         $mysqli = $config->mysqli;
 
@@ -49,8 +43,13 @@ function viewClandar($config, $month, $year){
 	echo "</div><div class=\"cal\"><table width=720>";
 	echo "<tr><th colspan=7> ";
 
-	echo "<br />Approved Requests<br/><br/>
-
+        
+	echo "<br/><h3>Approved Requests<br/></h3><br/>";
+        echo '<form name="divisionForm" method="POST">';
+        echo "<input type=\"hidden\" name=\"prevMon\" value=\"$prev_month\">
+            <input type=\"hidden\" name=\"curMon\" value=\"$month\">
+            <input type=\"hidden\" name=\"nextMon\" value=\"$next_month\">
+            <input type=\"hidden\" name=\"year\" value=\"$year\">
             <table border=\"0\" width=\"700\" cellspacing=\"0\" cellpadding=\"0\">
                     <tr>
                     <td width=10>&nbsp;</td>
@@ -58,51 +57,61 @@ function viewClandar($config, $month, $year){
                     <td height='8'  width=\"100\" align=\"center\" valign=\"middle\" style=\"padding:0px 0px 0px 0px;\"> ".$title."&nbsp;".$year ." </td>
                     <td width=\"8\" height=\"5\" align=\"center\" valign=\"middle\">".$Nextnavigation."</td>
                     <td align=\"right\" valign=\"middle\">";
-         echo '<form name="divisionForm" method="POST">
-             Show Approved Requests for division: 
-            <select name="divisionID" onchange="this.form.submit()">';
+             $requestReport = new request_reports($config);
+             $requestReport->config = $config;
+             $requestReport->showDivisionDropDown();
+             $myDivID = $requestReport->divisionID;
+            //echo 'Show for division: 
+            //<select name="divisionID" onchange="this.form.submit()">';
 
-            if(isset($_POST['divisionID'])){
-                $myDivID = $_POST['divisionID'];
-            }
-            else{
-                if($admin >= 50){
-                    $myDivID = "All"; 
-                }
-                else{
-                    $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
-                    $myDivResult = $mysqli->query($mydivq);
-                    SQLerrorCatch($mysqli, $myDivResult);
-                    $temp = $myDivResult->fetch_assoc();
-                    $myDivID = $temp['DIVISIONID'];
-                }
-            }
-
-            $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
-            $allDivResult = $mysqli->query($alldivq);
-            SQLerrorCatch($mysqli, $allDivResult);
-            while($Divrow = $allDivResult->fetch_assoc()) {
-                echo '<option value="'.$Divrow['DIVISIONID'].'"';
-                if($Divrow['DIVISIONID']==$myDivID)
-                    echo ' SELECTED ';
-                echo '>'.$Divrow['DESCR'].'</option>';
-            }
-            if(isset($_POST['divisionID'])){
-                if($myDivID == "All")
-                    echo '<option value="All" SELECTED>All</option>';
-                else
-                    echo '<option value="All">All</option>';
-            }
-            else
-                echo '<option value="All">All</option>';
-            echo '</select></form></div>';
+//            if(isset($_POST['divisionID'])){
+//                $myDivID = $_POST['divisionID'];
+//            }
+//            else{
+//                if($admin >= 50){
+//                    $myDivID = "All"; 
+//                }
+//                else{
+//                    $mydivq = "SELECT DIVISIONID FROM EMPLOYEE E WHERE E.IDNUM='" . $_SESSION['userIDnum']."'";
+//                    $myDivResult = $mysqli->query($mydivq);
+//                    SQLerrorCatch($mysqli, $myDivResult);
+//                    $temp = $myDivResult->fetch_assoc();
+//                    $myDivID = $temp['DIVISIONID'];
+//                }
+//            }
+//
+//            $alldivq = "SELECT * FROM `DIVISION` WHERE 1";
+//            $allDivResult = $mysqli->query($alldivq);
+//            SQLerrorCatch($mysqli, $allDivResult);
+//            while($Divrow = $allDivResult->fetch_assoc()) {
+//                echo '<option value="'.$Divrow['DIVISIONID'].'"';
+//                if($Divrow['DIVISIONID']==$myDivID)
+//                    echo ' SELECTED ';
+//                echo '>'.$Divrow['DESCR'].'</option>';
+//            }
+//            if(isset($_POST['divisionID'])){
+//                if($myDivID == "All")
+//                    echo '<option value="All" SELECTED>All</option>';
+//                else
+//                    echo '<option value="All">All</option>';
+//            }
+//            else
+//                echo '<option value="All">All</option>';
+//            echo '</select></form></div>';
         
         echo "      </td>
                 </tr>
-            </table></td>";
+            </form></table></td>";
 
 	echo "</th></tr>";
-	echo "<tr><td align=\"center\" width=102>Sunday</td><td align=\"center\" width=102>Monday</td><td align=\"center\" width=102>Tuesday</td><td align=\"center\" width=102>Wednesday</td><td align=\"center\" width=102>Thurday</td><td align=\"center\" width=102>Friday</td><td align=\"center\" width=102>Saturday</td></tr>";
+	echo "<tr><td align=\"center\" width=102>Sunday</td>
+                <td align=\"center\" width=102>Monday</td>
+                <td align=\"center\" width=102>Tuesday</td>
+                <td align=\"center\" width=102>Wednesday</td>
+                <td align=\"center\" width=102>Thurday</td>
+                <td align=\"center\" width=102>Friday</td>
+                <td align=\"center\" width=102>Saturday</td>
+            </tr>";
 
 	//This counts the days in the week, up to 7
 	$day_count = 1;
@@ -147,9 +156,10 @@ function viewClandar($config, $month, $year){
                                 INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
                                 WHERE R.TIMETYPEID = '".$timetype[$i]."'
                                 AND USEDATE = '".$year."-".$month."-".$day_num."' 
-                                AND REQ.DIVISIONID IN (".
-                                    $myDivID.
-                                ") ORDER BY REFER";
+                                
+                                ".$requestReport->filters."
+                                AND R.STATUS = 'APPROVED'
+                                ORDER BY REFER";
                 }
 
                 $result = $mysqli->query($myq);
@@ -165,8 +175,9 @@ function viewClandar($config, $month, $year){
             }
 
             echo "<td height='100' valign = \"top\" align=\"center\"><div style=\"background-color:grey\">";
-            echo '<form name="goToDetails" method="POST" action="?submittedRequests=true&cust=true">
+            echo '<form name="goToDetails" method="POST" action="?submittedRequestsNEW=true&cust=true">
                 <input type="hidden" name="divisionID" value="'.$myDivID.'" />
+                <input type="hidden" name="customDate" value="true" />
                 <input name="start" type="hidden" value="'.$month.'/'.$day_num.'/'.$year.'" />
                 <input name="end" type="hidden" value="'.$month.'/'.$day_num.'/'.$year.'" />
                 <input type="submit" name="goToDetails" value="'.$day_num.'" /></form></div>';

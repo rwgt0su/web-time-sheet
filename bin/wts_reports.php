@@ -10,7 +10,7 @@ function displayReportMenu($config){
         echo "<h2>Supervisor Menu</h2>";
         echo '<li><a href="?submittedRequests=true">Submitted Requests by Division and by Dates or Pay Period</a></li>';
         echo '<li><a href="?submittedRequestsNEW=true">NEW Submitted Requests by Division and by Dates or Pay Period</a></li>';
-        echo '<li><a href="?subReqCal=true">Submitted Requests Calendar</a></li>';
+        echo '<li><a href="?subReqCal=true">Requests Calendar</a></li>';
         echo '<li><a href="?lookup=true">Submitted Request by Employee by Date</a></li>';
         echo '<li><a href="?hrEmpRep=true">Approved and Denied Requests by Employee by Payperiod</a></li>';
         echo '<li><a href="?sickEmpRep=true">Sick Request Reports by Date </a></li>';
@@ -21,7 +21,16 @@ function displayReportMenu($config){
 }
 
 function reportsCal($config){
-    $month =isset($_POST['mon']) ? $_POST['mon'] : date('n');
+    if(isset($_POST['prevMonth'])){
+        $month =isset($_POST['prevMon']) ? $_POST['prevMon'] : date('n');
+        
+    }
+    elseif(isset($_POST['nextMonth'])){
+        $month =isset($_POST['nextMon']) ? $_POST['nextMon'] : date('n');
+    }
+    else{
+        $month =isset($_POST['curMon']) ? $_POST['curMon'] : date('n');
+    }
     $year =isset($_POST['year']) ? $_POST['year'] : date('Y');
     
     $passedDates = "";
