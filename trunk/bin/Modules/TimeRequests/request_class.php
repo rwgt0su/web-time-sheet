@@ -12,12 +12,11 @@
  */
 class request_class {
 
-    //db related
+//db related
     public $config;
     private $currentRow;
     private $currentQuery;
     private $currentFilters;
-    
     private $btnPushed;
     private $refNo;
     private $hrReason;
@@ -37,8 +36,8 @@ class request_class {
     private $limit;
     private $currentLimit;
     private $currentTable;
-    
-    public function request_class(){
+
+    public function request_class() {
         $this->config = '';
         $this->currentRow = 0;
         $this->currentQuery = '';
@@ -56,7 +55,7 @@ class request_class {
         $this->toUnExpunge = FALSE;
         $this->debug = false;
     }
-   
+
     public function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInput = '') {
         echo '<input type="hidden" name="formName" value="submittedRequests" />';
         $this->config = $config;
@@ -64,7 +63,7 @@ class request_class {
         $this->hiddenInput = $hiddenInput;
         $this->handlePOSTVariables();
         if ($this->config->adminLvl < 25) {
-            //users only allowed to search own reference numbers
+//users only allowed to search own reference numbers
             $this->currentFilters = getFilterLoggedInUserRequestID();
         }
         $this->currentLimit = $this->getCurrentPageLimits();
@@ -74,7 +73,7 @@ class request_class {
         $this->showSortingOptions();
         $this->showTable();
 
-        if($this->isSendToPending){
+        if ($this->isSendToPending) {
             echo '</form>';
             $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
                     <input type="hidden" name="pendingBtn1" value="true" />
@@ -92,7 +91,8 @@ class request_class {
             $this->expungeRequest($this->hiddenInput);
         }
     }
-    private function handlePOSTVariables(){
+
+    private function handlePOSTVariables() {
         if (isset($_POST['timeRequestTableRows'])) {
             $totalRows = $_POST['timeRequestTableRows'];
             $this->btnPushed = false;
@@ -132,101 +132,121 @@ class request_class {
                 }
                 if ($this->btnPushed) {
                     $this->config->anchorID = "editBtn" . $i;
-                    //goToAnchor("editBtn" . $i);
+//goToAnchor("editBtn" . $i);
                     break;
-                } 
+                }
             }
         }
     }
-    
-    private function getCurrentPageLimits(){
-        //Page Breaks Setup
+
+    private function getCurrentPageLimits() {
+//Page Breaks Setup
         $this->prevNum = isset($_POST['prevNum']) ? $_POST['prevNum'] : "0";
         $this->nextNum = isset($_POST['nextNum']) ? $_POST['nextNum'] : "25";
-        $this->limit= isset($_POST['limit']) ? $_POST['limit'] : "25";
+        $this->limit = isset($_POST['limit']) ? $_POST['limit'] : "25";
 
-        if(isset($_POST['prevBtn'])){
-            //$this->prevNum = $this->prevNum - $this->limit;
+        if (isset($_POST['prevBtn'])) {
+//$this->prevNum = $this->prevNum - $this->limit;
             $this->nextNum = $this->nextNum - $this->limit;
         }
-        if(isset($_POST['nextBtn'])){
+        if (isset($_POST['nextBtn'])) {
             $this->prevNum = $this->prevNum + $this->limit;
             $this->nextNum = $this->nextNum + $this->limit;
         }
-                
-        $this->hiddenInput .= '<input type="hidden" name="prevNum" value="'.$this->prevNum.'" />';
-        $this->nextNum .= '<input type="hidden" name="nextNum" value="'.$this->nextNum.'" />';
-        $this->hiddenInput .= '<input type="hidden" name="limit" value="'.$this->limit.'" />';
-        
+
+        $this->hiddenInput .= '<input type="hidden" name="prevNum" value="' . $this->prevNum . '" />';
+        $this->nextNum .= '<input type="hidden" name="nextNum" value="' . $this->nextNum . '" />';
+        $this->hiddenInput .= '<input type="hidden" name="limit" value="' . $this->limit . '" />';
+
         return getLimitFilter($this->config, $this->prevNum, $this->limit);
     }
-    private function showPageLimitOptions(){
+
+    private function showPageLimitOptions() {
         echo '<hr />';
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         $lastRec = $this->prevNum + $this->limit;
         echo '<br/>';
-        echo 'Showing Records '. $this->prevNum . ' to ' .$lastRec;
-        //Spacing characters
+        echo 'Showing Records ' . $this->prevNum . ' to ' . $lastRec;
+//Spacing characters
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
-        if(!$this->prevNum > 0){
+        if (!$this->prevNum > 0) {
             echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
             echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         }
         echo 'Records: <select name="limit" onChange="this.form.submit()" >
             <option value="25"';
-        if(strcmp($this->limit, "25") ==0)
+        if (strcmp($this->limit, "25") == 0)
             echo ' SELECTED';
         echo '>25</option>
             <option value="50"';
-        if(strcmp($this->limit, "50") ==0)
+        if (strcmp($this->limit, "50") == 0)
             echo ' SELECTED';
         echo '>50</option>
             </select>';
-        if($this->prevNum > 0)
+        if ($this->prevNum > 0)
             echo '<input type="submit" name="prevBtn" value="Previous" />';
-        if($this->limit <= $this->currentRow)
+        if ($this->limit <= $this->currentRow)
             echo '<input type="submit" name="nextBtn" value="Next" />';
         echo '<br/>';
     }
-    
-    private function showSortingOptions(){
+
+    private function showSortingOptions() {
         echo '<br/><h3><center>Ordered from newest request to oldest request</center></h3>';
     }
-    private function prepareTimeTable(){
+
+    private function prepareTimeTable() {
         $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
         $theTable = array(array());
         $this->currentRow = 0;
         $y = 0;
 
-        $theTable[$this->currentRow][$y] = "Actions";$y++;
-        $theTable[$this->currentRow][$y] = "Ref#";$y++;
-        $theTable[$this->currentRow][$y] = "Employee";$y++;
-        $theTable[$this->currentRow][$y] = "Date_of_Use";$y++;
-        $theTable[$this->currentRow][$y] = "Start Time";$y++;
-        $theTable[$this->currentRow][$y] = "End Time";$y++;
-        $theTable[$this->currentRow][$y] = "Hours";$y++;
-        $theTable[$this->currentRow][$y] = "Type";$y++;
-        $theTable[$this->currentRow][$y] = "Subtype";$y++;
-        $theTable[$this->currentRow][$y] = "Call Off";$y++;
-        $theTable[$this->currentRow][$y] = "Comment";$y++;
-        $theTable[$this->currentRow][$y] = "Submit Date";$y++;
-        $theTable[$this->currentRow][$y] = 'Status';$y++;
-        $theTable[$this->currentRow][$y] = 'Approved By';$y++;
-        $theTable[$this->currentRow][$y] = 'Approved Time';$y++;
-        $theTable[$this->currentRow][$y] = 'Reason';$y++;
-        $theTable[$this->currentRow][$y] = 'HR Approval';$y++;
-        $theTable[$this->currentRow][$y] = 'HR Notes';$y++;
+        $theTable[$this->currentRow][$y] = "Actions";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Ref#";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Employee";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Date_of_Use";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Start Time";
+        $y++;
+        $theTable[$this->currentRow][$y] = "End Time";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Hours";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Type";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Subtype";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Call Off";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Comment";
+        $y++;
+        $theTable[$this->currentRow][$y] = "Submit Date";
+        $y++;
+        $theTable[$this->currentRow][$y] = 'Status';
+        $y++;
+        $theTable[$this->currentRow][$y] = 'Approved By';
+        $y++;
+        $theTable[$this->currentRow][$y] = 'Approved Time';
+        $y++;
+        $theTable[$this->currentRow][$y] = 'Reason';
+        $y++;
+        $theTable[$this->currentRow][$y] = 'HR Approval';
+        $y++;
+        $theTable[$this->currentRow][$y] = 'HR Notes';
+        $y++;
         $this->currentRow++;
 
         while ($row = $result->fetch_assoc()) {
             $y = 0;
 
             $theTable[$this->currentRow][$y] = '<input type="submit" id="editBtn' . $this->currentRow . '" name="editBtn' . $this->currentRow . '" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />' .
-                    '<input type="submit" id="printBtn' . $this->currentRow . '" name="printBtn' . $this->currentRow . '" value="Print" onClick="window.open(\'printFriendly.php?printRequestNo='.$row['RefNo'].'\');" />'.
+                    '<input type="submit" id="printBtn' . $this->currentRow . '" name="printBtn' . $this->currentRow . '" value="Print" onClick="window.open(\'printFriendly.php?printRequestNo=' . $row['RefNo'] . '\');" />' .
                     '<input type="hidden" name="requestID' . $this->currentRow . '" value="' . $row['RefNo'] . '" />';
             if ($row['Status'] == "EXPUNGED")
                 $theTable[$this->currentRow][$y] .= '';
@@ -237,17 +257,28 @@ class request_class {
                     $theTable[$this->currentRow][$y] .= '<input type="submit" name="expungeBtn' . $this->currentRow . '" value="Delete" />';
             }
             $y++;
-            $theTable[$this->currentRow][$y] = '<input type="hidden" name="refNo' . $this->currentRow . '" value="' . $row['RefNo'] . '" />' . $row['RefNo'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Name'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Used'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Start'];$y++;
-            $theTable[$this->currentRow][$y] = $row['End'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Hrs'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Type'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Subtype'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Calloff'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Comment'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Request_Date'];$y++;
+            $theTable[$this->currentRow][$y] = '<input type="hidden" name="refNo' . $this->currentRow . '" value="' . $row['RefNo'] . '" />' . $row['RefNo'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Name'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Used'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Start'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['End'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Hrs'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Type'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Subtype'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Calloff'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Comment'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Request_Date'];
+            $y++;
             if ($row['Status'] != 'PENDING' && $this->config->adminLvl >= 25) {
                 $theTable[$this->currentRow][$y] = $row['Status'];
                 if (!empty($row['Reason']))
@@ -266,40 +297,46 @@ class request_class {
                 $theTable[$this->currentRow][$y] = $row['Status'] . '</br><font color="darkred">' . $row['Reason'] . '</font>';
             }
             $y++;
-            $theTable[$this->currentRow][$y] = $row['ApprovedBy'];$y++;
-            $theTable[$this->currentRow][$y] = $row['approveTS'];$y++;
-            $theTable[$this->currentRow][$y] = $row['Reason'];$y++;
+            $theTable[$this->currentRow][$y] = $row['ApprovedBy'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['approveTS'];
+            $y++;
+            $theTable[$this->currentRow][$y] = $row['Reason'];
+            $y++;
             if (!$row['HR_Approved'] && $row['Status'] != "DENIED") {
                 $theTable[$this->currentRow][$y] = 'Pending';
                 if ($row['Status'] == "APPROVED" && $this->config->adminLvl >= 50 && $this->config->adminLvl != 75) {
                     $theTable[$this->currentRow][$y] = '<font color="darkred">Pending</font>';
-                    $theTable[$this->currentRow][$y] .= '<input type="submit" name="hrApproveBtn' . $this->currentRow . '" value="HR Approve" />';$y++;
-                    $theTable[$this->currentRow][$y] = '<textarea rows="2" cols="21" name="hrReason' . $this->currentRow . '" ></textarea>';
-                }elseif ($row['Status'] == "EXPUNGED") {
+                    $theTable[$this->currentRow][$y] .= '<input type="submit" name="hrApproveBtn' . $this->currentRow . '" value="HR Approve" />';
                     $y++;
-                    $theTable[$this->currentRow][$y] = '<font color="darkred"> '.$row['EXPUNGE_NOTES'] . '</font>';
-                } 
-                else {
+                    $theTable[$this->currentRow][$y] = '<textarea rows="2" cols="21" name="hrReason' . $this->currentRow . '" ></textarea>';
+                } elseif ($row['Status'] == "EXPUNGED") {
+                    $y++;
+                    $theTable[$this->currentRow][$y] = '<font color="darkred"> ' . $row['EXPUNGE_NOTES'] . '</font>';
+                } else {
                     $y++;
                     $theTable[$this->currentRow][$y] = '<font color="darkred">
                         <input type="hidden" name="hrOldNotes' . $this->currentRow . '" value="' . $row['HRNOTES'] . '" />' . $row['HRNOTES'] . '</font>';
                 }
             } elseif ($row['Status'] == "DENIED") {
-                $theTable[$this->currentRow][$y] = 'No Action Required';$y++;
+                $theTable[$this->currentRow][$y] = 'No Action Required';
+                $y++;
                 $theTable[$this->currentRow][$y] = '<font color="darkred">
                     <input type="hidden" name="hrOldNotes' . $this->currentRow . '" value="' . $row['HRNOTES'] . '" />' . $row['HRNOTES'] . '</font>';
             } else {
-                $theTable[$this->currentRow][$y] = '<div align="center"><h3><font color="darkred">Approved</font></h3></div>';$y++;
+                $theTable[$this->currentRow][$y] = '<div align="center"><h3><font color="darkred">Approved</font></h3></div>';
+                $y++;
                 $theTable[$this->currentRow][$y] = '<font color="darkred">
                     <input type="hidden" name="hrOldNotes' . $this->currentRow . '" value="' . $row['HRNOTES'] . '" />' . $row['HRNOTES'] . '</font>';
             }
             $y++;
             $this->currentRow++;
         }
-        
+
         $this->currentTable = $theTable;
     }
-    private function showTable(){
+
+    private function showTable() {
         if ($this->config->adminLvl >= 50 && $this->config->adminLvl != 75)
             showSortableTable($this->currentTable, 2, "timeRequestTable");
         else
@@ -311,10 +348,10 @@ class request_class {
         $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
         if ($confirmBtn && !empty($_POST['hrNotes']) && $_SESSION['admin']) {
             $this->hrNotes = $_POST['hrNotes'];
-            if (!empty($this->hrNotes)){
+            if (!empty($this->hrNotes)) {
                 $myq = getSendToPending($this->config, $this->refNo, $this->hrNotes);
-                $result = getQueryResult($this->config, $myq, $debug=false);
-                if($result){
+                $result = getQueryResult($this->config, $myq, $debug = false);
+                if ($result) {
                     addLog($this->config, 'Ref# ' . $this->refNo . ' status was changed to pending');
 
                     popUpMessage('Request ' . $this->refNo . ' is now Pending Status. 
@@ -322,22 +359,23 @@ class request_class {
                                 ' . $extraInputs . '                     
                                 <input type="submit" name="okBtn" value="OK" />
                                 </form></div>');
+                } else {
+                    popupmessage('Failed to add');
                 }
-                else{popupmessage('Failed to add');}
+            } else {
+                popupmessage('Notes Requested');
             }
-            else {popupmessage('Notes Requested');}
-            
         } else {
             if (!isset($_POST['okBtn'])) {
                 $result = "";
-                
+
                 if (empty($this->hrNotes))
                     $result = '<font color="red">Requires a Reason</font><br/>';
                 $echo = '<div align="center"><form method="POST" name="confirmBackToPending">
                 <input name="deleteBtn' . $this->toSendToPendingIndex . '" type="hidden" value="' . $this->refNo . '" />
                 <input type="hidden" name="totalRows" value="' . $this->toSendToPendingIndex . '" />
                 Request ' . $this->refNo . ' will be sent back to pending<br/>   ' . $result . '
-                Reason:<textarea name="hrNotes">'.$this->hrNotes.'</textarea><br/>
+                Reason:<textarea name="hrNotes">' . $this->hrNotes . '</textarea><br/>
                 <input type="submit" name="confirmBtn" value="CONFIRM" />
                 <input type="submit" name="okBtn" value="CANCEL" />
                 ' . $extraInputs . ' 
@@ -345,14 +383,11 @@ class request_class {
                 popUpMessage($echo, "Confirm Back To Pending");
             }
         }
-        
-        
-       
     }
 
     public function hrApproveLeaveRequest() {
-        $myq= getHRApprovalByRef($this->config, $this->refNo, $this->supReason);
-        $result = getQueryResult($this->config, $myq, $debug=false);
+        $myq = getHRApprovalByRef($this->config, $this->refNo, $this->supReason);
+        $result = getQueryResult($this->config, $myq, $debug = false);
         if (!$result) {
             $logMsg = 'Approved Time Request with Ref# ' . $this->refNo;
             addLog($this->config, $logMsg);
@@ -430,57 +465,73 @@ class request_class {
             }
         }
     }
-    
-    private function showPrintFriendlyRedirect(){
+
+    private function showPrintFriendlyRedirect() {
         echo '<script type="text/javascript" language="javascript">
-                window.open("printFriendly.php?printRequestNo='.$this->refNo.'");
-                </script>'; 
-    }
-    public function showPrintFriendlyRequest(){
-        $this->refNo = isset($_GET['printRequestNo']) ? $_GET['printRequestNo'] : '';
-        $this->refNo = isset($_POST['requestID']) ? $_POST['requestID'] : $this->refNo;
-        if(!empty($this->refNo)){
-            echo '<h2><center>Printer Friendly - Request for '.$this->refNo.'</center></h2>';
-            $this->filters = getFilterByRefNo($this->config, $this->refNo);
-            $this->currentQuery = getTimeRequestTable($this->config, $this->filters, $orderBy='', $limit = ' LIMIT 1');
-            $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
-            $req = $result->fetch_assoc();
-            $mydivq = getEmployeeInfo($this->config, $_SESSION['userIDnum']);
-            $myDivResult = getQueryResult($this->config, $mydivq, $debug = false);
-            $empInfo = $myDivResult->fetch_assoc();
-
-            echo '<div align="right"> DATE FILED: '.$req['Request_Date'].'</div>';
-            echo '<h3>Employee Information</h3>';
-            echo 'EMPLOYEE NAME: '.$req['Name'].'<br/>';
-            echo 'Dvision: '.$empInfo['DESCR'].'<br/>';
-            echo 'RANK: '.$empInfo['RANK'].'<br/>';
-            echo '<br/><h3>Requested Information</h3>';
-            echo '<br/>';
-            echo 'TYPE OF REQUEST: '.$req['Type'].'<br/>';
-            echo 'SUBTYPE: '.$req['Subtype'].'<br/>';
-            echo 'DATE OF USE: '.$req['Used'].'<br/>';
-            echo 'START TIME: '.$req['Start'].'<br/>';
-            echo 'END TIME: '.$req['End'].'<br/>';
-            echo 'CALCULATED HOURS: '.$req['Hrs'].'<br/>';
-            echo 'EMPLOYEE NOTES: '.$req['Comment'].'<br/><br/><br/>';
-            echo '<h2>Employee Signature: _______________________________________  Date: _____________________</h2>';
-            echo '<div class="divider"></div>';
-            echo '<h3>O.I.C.</h3>';
-            echo 'REQUEST STATUS: '.$req['Status'].'<br/>';
-            echo 'SUPERVISOR NOTES: '.$req['Reason'].'<br/>';
-            echo 'SUPERVISOR FILED DATE: '.$req['approveTS'].'<br/>';
-            echo 'SUPERVISOR: '.$req['ApprovedBy'].'<br/><br/><br/>';
-            echo '<h2>Supervisor Signature: _______________________________________  Date: _____________________</h2>';
-            
-            
-            
-            
-        }
-        else{
-            echo 'Error Getting Reference Number to Print!';
-        }
+                window.open("printFriendly.php?printRequestNo=' . $this->refNo . '");
+                </script>';
     }
 
-} //End of Request Class
+    public function showPrintFriendlyRequest() {
+        if ($this->config->adminLvl >= 0) {
+            $this->refNo = isset($_GET['printRequestNo']) ? $_GET['printRequestNo'] : '';
+            $this->refNo = isset($_POST['requestID']) ? $_POST['requestID'] : $this->refNo;
+            if (!empty($this->refNo)) {
+                echo '<div style="font-size:16px"> <h1><center>MAHONING COUNTY SHERIFF\'S OFFICE <br/>
+                    EMPLOYEE REQUEST FORM<br/></center></h1>
+                    <h2><center>Request reference #' . $this->refNo . '</center></h2>';
+                $this->filters = getFilterByRefNo($this->config, $this->refNo);
+                $this->currentQuery = getTimeRequestTable($this->config, $this->filters, $orderBy = '', $limit = ' LIMIT 1');
+                $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
+                $req = $result->fetch_assoc();
+                $mydivq = getEmployeeInfo($this->config, $_SESSION['userIDnum']);
+                $myDivResult = getQueryResult($this->config, $mydivq, $debug = false);
+                $empInfo = $myDivResult->fetch_assoc();
 
+                if ($this->config->adminLvl < 25 && $req['Requester'] == $_SESSION['userIDnum']) {
+                    //Must be admin or viewing own requests
+                    echo '<div align="right"> DATE FILED: ' . $req['Request_Date'] . '</div>';
+                    echo '<h1>Employee Information</h1>';
+                    echo 'EMPLOYEE: <div style="display: inline;font-size:24px">' . $req['Name'] . '</div><br/>';
+                    echo 'Dvision: <div style="display: inline;font-size:20px">' . $empInfo['DESCR'] . '</div><br/>';
+                    echo 'RANK: <div style="display: inline;font-size:20px">' . $empInfo['RANK'] . '</div><br/>';
+                    echo '<br/><h2>Requested Information</h2>';
+                    echo '<br/>';
+                    echo 'TYPE OF REQUEST: <div style="display: inline;font-size:20px">' . $req['Type'] . '</div><br/>';
+                    echo 'SUBTYPE: <div style="display: inline;font-size:20px">' . $req['Subtype'] . '</div><br/>';
+                    echo 'DATE OF USE: <div style="display: inline;font-size:20px">' . $req['Used'] . '</div><br/>';
+                    echo 'START TIME: <div style="display: inline;font-size:20px">' . $req['Start'] . '</div><br/>';
+                    echo 'END TIME: <div style="display: inline;font-size:20px">' . $req['End'] . '</div><br/>';
+                    echo 'CALCULATED HOURS: <div style="display: inline;font-size:20px">' . $req['Hrs'] . '</div><br/>';
+                    echo 'EMPLOYEE NOTES: <div style="display: inline;font-size:20px">' . $req['Comment'] . '</div><br/><br/><br/>';
+
+                    if ($this->config->adminLvl >= 25) {
+                        echo '<h2>Employee Signature: _______________________________________  Date: _____________________</h2>';
+                        echo '<div class="divider"></div>';
+                    }
+                    echo '<h1>O.I.C.</h1>';
+                    echo 'REQUEST STATUS: <div style="display: inline;font-size:20px">' . $req['Status'] . '</div><br/>';
+                    echo 'SUPERVISOR NOTES: <div style="display: inline;font-size:20px">' . $req['Reason'] . '</div><br/>';
+                    echo 'SUPERVISOR FILED DATE: <div style="display: inline;font-size:20px">' . $req['approveTS'] . '</div><br/>';
+                    echo 'SUPERVISOR: <div style="display: inline;font-size:20px">' . $req['ApprovedBy'] . '</div><br/><br/><br/>';
+                    if ($this->config->adminLvl >= 25) {
+                        echo '<h2>Supervisor Signature: _____________________________________  Date: _____________________</h2>';
+                        echo '<br/><br/><h1>OFFICE USE ONLY</h1><br/><br/>';
+                        echo '<h2>Office Signature: _________________________________________  Date: _____________________</h2>';
+                        echo '</div>';
+                    }
+                } else {
+                    echo 'You can only view your own requests';
+                }
+            } else {
+                echo 'Error Getting Reference Number to Print!';
+            }
+        } else {
+            echo 'You must login first';
+        }
+    }
+
+}
+
+//End of Request Class
 ?>

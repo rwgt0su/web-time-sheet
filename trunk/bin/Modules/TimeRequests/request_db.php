@@ -29,8 +29,9 @@ function getApproveRequest($config, $refNo, $status, $reason) {
 }
 
 function getTimeRequestTable($config, $filters, $orderBy, $limit = '') {
-    return "SELECT REFER 'RefNo', REQ.MUNIS 'Munis', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
-                    DATE_FORMAT(USEDATE,'%c-%d-%Y %a') 'Used', STATUS 'Status',
+    return "SELECT REFER 'RefNo', REQ.IDNUM as 'Requester', REQ.MUNIS 'Munis', 
+                    CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', 
+                    DATE_FORMAT(USEDATE,'%c-%d-%Y %a') 'Used', STATUS 'Status', 
                     DATE_FORMAT(BEGTIME,'%H%i') 'Start',
                     DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
                     DATE_FORMAT(REQDATE,'%c-%d-%Y %H%i') 'Request_Date',
