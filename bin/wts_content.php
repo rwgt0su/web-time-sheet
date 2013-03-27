@@ -17,7 +17,7 @@ function displayContent($wts_content, $config){
         <div class="post"><?php displayAbout($config); ?><div class="clear"></div></div><div class="divider"></div>
         <?php
     }
-    if(isValidUser($config)){
+    if(isValidUser($config)){       
         if($wts_content->isAnounceAdmin){
             ?>
             <div class="post"><?php displayAdminAnnounce($config); ?><div class="clear"></div></div><div class="divider"></div>
@@ -167,7 +167,9 @@ function displayContent($wts_content, $config){
                 <div class="clear"></div></div><div class="divider"></div>
             <?php
         }
-                
+        if(str_replace(dirname($_SERVER['REQUEST_URI'])."/", "", $_SERVER['PHP_SELF']) != "printFriendly.php"){
+            echo '<a target="_blank" href="printFriendly.php?' . str_replace($_SERVER['PHP_SELF']."?", "", $_SERVER['REQUEST_URI']) . '">Printer Friendly</a>';
+        }
         myAlerts($config, $wts_content); 
     }
     else{
