@@ -488,7 +488,7 @@ class request_class {
                 $myDivResult = getQueryResult($this->config, $mydivq, $debug = false);
                 $empInfo = $myDivResult->fetch_assoc();
 
-                if ($this->config->adminLvl < 25 && $req['Requester'] == $_SESSION['userIDnum']) {
+                if ($this->config->adminLvl >= 25 && $req['Requester'] == $_SESSION['userIDnum']) {
                     //Must be admin or viewing own requests
                     echo '<div align="right"> DATE FILED: ' . $req['Request_Date'] . '</div>';
                     echo '<h1>Employee Information</h1>';
