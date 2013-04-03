@@ -36,6 +36,7 @@ class request_class {
     private $limit;
     private $currentLimit;
     private $currentTable;
+    private $isShowTable;
 
     public function request_class() {
         $this->config = '';
@@ -53,7 +54,8 @@ class request_class {
         $this->toSendToPendingTotalRows = '';
         $this->toExpunge = FALSE;
         $this->toUnExpunge = FALSE;
-        $this->debug = false;
+        $this->debug = true;
+        $this->isShowTable = true;
     }
 
     public function showTimeRequestTable($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInput = '') {
@@ -62,33 +64,35 @@ class request_class {
         $this->currentFilters = $filters;
         $this->hiddenInput = $hiddenInput;
         $this->handlePOSTVariables();
-        if ($this->config->adminLvl < 25) {
-//users only allowed to search own reference numbers
-            $this->currentFilters = getFilterLoggedInUserRequestID();
-        }
-        $this->currentLimit = $this->getCurrentPageLimits();
-        $this->currentQuery = getTimeRequestTable($this->config, $this->currentFilters, $orderBy, $this->currentLimit);
-        $this->prepareTimeTable();
-        $this->showPageLimitOptions();
-        $this->showSortingOptions();
-        $this->showTable();
+        if($this->isShowTable){
+            if ($this->config->adminLvl < 25) {
+                //users only allowed to view own reference numbers
+                $this->currentFilters = getFilterLoggedInUserRequestID($this->config);
+            }
+            $this->currentLimit = $this->getCurrentPageLimits();
+            $this->currentQuery = getTimeRequestTable($this->config, $this->currentFilters, $orderBy, $this->currentLimit);
+            $this->prepareTimeTable();
+            $this->showPageLimitOptions();
+            $this->showSortingOptions();
+            $this->showTable();
 
-        if ($this->isSendToPending) {
-            echo '</form>';
-            $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
-                    <input type="hidden" name="pendingBtn1" value="true" />
-                    <input type="hidden" name="refNo1" value="' . $this->refNo . '" />
-                    ';
-            $this->sendRequestToPending($this->hiddenInput);
-        }
+            if ($this->isSendToPending) {
+                echo '</form>';
+                $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
+                        <input type="hidden" name="pendingBtn1" value="true" />
+                        <input type="hidden" name="refNo1" value="' . $this->refNo . '" />
+                        ';
+                $this->sendRequestToPending($this->hiddenInput);
+            }
 
-        if ($this->toExpunge) {
-            echo '</form>';
-            $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
-                    <input type="hidden" name="expungeBtn1" value="true" />
-                    <input type="hidden" name="refNo1" value="' . $this->toExpungeRefNo . '" />
-                    ';
-            $this->expungeRequest($this->hiddenInput);
+            if ($this->toExpunge) {
+                echo '</form>';
+                $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
+                        <input type="hidden" name="expungeBtn1" value="true" />
+                        <input type="hidden" name="refNo1" value="' . $this->toExpungeRefNo . '" />
+                        ';
+                $this->expungeRequest($this->hiddenInput);
+            }
         }
     }
 
@@ -129,6 +133,15 @@ class request_class {
                     if (isset($_POST['unExpungeBtn' . $i]))
                         $this->toUnExpunge = true;
                     $this->btnPushed = true;
+                }
+                elseif(isset($_POST['editBtn'.$i]) && !isset($_POST['cancelReqForm'])){
+                    echo '<br/><center><input type="hidden" name="editBtn'.$i.'" value="true" />';
+                    echo '<input type="hidden" name="timeRequestTableRows" value="'.$totalRows.'" />';
+                    echo '<input type="hidden" name="requestID'.$i.'" value="'.$_POST['requestID'.$i].'" />';
+                    echo '<input type="submit" name="cancelReqForm" value="Cancel Editing" /></center>';
+                    $requestForm = new time_request_form($this->config);
+                    $requestForm->showTimeRequestForm($_POST['requestID'.$i]);
+                    $this->isShowTable = false;
                 }
                 if ($this->btnPushed) {
                     $this->config->anchorID = "editBtn" . $i;
@@ -222,8 +235,8 @@ class request_class {
         $y++;
         $theTable[$this->currentRow][$y] = "Subtype";
         $y++;
-        $theTable[$this->currentRow][$y] = "Call Off";
-        $y++;
+//        $theTable[$this->currentRow][$y] = "Call Off";
+//        $y++;
         $theTable[$this->currentRow][$y] = "Comment";
         $y++;
         $theTable[$this->currentRow][$y] = "Submit Date";
@@ -245,7 +258,7 @@ class request_class {
         while ($row = $result->fetch_assoc()) {
             $y = 0;
 
-            $theTable[$this->currentRow][$y] = '<input type="submit" id="editBtn' . $this->currentRow . '" name="editBtn' . $this->currentRow . '" value="Edit/View" onClick="this.form.action=' . "'?leave=true'" . '; this.form.submit()" />' .
+            $theTable[$this->currentRow][$y] = '<input type="submit" id="editBtn' . $this->currentRow . '" name="editBtn' . $this->currentRow . '" value="Edit/View" />' .
                     '<input type="submit" id="printBtn' . $this->currentRow . '" name="printBtn' . $this->currentRow . '" value="Print" onClick="window.open(\'printFriendly.php?printRequestNo=' . $row['RefNo'] . '\');" />' .
                     '<input type="hidden" name="requestID' . $this->currentRow . '" value="' . $row['RefNo'] . '" />';
             if ($row['Status'] == "EXPUNGED")
@@ -273,8 +286,8 @@ class request_class {
             $y++;
             $theTable[$this->currentRow][$y] = $row['Subtype'];
             $y++;
-            $theTable[$this->currentRow][$y] = $row['Calloff'];
-            $y++;
+//            $theTable[$this->currentRow][$y] = $row['Calloff'];
+//            $y++;
             $theTable[$this->currentRow][$y] = $row['Comment'];
             $y++;
             $theTable[$this->currentRow][$y] = $row['Request_Date'];
@@ -289,10 +302,16 @@ class request_class {
                     $theTable[$this->currentRow][$y] .= '<Br/><input type="submit" name="pendingBtn' . $this->currentRow . '" value="Send to Pending" />';
             }
             elseif ($row['Status'] == 'PENDING' && $this->config->adminLvl >= 25) {
-                $theTable[$this->currentRow][$y] = $row['Status'];
-                $theTable[$this->currentRow][$y] .= "<br/><input type='submit' name='approve$this->currentRow' value='APPROVED' size='15'/> ";
-                $theTable[$this->currentRow][$y] .= "<input type='submit' name='deny$this->currentRow' value='DENIED' size='15'><br/>";
-                $theTable[$this->currentRow][$y] .= 'Reason:<br/><textarea rows="2" cols="21" name="reason' . $this->currentRow . '" ></textarea>';
+                
+                if ($row['ELEVATE_SUPERVISORS'] != "1" || ($row['ELEVATE_SUPERVISORS'] == "1" && $this->config->adminLvl > 25)) {
+                    $theTable[$this->currentRow][$y] = $row['Status'];
+                    $theTable[$this->currentRow][$y] .= "<br/><input type='submit' name='approve$this->currentRow' value='APPROVED' size='15'/> ";
+                    $theTable[$this->currentRow][$y] .= "<input type='submit' name='deny$this->currentRow' value='DENIED' size='15'><br/>";
+                    $theTable[$this->currentRow][$y] .= 'Reason:<br/><textarea rows="2" cols="21" name="reason' . $this->currentRow . '" ></textarea>';
+                }
+                else{
+                    $theTable[$this->currentRow][$y] = $row['Status'];
+                }
             } else {
                 $theTable[$this->currentRow][$y] = $row['Status'] . '</br><font color="darkred">' . $row['Reason'] . '</font>';
             }
@@ -389,17 +408,18 @@ class request_class {
         $myq = getHRApprovalByRef($this->config, $this->refNo, $this->supReason);
         $result = getQueryResult($this->config, $myq, $debug = false);
         if (!$result) {
-            $logMsg = 'Approved Time Request with Ref# ' . $this->refNo;
-            addLog($this->config, $logMsg);
-            echo '<h6>HR Approval for Reference ' . $this->refNo . "</h6>";
+            
         }
+        $logMsg = 'HR Approval for Time Request with Ref# ' . $this->refNo;
+        addLog($this->config, $logMsg);
+        echo '<h6>HR Approval for Reference ' . $this->refNo . "</h6>";
     }
 
     public function approveLeaveRequest($status) {
         $myq = getApproveRequest($this->config, $this->refNo, $status, $this->supReason);
         $result = getQueryResult($this->config, $myq, $this->debug);
         if ($result) {
-            $logMsg = 'Approved Time Request with Ref# ' . $this->refNo;
+            $logMsg = $status.' Time Request with Ref# ' . $this->refNo;
             addLog($this->config, $logMsg);
             echo '<h6>' . $status . " Reference " . $this->refNo . "</h6>";
         }
@@ -474,6 +494,7 @@ class request_class {
 
     public function showPrintFriendlyRequest() {
         if ($this->config->adminLvl >= 0) {
+            //Valid user
             $this->refNo = isset($_GET['printRequestNo']) ? $_GET['printRequestNo'] : '';
             $this->refNo = isset($_POST['requestID']) ? $_POST['requestID'] : $this->refNo;
             if (!empty($this->refNo)) {
@@ -488,7 +509,7 @@ class request_class {
                 $myDivResult = getQueryResult($this->config, $mydivq, $debug = false);
                 $empInfo = $myDivResult->fetch_assoc();
 
-                if ($this->config->adminLvl >= 25 && $req['Requester'] == $_SESSION['userIDnum']) {
+                if ($this->config->adminLvl >= 25 || ($req['Requester'] == $_SESSION['userIDnum'])) {
                     //Must be admin or viewing own requests
                     echo '<div align="right"> DATE FILED: ' . $req['Request_Date'] . '</div>';
                     echo '<h1>Employee Information</h1>';
@@ -529,6 +550,26 @@ class request_class {
         } else {
             echo 'You must login first';
         }
+    }
+    public function showTimeRequestEmpCounts($config, $filters, $orderBy = "ORDER BY REFER DESC", $hiddenInput = ''){
+        echo '<input type="hidden" name="formName" value="submittedRequests" />';
+        $this->config = $config;
+        $this->currentFilters = $filters;
+        $this->hiddenInput = $hiddenInput;
+        $this->handlePOSTVariables();
+        if($this->isShowTable){
+            if ($this->config->adminLvl < 25) {
+                //users only allowed to view own reference numbers
+                $this->currentFilters = getFilterLoggedInUserRequestID($this->config);
+            }
+            $this->currentLimit = $this->getCurrentPageLimits();
+            $this->currentQuery = getTimeRequestTable($this->config, $this->currentFilters, $orderBy, $this->currentLimit);
+            $this->showPageLimitOptions();
+            $this->showSortingOptions();
+        }
+    
+        $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
+        return $result;
     }
 
 }

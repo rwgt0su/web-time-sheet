@@ -60,6 +60,7 @@ require_once 'bin/wts_announce.php';
 
 //Searching
 require_once 'bin/wts_search.php';
+require_once 'bin/WTS_Classes/Employee.php';
 
 //Time gain/use (leave) request functions
 require_once 'bin/time_request_functions.php';

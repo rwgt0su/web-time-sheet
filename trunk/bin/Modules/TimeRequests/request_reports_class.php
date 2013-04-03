@@ -12,6 +12,7 @@
 class request_reports {
 
     public $config;
+    public $db;
     private $startDate;
     private $endDate;
     private $shiftTimeID;
@@ -23,20 +24,39 @@ class request_reports {
 
     public function request_reports($config = '') {
         $this->request_class = new request_class();
+        $this->config = $config;
+        $this->db = new request_db($this->config);
     }
 
-    public function showTimeRequestsByDate($hiddenInputs) {
+    public function showTimeRequestsByDate($hiddenInputs, $showCustomDates = true, $showPayPeriods = true, $showDivisions = true) {
         echo "<form name='timeRequests' method='post'>";
         echo '<h2>Submitted Requests By Division and By Date</h2>';
         $requests = new request_class();
-        $this->showCustomDateRange();
-        $this->getCurrentPayPeriods();
-        $this->showDivisionDropDown();
+        if($showCustomDates)
+            $this->showCustomDateRange();
+        if($showPayPeriods)
+            $this->getCurrentPayPeriods();
+        if($showDivisions)
+            $this->showDivisionDropDown();
         $this->filters .= getTimeRequestFiltersBetweenDates($this->config, $this->startDate, $this->endDate);
         //$filters .= " AND (STATUS='APPROVED' OR STATUS='DENIED')";
         $hiddenInputs = $this->setHiddenPostInputs();
         $requests->debug = false;
         $requests->showTimeRequestTable($this->config, $this->filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
+    }
+    public function showTimeRequestFilterOptions($showCustomDates = true, $showPayPeriods = true, $showDivisions = true){
+         echo "<form name='timeRequests' method='post'>";
+        echo '<h2>Submitted Requests By Division and By Date</h2>';        
+        if($showCustomDates)
+            $this->showCustomDateRange();
+        if($showPayPeriods)
+            $this->getCurrentPayPeriods();
+        if($showDivisions)
+            $this->showDivisionDropDown();
+        $this->filters .= getTimeRequestFiltersBetweenDates($this->config, $this->startDate, $this->endDate);
+        //$filters .= " AND (STATUS='APPROVED' OR STATUS='DENIED')";
+        $hiddenInputs = $this->setHiddenPostInputs();
+        $requests->debug = false;        
     }
 
     private function setHiddenPostInputs(){
@@ -65,9 +85,7 @@ class request_reports {
             //what pay period are we currently in?
             $myq = getCurrentPayPeriod();
             $result = getQueryResult($this->config, $myq, $debug = false);
-            if (!$result) {
-                
-            }
+
             $ppArray = $result->fetch_assoc();
             /* $ppOffset stands for the number of pay periods to adjust the query by 
              * relative to the current period

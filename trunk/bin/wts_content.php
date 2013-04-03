@@ -28,6 +28,11 @@ function displayContent($wts_content, $config){
             <div class="post"><?php displayLeaveForm($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
+        if($wts_content->isTimeRequestForm){
+            ?>
+            <div class="post"><?php displayNewTimeRequestForm($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <?php
+        } 
         if($wts_content->isSubmittedRequests){
             ?>
             <div class="post"><?php displaySubmittedRequests($config); ?><div class="clear"></div></div><div class="divider"></div>
@@ -40,7 +45,7 @@ function displayContent($wts_content, $config){
         }
         if($wts_content->isLeaveApproval){
             ?>
-            <div class="post"><?php displayLeaveApproval($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <div class="post"><?php displayLeaveApprovalNEW($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
         if($wts_content->isUserMenu){
@@ -108,7 +113,7 @@ function displayContent($wts_content, $config){
         }
         if($wts_content->isMySubmitReq){
             ?>
-            <div class="post"><?php displayMySubmittedRequests($config); ?><div class="clear"></div></div><div class="divider"></div>
+            <div class="post"><?php displayMySubmittedRequestsNEW($config); ?><div class="clear"></div></div><div class="divider"></div>
             <?php
         }
         if($wts_content->isReports){
@@ -167,7 +172,7 @@ function displayContent($wts_content, $config){
                 <div class="clear"></div></div><div class="divider"></div>
             <?php
         }
-        if(str_replace(dirname($_SERVER['REQUEST_URI'])."/", "", $_SERVER['PHP_SELF']) != "printFriendly.php"){
+        if(str_replace(dirname($_SERVER['REQUEST_URI'])."/", "", $_SERVER['PHP_SELF']) != "printFriendly.php" && $config->showPrinterFriendly){
             echo '<a target="_blank" href="printFriendly.php?' . str_replace($_SERVER['PHP_SELF']."?", "", $_SERVER['REQUEST_URI']) . '">Printer Friendly</a>';
         }
         myAlerts($config, $wts_content); 

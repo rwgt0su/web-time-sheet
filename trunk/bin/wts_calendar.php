@@ -102,7 +102,26 @@ function viewClandar($config, $month, $year){
         echo "      </td>
                 </tr>
             </form></table></td>";
+        
+        $myq = "SELECT COUNT(REQUEST.REFER) AS 'RequestNumbers',
+                IF(REQUEST.TIMETYPEID IS NULL, SUB.DESCR, OLDT.DESCR) 'Subtype',
+                DATE_FORMAT(USEDATE,'%d') 'Used'
+            FROM REQUEST  
+            LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
+            LEFT JOIN TIMETYPE AS OLDT ON OLDT.TIMETYPEID = REQUEST.TIMETYPEID
+            LEFT JOIN SUBTYPE AS OLDSUB ON OLDSUB.IDNUM=REQUEST.SUBTYPE
+            LEFT JOIN WTS_TIMETYPES AS T ON T.IDNUM=REQUEST.TIMETYPES_ID
+            LEFT JOIN WTS_SUBTIMETYPES AS SUB ON SUB.IDNUM=REQUEST.SUBTYPE_ID
 
+            WHERE 1 ".$requestReport->filters."
+                AND DATE_FORMAT(USEDATE,'%m') = '".date('m', mktime(0, 0, 0, $month, 1, $year))."'
+                AND REQUEST.STATUS = 'APPROVED'
+            GROUP BY REQUEST.USEDATE, IF(REQUEST.TIMETYPEID IS NULL, SUB.IDNUM, NEWTYPE_ID)
+            ORDER BY REQUEST.USEDATE";
+//                }
+
+        $result = $mysqli->query($myq);
+        SQLerrorCatch($mysqli, $result, $myq, $debug = false);
 	echo "</th></tr>";
 	echo "<tr><td align=\"center\" width=102>Sunday</td>
                 <td align=\"center\" width=102>Monday</td>
@@ -128,52 +147,29 @@ function viewClandar($config, $month, $year){
 
 	//sets the first day of the month to 1
 	$day_num = "01";
-        $timetype[0] = "OT";
-        $timetype[1] = "SK";
-        $timetype[2] = "PR";
-        $timetype[3] = "VA";
-
+//        $timetype[0] = "OT";
+//        $timetype[1] = "SK";
+//        $timetype[2] = "PR";
+//        $timetype[3] = "VA";
+//        $timetype[4] = "5";//overtime
+//        $timetype[5] = "6";//overtime
+//        $timetype[6] = "3";//sick
+//        $timetype[7] = "2";//personal
+//        $timetype[8] = "1";//vacation
+                
 	//count up the days, untill we've done all of them in the month
 	while ( $day_num <= $days_in_month )
 	{        
-            for($i=0;$i<count($timetype);$i++){
-                if($myDivID == "All"){
-                    $myq = "SELECT `REFER` , `IDNUM` , `TIMETYPEID` , `USEDATE` , `STATUS`
-                        FROM `REQUEST`
-                        WHERE `TIMETYPEID` = '".$timetype[$i]."'
-                        AND USEDATE = '".$year."-".$month."-".$day_num."'
-                        AND `STATUS` = 'APPROVED'";
-                }
-                else{
-                    $myq = "SELECT DISTINCT REFER 'RefNo', CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Employee', DATE_FORMAT(REQDATE,'%d %b %Y %H%i') 'Requested', 
-                                    DATE_FORMAT(USEDATE,'%a %d %b %Y') 'Used', DATE_FORMAT(BEGTIME,'%H%i') 'Start',
-                                    DATE_FORMAT(ENDTIME,'%H%i') 'End', HOURS 'Hrs',
-                                    T.DESCR 'Type', SUBTYPE 'Subtype', CALLOFF 'Calloff', NOTE 'Comment', STATUS 'Status', 
-                                    APR.LNAME 'ApprovedBy', REASON 'Reason' 
-                                FROM REQUEST R
-                                INNER JOIN EMPLOYEE AS REQ ON REQ.IDNUM=R.IDNUM
-                                LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=R.APPROVEDBY
-                                INNER JOIN TIMETYPE AS T ON T.TIMETYPEID=R.TIMETYPEID                         
-                                WHERE R.TIMETYPEID = '".$timetype[$i]."'
-                                AND USEDATE = '".$year."-".$month."-".$day_num."' 
-                                
-                                ".$requestReport->filters."
-                                AND R.STATUS = 'APPROVED'
-                                ORDER BY REFER";
-                }
-
-                $result = $mysqli->query($myq);
-                SQLerrorCatch($mysqli, $result);
-                if($i == 0)
-                    $overTime = $result->num_rows;
-                if($i == 1)
-                    $sick = $result->num_rows;
-                if($i == 2)
-                    $personal = $result->num_rows;
-                if($i == 3)
-                    $vacation = $result->num_rows;
-            }
-
+//            for($i=0;$i<count($timetype);$i++){
+//                if($myDivID == "All"){
+//                    $myq = "SELECT `REFER` , `IDNUM` , `TIMETYPEID` , `USEDATE` , `STATUS`
+//                        FROM `REQUEST`
+//                        WHERE `TIMETYPEID` = '".$timetype[$i]."'
+//                        AND USEDATE = '".$year."-".$month."-".$day_num."'
+//                        AND `STATUS` = 'APPROVED'";
+//                }
+//                else{
+                
             echo "<td height='100' valign = \"top\" align=\"center\"><div style=\"background-color:grey\">";
             echo '<form name="goToDetails" method="POST" action="?submittedRequestsNEW=true&cust=true">
                 <input type="hidden" name="divisionID" value="'.$myDivID.'" />
@@ -181,6 +177,30 @@ function viewClandar($config, $month, $year){
                 <input name="start" type="hidden" value="'.$month.'/'.$day_num.'/'.$year.'" />
                 <input name="end" type="hidden" value="'.$month.'/'.$day_num.'/'.$year.'" />
                 <input type="submit" name="goToDetails" value="'.$day_num.'" /></form></div>';
+                $overTime = 0;
+                $sick = 0;
+                $personal = 0;
+                $vacation = 0;
+                
+                $result->data_seek(0);
+                while($row = $result->fetch_assoc()){
+                    //popupmessage($row['Used'].' day '. $day_num);
+                    if($row['Used'] == $day_num){
+                        echo $row['Subtype'].': '.$row['RequestNumbers'].'<br/>';
+                    }
+                }
+//                if($i == 0)
+//                    $overTime = $result->num_rows;
+//                if($i == 1)
+//                    $sick = $result->num_rows;
+//                if($i == 2)
+//                    $personal = $result->num_rows;
+//                if($i == 3)
+//                    $vacation = $result->num_rows;
+//            }
+
+
+            
             
             if($overTime > 0)
                 echo 'Overtime: '.$overTime.'<br/>';

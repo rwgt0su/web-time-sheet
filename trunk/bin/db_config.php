@@ -16,6 +16,7 @@ Class Config {
     public $installYear;
     public $anchorID;
     public $isGoToAnchor;
+    public $showPrinterFriendly;
 
     public function Config() {
         $this->mysqli = connectToSQL();
@@ -46,6 +47,7 @@ Class Config {
             }
         }
         $this->anchorID = false;
+        $this->showPrinterFriendly = true;
         
         //Prepare for Mahoning County Domain Migration
         $this->ldap_MCO_domain = "mahoningcountyoh.gov";
