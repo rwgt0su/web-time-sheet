@@ -245,7 +245,7 @@ function SQLerrorCatch($mysqli, $result, $myq='', $debug=false) {
         popUpMessage($dbgMsg, "Debug Message");
     }
     
-    return false;
+    return $isError;
 }
 function getQueryResult($config, $myq, $debug = false){
     $result = $config->mysqli->query($myq);

@@ -3,6 +3,7 @@ Class wts_content {
     public $isWelcome;
     public $isLogout;
     public $isLeaveForm;
+    public $isTimeRequestForm;
     public $isSubmittedRequests;
     public $submittedRequestsNEW;
     public $isLeaveApproval;
@@ -37,7 +38,8 @@ Class wts_content {
         //get passed variables based on URL
         $this->isWelcome = isset($_GET['welcome']) ? $_GET['welcome'] : false;
         $this->isLogout = isset($_GET['logout']) ? $_GET['logout'] : false;
-        $this->isLeaveForm = isset($_GET['leave']) ? $_GET['leave'] : false;
+        $this->isLeaveForm = isset($_GET['leave']) ? $_GET['leave'] : false; 
+        $this->isTimeRequestForm = isset($_GET['isTimeRequestForm']) ? true : false;
         $this->isSubmittedRequests = isset($_GET['submittedRequests']) ? $_GET['submittedRequests'] : false;
         $this->isSubmittedRequestsNEW = isset($_GET['submittedRequestsNEW']) ? $_GET['submittedRequestsNEW'] : false;
         $this->isLeaveApproval = isset($_GET['approve']) ? $_GET['approve'] : false;
