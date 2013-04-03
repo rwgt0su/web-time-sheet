@@ -54,7 +54,7 @@ class request_class {
         $this->toSendToPendingTotalRows = '';
         $this->toExpunge = FALSE;
         $this->toUnExpunge = FALSE;
-        $this->debug = true;
+        $this->debug = false;
         $this->isShowTable = true;
     }
 
