@@ -170,6 +170,7 @@ class time_request_form {
         $this->db->filters = '';
         $result = $this->db->getTimeRequestByID($this->reqID);
         $reqInfo = $result->fetch_assoc();
+        $this->empID = $reqInfo['Requester'];
         $this->subTypeID = $reqInfo['TIMETYPES_ID'];
         $this->typeID = $reqInfo['SUBTYPE_ID'];
         $this->useDate = $reqInfo['UsedReqForm'];
