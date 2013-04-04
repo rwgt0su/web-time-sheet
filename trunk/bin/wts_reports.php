@@ -42,7 +42,7 @@ function hrPayrolReportByEmployee($config){
     $viewBtn = false;
     $showAllStatus = isset($_POST['showAllStatus']) ? true : false;
     $hrReportTotalRows = isset($_POST['hrReportTotalRows']) ? $_POST['hrReportTotalRows'] : 0;
-    
+    ;
     if($hrReportTotalRows > 0){
         for($i=0; $i<=$hrReportTotalRows; $i++){
             if(isset($_POST['viewDetailsBtn'.$i])){
@@ -138,7 +138,7 @@ function hrPayrolReportByEmployee($config){
 
                     $theTable[$x][0] = '<input type="submit" name="viewDetailsBtn'.$rowCount.'" value="View" />
                         <input type="hidden" name="empID'.$rowCount.'" value="'.$row['EMP_ID'].'" />
-                        </form>';
+                        ';
                     $theTable[$x][1] = $row['Munis'];
                     $theTable[$x][2] = $lastUser;
                     $theTable[$x][3] = $row['ReqNumbers'];
