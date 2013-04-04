@@ -94,16 +94,16 @@ Class request_db {
                         AND REQUEST.IDNUM = '" . $empID . "'
                         AND `USEDATE` = '" . date('Y-m-d', strtotime($date)) . "'";
     }
-    public function getAddNewRequest($reqClass){
+    public function getAddNewRequest($reqClass, $submitForDate){
         $myq = "INSERT INTO REQUEST (IDNUM, USEDATE, BEGTIME, ENDTIME, 
                 HOURS, TIMETYPES_ID, SUBTYPE_ID, NOTE, STATUS, REQDATE, HR_NOTES, 
                 AUDITID, IP)
-                    VALUES ('".$reqClass->empID."', '" . date('Y-m-d', strtotime($reqClass->useDate)) . "',
+                    VALUES ('".$reqClass->empID."', '" . date('Y-m-d', $submitForDate) . "',
                         '".$reqClass->begTime1.$reqClass->begTime2."00', '".$reqClass->endTime1.$reqClass->endTime2."00',
                         '".$reqClass->shiftHours."', '".$reqClass->subTypeID."', '".$reqClass->typeID."', 
                         '".$reqClass->empComment."', 'PENDING', NOW(), '".$reqClass->hrNotes."', 
                         '".$_SESSION['userIDnum']."',INET_ATON('".$_SERVER['REMOTE_ADDR']."'))";
-        $result = getQueryResult($this->config, $myq, $debug = false);
+        $result = getQueryResult($this->config, $myq, $debug = TRUE);
         return $result;
     }
     public function getUpdateRequestByID($refNo, $useDate, $begTime, $endTime, $shifthours, $typeID, $subTypeID, $empComment){

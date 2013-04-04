@@ -425,7 +425,7 @@ class time_request_form {
             $submitForDate = strtotime($submitForDate);
             $noErrors = $this->checkSubmissionErrors($submitForDate);
             if ($noErrors) {
-                $this->reqID = $this->submitNewTimeRequest();
+                $this->reqID = $this->submitNewTimeRequest($submitForDate);
                 addLog($this->config, 'Request ' . $this->reqID . ' Submitted');
                 echo '<h3>Request accepted. The reference number for this request is <font color="red"><b>'
                 . $this->reqID . '</b></font>.</h3>';
@@ -570,10 +570,10 @@ class time_request_form {
         return $noErrors;
     }
 
-    private function submitNewTimeRequest() {
+    private function submitNewTimeRequest($submitForDate) {
         $refInsert = false;
         //popupmessage('empid'.$this->empID);
-        $result = $this->db->getAddNewRequest($this);
+        $result = $this->db->getAddNewRequest($this, $submitForDate);
         //echo $myq; //DEBUG
         //show SQL error msg if query failed
         if (!$result) {
