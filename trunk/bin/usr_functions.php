@@ -192,7 +192,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $configNew = new Config();
                         $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
                         addLog($configNew, 'Logged in to system');
-                        //echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['REQUEST_URI'].'" />';
+                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['REQUEST_URI'].'" />';
                     }
                     else
                         $errorText .= "Failed to authenticate user: " . $ldapbind;
