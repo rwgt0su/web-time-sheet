@@ -158,11 +158,11 @@ class request_class {
         $this->nextNum = isset($_POST['nextNum']) ? $_POST['nextNum'] : "25";
         $this->limit = isset($_POST['limit']) ? $_POST['limit'] : "25";
 
-        if (isset($_POST['prevBtn'])) {
+        if (isset($_POST['prevLimitBtn'])) {
 //$this->prevNum = $this->prevNum - $this->limit;
             $this->nextNum = $this->nextNum - $this->limit;
         }
-        if (isset($_POST['nextBtn'])) {
+        if (isset($_POST['nextLimitBtn'])) {
             $this->prevNum = $this->prevNum + $this->limit;
             $this->nextNum = $this->nextNum + $this->limit;
         }
@@ -201,9 +201,9 @@ class request_class {
         echo '>50</option>
             </select>';
         if ($this->prevNum > 0)
-            echo '<input type="submit" name="prevBtn" value="Previous" />';
+            echo '<input type="submit" name="prevLimitBtn" value="Previous" />';
         if ($this->limit <= $this->currentRow)
-            echo '<input type="submit" name="nextBtn" value="Next" />';
+            echo '<input type="submit" name="nextLimitBtn" value="Next" />';
         echo '<br/>';
     }
 
