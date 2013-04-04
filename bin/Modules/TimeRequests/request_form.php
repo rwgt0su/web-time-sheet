@@ -48,6 +48,8 @@ class time_request_form {
     public function time_request_form($config) {
         $this->config = $config;
         $this->db = new request_db($this->config);
+        
+        $this->empID = $_SESSION['userIDnum'];
 
         $this->subTypeID = '';
         $this->maxCalDays = 0;
@@ -69,7 +71,7 @@ class time_request_form {
 
     public function showTimeRequestForm($reqID = '') {
         echo '<h1><center>EMPLOYEE TIME REQUEST FORM</center></h1>';
-
+       
         if (!empty($reqID)) {
             $this->reqID = $reqID;
             $this->getRequestByID();
@@ -570,6 +572,7 @@ class time_request_form {
 
     private function submitNewTimeRequest() {
         $refInsert = false;
+        //popupmessage('empid'.$this->empID);
         $result = $this->db->getAddNewRequest($this);
         //echo $myq; //DEBUG
         //show SQL error msg if query failed

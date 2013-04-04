@@ -181,17 +181,18 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
                         }
                         $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
+                        popupmessage($resultAssoc['IDNUM']);
                         $_SESSION['userName'] = $user;
                         $_SESSION['admin'] = $admin;
                         $_SESSION['validUser'] = true;
                         $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
-                        session_regenerate_id();
+                        //session_regenerate_id();
                         $validUser = true;
                         $configNew = new Config();
                         $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
                         addLog($configNew, 'Logged in to system');
-                        echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['REQUEST_URI'].'" />';
+                        //echo '<meta http-equiv="refresh" content="0;url='.$_SERVER['REQUEST_URI'].'" />';
                     }
                     else
                         $errorText .= "Failed to authenticate user: " . $ldapbind;
@@ -218,7 +219,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                     $_SESSION['validUser'] = true;
                     $_SESSION['isLDAP'] = false;
                     $_SESSION['timeout'] = time();
-                    session_regenerate_id();
+                    //session_regenerate_id();
                     $validUser = true;
                     $configNew = new Config();
                     $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
@@ -289,7 +290,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         $_SESSION['validUser'] = true;
                         $_SESSION['isLDAP'] = true;
                         $_SESSION['timeout'] = time();
-                        session_regenerate_id();
+                        //session_regenerate_id();
                         $validUser = true;
                         $configNew = new Config();
                         $configNew->setAdmin(isset($_SESSION['admin']) ? $_SESSION['admin'] : -1);
