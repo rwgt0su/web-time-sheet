@@ -106,7 +106,7 @@ function hrPayrolReportByEmployee($config){
 
                     $theTable[$x][0] = '<input type="submit" name="viewDetailsBtn'.$rowCount.'" value="View" />
                         <input type="hidden" name="empID'.$rowCount.'" value="'.$row['EMP_ID'].'" />
-                        </form>';
+                        ';
                     $theTable[$x][1] = $row['Munis'];
                     $theTable[$x][2] = $lastUser;
                     $theTable[$x][3] = $row['ReqNumbers'];
