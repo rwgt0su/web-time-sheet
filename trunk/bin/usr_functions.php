@@ -181,7 +181,6 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
                         }
                         $_SESSION['userIDnum'] = $resultAssoc['IDNUM'];
-                        popupmessage($resultAssoc['IDNUM']);
                         $_SESSION['userName'] = $user;
                         $_SESSION['admin'] = $admin;
                         $_SESSION['validUser'] = true;
