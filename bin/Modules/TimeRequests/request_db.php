@@ -103,7 +103,7 @@ Class request_db {
                         '".$reqClass->shiftHours."', '".$reqClass->subTypeID."', '".$reqClass->typeID."', 
                         '".$reqClass->empComment."', 'PENDING', NOW(), '".$reqClass->hrNotes."', 
                         '".$_SESSION['userIDnum']."',INET_ATON('".$_SERVER['REMOTE_ADDR']."'))";
-        $result = getQueryResult($this->config, $myq, $debug = TRUE);
+        $result = getQueryResult($this->config, $myq, $debug = false);
         return $result;
     }
     public function getUpdateRequestByID($refNo, $useDate, $begTime, $endTime, $shifthours, $typeID, $subTypeID, $empComment){
