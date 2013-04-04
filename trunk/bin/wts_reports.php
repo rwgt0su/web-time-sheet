@@ -114,7 +114,7 @@ function hrPayrolReportByEmployee($config){
 
             }//end While loop
             echo '<h3>Pending HR Approval</h3>';
-            showSortableTable($theTable, 1, "hrPending");
+            showSortableTable($theTable, 2, "hrPending");
             $filters = $timeReport->filters;
             $filters .= $timeReport->db->getFilterHRStatus('1');  
             $timeReport->db->filters = $filters;
@@ -147,7 +147,7 @@ function hrPayrolReportByEmployee($config){
             }//end While loop
             //echo 'number of rows: '.$x;
             echo '<h3>HR Approvals</h3>';
-            showSortableTable($theTable, 1, "hrApprove");
+            showSortableTable($theTable, 2, "hrApprove");
             echo '<input type="hidden" name="hrReportTotalRows" value="'.$rowCount.'" />';
         }
 
