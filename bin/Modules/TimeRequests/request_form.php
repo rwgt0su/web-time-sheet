@@ -217,10 +217,11 @@ class time_request_form {
 
         //Multiple Day submitions        
         if (isset($_POST['endDate'])) {
-            if (!empty($_POST['endDate'])) {
+            if (!empty($this->endDate)) {
                 //number days in given range
                 $daysOffInterval = abs(strtotime($this->endDate) - strtotime($this->useDate));
-                $this->daysOff = date('j', $daysOffInterval);
+                if($daysOffInterval != 0 )
+                    $this->daysOff = date('j', $daysOffInterval);
             }
         }
 
