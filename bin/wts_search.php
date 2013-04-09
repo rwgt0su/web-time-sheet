@@ -122,20 +122,22 @@ function searchDatabase($config, $userToFind, $rowCount, $isSearching = true, $i
             $myq = "SELECT FNAME,LNAME,GRADE,E.ID,E.IDNUM, D.DESCR, isLDAP 
                 FROM EMPLOYEE E
                 LEFT JOIN DIVISION AS D ON E.DIVISIONID=D.DIVISIONID
-                WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%' 
-                    OR `LNAME` LIKE '%" . strtoupper($userToFind) . "%'
-                AND `isLDAP` !=1";
+                WHERE (`ID` LIKE '%" . strtoupper($userToFind) . "%' 
+                    OR `LNAME` LIKE '%" . strtoupper($userToFind) . "%')
+                AND `isLDAP` !=1
+                AND IS_ACTIVE = '1'";
         else
             $myq = "SELECT FNAME,LNAME,GRADE,E.ID,E.IDNUM, D.DESCR, isLDAP 
                 FROM EMPLOYEE E
                 LEFT JOIN DIVISION AS D ON E.DIVISIONID=D.DIVISIONID
-                WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%'
-                     OR `LNAME` LIKE '%" . strtoupper($userToFind) . "%'" ;
+                WHERE (`ID` LIKE '%" . strtoupper($userToFind) . "%'
+                     OR `LNAME` LIKE '%" . strtoupper($userToFind) . "%')
+                     AND IS_ACTIVE = 1" ;
     }
     else
-        $myq = "SELECT * FROM `EMPLOYEE` WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%'";
+        $myq = "SELECT * FROM `EMPLOYEE` WHERE `ID` LIKE '%" . strtoupper($userToFind) . "%' AND IS_ACTIVE = 1";
     $result = $mysqli->query($myq);
-    SQLerrorCatch($mysqli, $result);
+    SQLerrorCatch($mysqli, $result, $myq, $debug = false);
     $begin = $rowCount;
     $echo = "";
 
