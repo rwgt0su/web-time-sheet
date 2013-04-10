@@ -228,12 +228,13 @@ class time_request_form {
         //Hours calculation
         if (isset($_POST['shiftHour'])) {
             if ($_POST['shiftHour'] == "8") {
-                //add 8 hours to begTime1            
-                $this->endTime1 = $this->begTime1 + 8;
+                //add 8 hours to begTime1  
+                //popupmessage($this->begTime1.'hit '.date('h', strtotime('+8 hours',$this->begTime1.':00:00')));
+                $this->endTime1 = date('h', strtotime("+8 hours",strtotime($this->begTime1.':00:00')));
                 $this->endTime2 = $this->begTime2;
             } elseif ($_POST['shiftHour'] == "12") {
                 //add 8 hours to begTime1
-                $this->endTime1 = $this->begTime1 + 12;
+                $this->endTime1 = date('h', strtotime("+12 hours",strtotime($this->begTime1.':00:00')));
                 $this->endTime2 = $this->begTime2;
             }
         }
