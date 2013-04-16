@@ -505,7 +505,7 @@ class request_class {
                 $this->currentQuery = getTimeRequestTable($this->config, $this->filters, $orderBy = '', $limit = ' LIMIT 1');
                 $result = getQueryResult($this->config, $this->currentQuery, $this->debug);
                 $req = $result->fetch_assoc();
-                $mydivq = getEmployeeInfo($this->config, $_SESSION['userIDnum']);
+                $mydivq = getEmployeeInfo($this->config, $req['Requester']);
                 $myDivResult = getQueryResult($this->config, $mydivq, $debug = false);
                 $empInfo = $myDivResult->fetch_assoc();
 
