@@ -159,9 +159,11 @@ class time_request_form {
 
         if (!$this->isEditing) {
             echo '<input type="submit" name="submitBtn" value="Submit for Approval">';
-        } else {
-            if($this->status != "APPROVED")
+        } else {            
+            if($this->status != "APPROVED"){      
+                echo '<input type="hidden" name="reqID" value="'.$this->reqID.'" />';
                 echo '<input type="submit" name="updateReqBtn" value="Update Request ' . $this->reqID . '">';
+            }
             echo '<input type="submit" name="duplicateReqBtn" value="Duplicate Request" />';
         }
     }
@@ -194,6 +196,7 @@ class time_request_form {
         $this->isShowMainRequestForm = false;
 
         //variables
+        $this->reqID = isset($_POST['reqID']) ? $_POST['reqID'] : $this->reqID;
         $this->empID = isset($_POST['empID']) ? $_POST['empID'] : $this->empID;
         $this->subTypeID = isset($_POST['subTypeID']) ? $_POST['subTypeID'] : $this->subTypeID;
         $this->typeID = isset($_POST['typeID']) ? $_POST['typeID'] : $this->typeID;
@@ -229,12 +232,12 @@ class time_request_form {
         if (isset($_POST['shiftHour'])) {
             if ($_POST['shiftHour'] == "8") {
                 //add 8 hours to begTime1  
-                //popupmessage($this->begTime1.'hit '.date('h', strtotime('+8 hours',$this->begTime1.':00:00')));
-                $this->endTime1 = date('h', strtotime("+8 hours",strtotime($this->begTime1.':00:00')));
+                //popupmessage($this->begTime1.' plus 8 = '.date('H', strtotime("+8 hours",strtotime($this->begTime1.':00:00'))));
+                $this->endTime1 = date('H', strtotime("+8 hours",strtotime($this->begTime1.':00:00')));
                 $this->endTime2 = $this->begTime2;
             } elseif ($_POST['shiftHour'] == "12") {
                 //add 8 hours to begTime1
-                $this->endTime1 = date('h', strtotime("+12 hours",strtotime($this->begTime1.':00:00')));
+                $this->endTime1 = date('H', strtotime("+12 hours",strtotime($this->begTime1.':00:00')));
                 $this->endTime2 = $this->begTime2;
             }
         }
