@@ -129,7 +129,8 @@ class time_request_form {
         echo '<br/><br/>';
         echo 'Start time: ';
         showTimeSelector("begTime", $this->begTime1, $this->begTime2);
-        if ($this->subTypeInfo['LIMIT_8_12'] == '1') {
+        if ($this->subTypeInfo['LIMIT_8_12'] == '1' || $this->typeID == '2') {
+            //Limit is enabled or Type is Personal
             if (!empty($this->shiftHours)) {
                 if ($this->shiftHourRadio == "8" || $this->shiftHours == "8") {
                     echo " How long is your shift? <input type='radio' name='shiftHour' value='8' CHECKED>8 Hours";
