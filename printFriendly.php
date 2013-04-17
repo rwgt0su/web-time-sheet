@@ -3,6 +3,13 @@
 <?php
 require_once('bin/common.php');
 ?>
+<script language="Javascript1.2">
+  <!--
+  function printpage() {
+  window.print();
+  }
+  //-->
+</script>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -16,7 +23,7 @@ require_once('bin/common.php');
         <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
 
     </head>
-    <body>   
+    <body onload="printpage()"> 
         <div class="header_cotainer">
             <div class="container_12">
                 <div class="grid_3">
