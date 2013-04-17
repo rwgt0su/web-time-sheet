@@ -173,7 +173,7 @@ function displayContent($wts_content, $config){
             <?php
         }
         if(str_replace(dirname($_SERVER['REQUEST_URI'])."/", "", $_SERVER['PHP_SELF']) != "printFriendly.php" && $config->showPrinterFriendly){
-            echo '<a target="_blank" href="printFriendly.php?' . str_replace($_SERVER['PHP_SELF']."?", "", $_SERVER['REQUEST_URI']) . '">Printer Friendly</a>';
+            echo '<a target="_blank" href="printFriendly.php?' . str_replace($_SERVER['PHP_SELF']."?", "", $_SERVER['REQUEST_URI']) . '">Print Tables</a>';
         }
         myAlerts($config, $wts_content); 
     }
