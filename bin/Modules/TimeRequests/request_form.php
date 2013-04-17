@@ -44,6 +44,7 @@ class time_request_form {
     private $isEditing;
     private $lastPayStart;
     private $lastPayEnd;
+    private $hiddenInputs;
 
     public function time_request_form($config) {
         $this->config = $config;
@@ -67,9 +68,11 @@ class time_request_form {
         $this->status = '';
         $this->isEditing = false;
         $this->isShowEmpSelectionForm = true;
+        $this->hiddenInputs = '';
     }
 
-    public function showTimeRequestForm($reqID = '') {
+    public function showTimeRequestForm($reqID = '', $hiddenInputs = '') {
+        $this->hiddenInputs = $hiddenInputs;
         echo '<h1><center>EMPLOYEE TIME REQUEST FORM</center></h1>';
        
         if (!empty($reqID)) {
@@ -195,7 +198,7 @@ class time_request_form {
         $this->isShowWhyRequestForm = true;
         $this->isShowHowRequestForm = false;
         $this->isShowMainRequestForm = false;
-
+     
         //variables
         $this->reqID = isset($_POST['reqID']) ? $_POST['reqID'] : $this->reqID;
         $this->empID = isset($_POST['empID']) ? $_POST['empID'] : $this->empID;
@@ -284,9 +287,13 @@ class time_request_form {
             $this->isShowMainRequestForm = true;
         }
         if ($submitBtn) {
+            $this->hiddenInputs .= '<input type="hidden" name="submitBtn" value="true" />';
+            echo '<input type="hidden" name="submitBtn" value="true" />';
             $this->isEditing = $this->showSubmitNewRequest();
         }
         if ($updateReqBtn) {
+            $this->hiddenInputs .= '<input type="hidden" name="updateReqBtn" value="true" />';
+            echo '<input type="hidden" name="updateReqBtn" value="true" />';
             $this->isEditing = $this->updateRequest();
             $this->isEditing = true;
         }
@@ -451,10 +458,7 @@ class time_request_form {
 
     private function showAreYouSureMessage() {
         if ($this->isShowAreYouSureMessage) {
-            popUpMessage('<div align="center"><form method="POST" name="areYouSure">                    
-                           ' . $this->reason . '<br/><br/><h4>Are you sure you want to submit another?</h4>
-                                <input type="submit" name="confirmBtn" value="Yes" /> 
-                                <input type="submit" name="noBtn" value="No" />
+            $this->hiddenInputs .= '<input type="hidden" name="reqID" value="' . $this->reqID . '" />
                                 <input type="hidden" name="typeID" value="' . $this->typeID . '" />
                                 <input type="hidden" name="subTypeID" value="' . $this->subTypeID . '" />
                                 <input type="hidden" name="empID" value="' . $this->empID . '" />
@@ -465,8 +469,14 @@ class time_request_form {
                                 <input type="hidden" name="endTime1" value="' . $this->endTime1 . '" />
                                 <input type="hidden" name="endTime2" value="' . $this->endTime2 . '" />
                                 <input type="hidden" name="empComment" value="' . $this->empComment . '" />
-                                    <input type="hidden" name="shiftHour" value="' . $this->shiftHourRadio . '" />
-                                <input type="hidden" name="submitBtn" value="true" />
+                                <input type="hidden" name="shiftHour" value="' . $this->shiftHourRadio . '" />
+                                ';
+            
+            popUpMessage('<div align="center"><form method="POST" name="areYouSure">                    
+                           ' . $this->reason . '<br/><br/><h4>Are you sure you want to submit another?</h4>
+                                <input type="submit" name="confirmBtn" value="Yes" /> 
+                                <input type="submit" name="noBtn" value="No" />
+                                '.$this->hiddenInputs.'
                                 </form></div>');
         }
     }
@@ -605,8 +615,8 @@ class time_request_form {
                 echo '<br/>Request #' . $this->reqID . ' has been updated<br/><br/>';
                 addLog($this->config, 'Request #' . $this->reqID . ' Updated');
             }
+            $this->getRequestByID();
         }
-        $this->getRequestByID();
     }
 
     private function checkSubmissionErrors($submitForDate) {
