@@ -62,7 +62,7 @@ class request_class {
         echo '<input type="hidden" name="formName" value="submittedRequests" />';
         $this->config = $config;
         $this->currentFilters = $filters;
-        $this->hiddenInput = $hiddenInput;
+        $this->hiddenInputs = $hiddenInput;
         $this->handlePOSTVariables();
         if($this->isShowTable){
             if ($this->config->adminLvl < 25) {
@@ -135,12 +135,16 @@ class request_class {
                     $this->btnPushed = true;
                 }
                 elseif(isset($_POST['editBtn'.$i]) && !isset($_POST['cancelReqForm'])){
-                    echo '<br/><center><input type="hidden" name="editBtn'.$i.'" value="true" />';
-                    echo '<input type="hidden" name="timeRequestTableRows" value="'.$totalRows.'" />';
-                    echo '<input type="hidden" name="requestID'.$i.'" value="'.$_POST['requestID'.$i].'" />';
+                    echo '<br/><center>';
+                    $echo = '<input type="hidden" name="editBtn'.$i.'" value="true" />
+                        <input type="hidden" name="timeRequestTableRows" value="'.$totalRows.'" />
+                        <input type="hidden" name="requestID'.$i.'" value="'.$_POST['requestID'.$i].'" />';
+                    echo $echo;
+                    $this->hiddenInputs .= $echo;
+                    
                     echo '<input type="submit" name="cancelReqForm" value="Cancel Editing" /></center>';
                     $requestForm = new time_request_form($this->config);
-                    $requestForm->showTimeRequestForm($_POST['requestID'.$i]);
+                    $requestForm->showTimeRequestForm($_POST['requestID'.$i], $this->hiddenInputs);
                     $this->isShowTable = false;
                 }
                 if ($this->btnPushed) {
