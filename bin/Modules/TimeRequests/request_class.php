@@ -305,7 +305,7 @@ class request_class {
                 elseif ($row['HR_Approved'] && $this->config->adminLvl >= 50 && $this->config->adminLvl != 75)
                     $theTable[$this->currentRow][$y] .= '<Br/><input type="submit" name="pendingBtn' . $this->currentRow . '" value="Send to Pending" />';
             }
-            elseif ($row['Status'] == 'PENDING' && $this->config->adminLvl >= 25) {
+            elseif (($row['Status'] == 'PENDING' && $this->config->adminLvl >= 25) && $row['Requester'] != $_SESSION['userIDnum']) {
                 
                 if ($row['ELEVATE_SUPERVISORS'] != "1" || ($row['ELEVATE_SUPERVISORS'] == "1" && $this->config->adminLvl > 25)) {
                     $theTable[$this->currentRow][$y] = $row['Status'];
