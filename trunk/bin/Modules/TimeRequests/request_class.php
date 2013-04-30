@@ -253,7 +253,7 @@ class request_class {
         $y++;
         $theTable[$this->currentRow][$y] = 'Reason';
         $y++;
-        $theTable[$this->currentRow][$y] = 'HR Approval';
+        $theTable[$this->currentRow][$y] = 'HR Actions';
         $y++;
         $theTable[$this->currentRow][$y] = 'HR Notes';
         $y++;
@@ -326,7 +326,7 @@ class request_class {
             $y++;
             $theTable[$this->currentRow][$y] = $row['Reason'];
             $y++;
-            if (!$row['HR_Approved'] && $row['Status'] != "DENIED") {
+            if (!$row['HR_Approved']) {
                 $theTable[$this->currentRow][$y] = 'Pending';
                 if ($row['Status'] == "APPROVED" && $this->config->adminLvl >= 50 && $this->config->adminLvl != 75) {
                     $theTable[$this->currentRow][$y] = '<font color="darkred">Pending</font>';
@@ -336,16 +336,17 @@ class request_class {
                 } elseif ($row['Status'] == "EXPUNGED") {
                     $y++;
                     $theTable[$this->currentRow][$y] = '<font color="darkred"> ' . $row['EXPUNGE_NOTES'] . '</font>';
-                } else {
+                }elseif ($row['Status'] == "DENIED"){
+                    $theTable[$this->currentRow][$y] = '<font color="darkred">Request Denied</font>';
+                    $theTable[$this->currentRow][$y] .= '<input type="submit" name="hrApproveBtn' . $this->currentRow . '" value="Awknowledged" />';
+                    $y++;
+                    $theTable[$this->currentRow][$y] = '<textarea rows="2" cols="21" name="hrReason' . $this->currentRow . '" ></textarea>';
+                } 
+                else {
                     $y++;
                     $theTable[$this->currentRow][$y] = '<font color="darkred">
                         <input type="hidden" name="hrOldNotes' . $this->currentRow . '" value="' . $row['HRNOTES'] . '" />' . $row['HRNOTES'] . '</font>';
                 }
-            } elseif ($row['Status'] == "DENIED") {
-                $theTable[$this->currentRow][$y] = 'No Action Required';
-                $y++;
-                $theTable[$this->currentRow][$y] = '<font color="darkred">
-                    <input type="hidden" name="hrOldNotes' . $this->currentRow . '" value="' . $row['HRNOTES'] . '" />' . $row['HRNOTES'] . '</font>';
             } else {
                 $theTable[$this->currentRow][$y] = '<div align="center"><h3><font color="darkred">Approved</font></h3></div>';
                 $y++;
