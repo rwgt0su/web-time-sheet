@@ -123,7 +123,7 @@ class request_class {
                     $this->hrNotes = isset($_POST['hrReason' . $i]) ? $_POST['hrReason' . $i] : isset($_POST['hrOldNotes' . $i]) ? $_POST['hrOldNotes' . $i] : '';
                     $this->refNo = $_POST['refNo' . $i];
                     $this->hrApproveLeaveRequest();
-                    $this->btnPushed = true;
+                    $this->config->anchorID = "hrScrollTo" . $i;
                 } elseif (isset($_POST['expungeBtn' . $i]) || isset($_POST['unExpungeBtn' . $i])) {
                     $this->toExpungeRefNo = $_POST['refNo' . $i];
                     $this->toExpungeIndex = $i;
@@ -353,6 +353,7 @@ class request_class {
                 $theTable[$this->currentRow][$y] = '<font color="darkred">
                     <input type="hidden" name="hrOldNotes' . $this->currentRow . '" value="' . $row['HRNOTES'] . '" />' . $row['HRNOTES'] . '</font>';
             }
+            $theTable[$this->currentRow][$y] .= '<div id="hrScrollTo'.$this->currentRow.'" />';
             $y++;
             $this->currentRow++;
         }
