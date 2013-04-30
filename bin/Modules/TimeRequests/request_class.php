@@ -277,6 +277,8 @@ class request_class {
             $theTable[$this->currentRow][$y] = '<input type="hidden" name="refNo' . $this->currentRow . '" value="' . $row['RefNo'] . '" />' . $row['RefNo'];
             $y++;
             $theTable[$this->currentRow][$y] = $row['Name'];
+            if(strcmp($row['Name'], $row['Audit_Name'])!=0)
+                   $theTable[$this->currentRow][$y] .= '<br/><br/>Entered by: <br/> '.$row['Audit_Name']; 
             $y++;
             $theTable[$this->currentRow][$y] = $row['Used'];
             $y++;
@@ -336,7 +338,7 @@ class request_class {
                 } elseif ($row['Status'] == "EXPUNGED") {
                     $y++;
                     $theTable[$this->currentRow][$y] = '<font color="darkred"> ' . $row['EXPUNGE_NOTES'] . '</font>';
-                }elseif ($row['Status'] == "DENIED"){
+                }elseif ($row['Status'] == "DENIED" && $this->config->adminLvl >= 50 && $this->config->adminLvl != 75){
                     $theTable[$this->currentRow][$y] = '<font color="darkred">Request Denied</font>';
                     $theTable[$this->currentRow][$y] .= '<input type="submit" name="hrApproveBtn' . $this->currentRow . '" value="Awknowledged" />';
                     $y++;
