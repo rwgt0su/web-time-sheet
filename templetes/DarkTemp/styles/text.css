@@ -47,8 +47,11 @@ fieldset{
     font-size:30pt;
 }
 @font-face {
-    font-family: "HaloHandletter";
-    src: url(HaloHandletter.ttf) format("truetype");
+    font-family: 'HaloHandletter';
+    src: url('../fonts/HaloHandletter.eot');
+    src: local('☺'), url('../fonts/HaloHandletter.woff') format('woff'), url('../fonts/HaloHandletter.ttf') format('truetype'), url('../fonts/HaloHandletter.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
 }
 #DateSignature {
     display:inline;
