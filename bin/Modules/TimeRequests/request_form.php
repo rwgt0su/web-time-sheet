@@ -40,6 +40,8 @@ class time_request_form {
     private $shiftHourRadio;
     public $hrNotes;
     private $status;
+    private $submitDate;
+    private $auditName;
     //other Var
     private $isEditing;
     private $lastPayStart;
@@ -66,6 +68,9 @@ class time_request_form {
         $this->reason = '';
         $this->hrNotes = '';
         $this->status = '';
+        $this->submitDate = '';
+        $this->auditName = '';
+        echo '<br/><br/>';
         $this->isEditing = false;
         $this->isShowEmpSelectionForm = true;
         $this->hiddenInputs = '';
@@ -160,6 +165,10 @@ class time_request_form {
         echo '<br/><br/>';
         echo 'Comment: <textarea rows="3" cols="40" name="empComment" >' . $this->empComment . '</textarea>';
         echo '<br/><br/>';
+        if(!empty($this->submitDate)){
+            echo '<font color="darkred">Submitted on '. $this->submitDate .' by '.$this->auditName.'</font>';
+            echo '<br/><br/>';
+        }
 
         if (!$this->isEditing) {
             echo '<input type="submit" name="submitBtn" value="Submit for Approval">';
@@ -187,6 +196,8 @@ class time_request_form {
         $this->shiftHours = $this->calculateHours($this->begTime1, $this->begTime2, $this->endTime1, $this->endTime2);
         $this->empComment = $reqInfo['Comment'];
         $this->status = $reqInfo['Status'];
+        $this->submitDate = $reqInfo['Submit_Date'];
+        $this->auditName = $reqInfo['Audit_Name'];
         $this->db->filters = " AND IDNUM = '" . $this->subTypeID . "' ";
         $subTypeInfo = $this->db->getTimeTypes();
         $this->subTypeInfo = $subTypeInfo->fetch_assoc();
