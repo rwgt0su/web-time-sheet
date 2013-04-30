@@ -188,7 +188,8 @@ function getApproveRequest($config, $refNo, $status, $reason) {
 
 function getTimeRequestTable($config, $filters, $orderBy, $limit = '') {
     return "SELECT REFER 'RefNo', REQ.IDNUM as 'Requester', REQ.MUNIS 'Munis', 
-                    CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', REQ.IDNUM 'EMP_ID', 
+                    CONCAT_WS(', ',REQ.LNAME,REQ.FNAME) 'Name', REQ.IDNUM 'EMP_ID',
+                    CONCAT_WS(', ',AUDIT.LNAME,AUDIT.FNAME) 'Audit_Name',
                     DATE_FORMAT(USEDATE,'%c-%d-%Y %a') 'Used', 
                     DATE_FORMAT(USEDATE,'%c/%d/%Y') 'UsedReqForm',
                     STATUS 'Status', 
@@ -209,6 +210,7 @@ function getTimeRequestTable($config, $filters, $orderBy, $limit = '') {
                     REASON 'Reason', HRAPP_IS 'HR_Approved', HR.LNAME 'HRLName', HR.FNAME 'HRFName', REQUEST.HR_NOTES AS 'HRNOTES'
                 FROM REQUEST
                 LEFT JOIN EMPLOYEE AS REQ ON REQ.IDNUM=REQUEST.IDNUM
+                LEFT JOIN EMPLOYEE AS AUDIT ON AUDIT.IDNUM=REQUEST.AUDITID
                 LEFT JOIN EMPLOYEE AS APR ON APR.IDNUM=REQUEST.APPROVEDBY
                 LEFT JOIN EMPLOYEE AS HR ON HR.IDNUM=REQUEST.HRAPP_ID
                 LEFT JOIN TIMETYPE AS OLDT ON OLDT.TIMETYPEID = REQUEST.TIMETYPEID
