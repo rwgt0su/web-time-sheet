@@ -521,7 +521,10 @@ class request_class {
                     //Must be admin or viewing own requests
                     echo '<div align="right"> DATE FILED: ' . $req['Request_Date'] . '</div>';
                     echo '<h1>Employee Information</h1>';
-                    echo 'EMPLOYEE: <div style="display: inline;font-size:24px">' . $req['Name'] . '</div><br/>';
+                    echo 'EMPLOYEE: <div style="display: inline;font-size:24px">' . $req['Name'];
+                    if(strcmp($req['Name'], $req['Audit_Name'])!=0)
+                        echo ' <font color="darkred">Submission By: '.$req['Audit_Name'].'</font>';
+                    echo '</div><br/>';
                     echo 'Dvision: <div style="display: inline;font-size:20px">' . $empInfo['DESCR'] . '</div><br/>';
                     echo 'RANK: <div style="display: inline;font-size:20px">' . $empInfo['RANK'] . '</div><br/>';
                     echo '<br/><h2>Requested Information</h2>';
@@ -535,7 +538,16 @@ class request_class {
                     echo 'EMPLOYEE NOTES: <div style="display: inline;font-size:20px">' . $req['Comment'] . '</div><br/><br/><br/>';
 
                     if ($this->config->adminLvl >= 25) {
-                        echo '<h2>Employee Signature: _______________________________________  Date: _____________________</h2>';
+                        if(strcmp($req['Name'], $req['Audit_Name'])!=0)
+                            echo '<h2>Employee Signature: _______________________________________  Date: _____________________</h2>';
+                        else{
+                            $fname = capitolizeFirstLetterOnly($req['Emp_Fname']);
+                            $lname = capitolizeFirstLetterOnly($req['Emp_Lname']);
+                            echo '<h2>Employee Signature:                                
+                                <div id="HaloSignature">'.
+                                    '&nbsp;&nbsp;&nbsp;&nbsp;'.$fname. ' '.$lname.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>'.
+                                '  Date: <div id="HaloSignature">&nbsp;&nbsp;&nbsp;&nbsp;'.$req['Submit_Date'].'&nbsp;&nbsp;&nbsp;&nbsp;</div></h2>';
+                        }
                         echo '<div class="divider"></div>';
                     }
                     echo '<h1>O.I.C.</h1>';
