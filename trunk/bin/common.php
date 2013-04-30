@@ -563,4 +563,11 @@ function moveTablesOnSelect($theTable, $selectedValues = array(array()), $rowToS
     //popUpMessage($debug);
 
 }
+function capitolizeFirstLetterOnly($string){
+    $temp = strtolower($string);
+    $newString = strtoupper(substr($temp, 0, 1));
+    $newString .= substr($temp, 1);
+    
+    return $newString;
+}
 ?>
