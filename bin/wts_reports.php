@@ -76,7 +76,7 @@ function hrPayrolReportByEmployee($config){
             //echo '<div align="center"><a href="'.$_SERVER['REQUEST_URI'].'">Back</a></div>';
 //            echo '<form method="POST">';
             echo ' <input type="submit" name="backBtn" value="Back To Employee Counts" /></div><Br/>';
-            $hiddenInputs = '<input type="hidden" name="viewDetailsBtn" value="true" />';
+            $hiddenInputs .= '<input type="hidden" name="viewDetailsBtn" value="true" />';
             $timeReport->filters .= $timeReport->db->getTimeRequestFiltersByEmpID($empID);
             $requests->showTimeRequestTable($config, $timeReport->filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
             //empTimeReportByPay($config, $startDate, $endDate, $empID);
