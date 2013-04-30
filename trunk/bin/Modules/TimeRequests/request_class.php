@@ -62,7 +62,7 @@ class request_class {
         echo '<input type="hidden" name="formName" value="submittedRequests" />';
         $this->config = $config;
         $this->currentFilters = $filters;
-        $this->hiddenInputs = $hiddenInput;
+        $this->hiddenInput = $hiddenInput;
         $this->handlePOSTVariables();
         if($this->isShowTable){
             if ($this->config->adminLvl < 25) {
@@ -140,11 +140,11 @@ class request_class {
                         <input type="hidden" name="timeRequestTableRows" value="'.$totalRows.'" />
                         <input type="hidden" name="requestID'.$i.'" value="'.$_POST['requestID'.$i].'" />';
                     echo $echo;
-                    $this->hiddenInputs .= $echo;
+                    $this->hiddenInput .= $echo;
                     
                     echo '<input type="submit" name="cancelReqForm" value="Cancel Editing" /></center>';
                     $requestForm = new time_request_form($this->config);
-                    $requestForm->showTimeRequestForm($_POST['requestID'.$i], $this->hiddenInputs);
+                    $requestForm->showTimeRequestForm($_POST['requestID'.$i], $this->hiddenInput);
                     $this->isShowTable = false;
                 }
                 if ($this->btnPushed) {
