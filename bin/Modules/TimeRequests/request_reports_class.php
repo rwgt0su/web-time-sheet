@@ -235,9 +235,9 @@ class request_reports {
                 echo '<option value="0">All</option>';
 
             echo '</select>';
-            $this->getShiftTimes();
         }
         $this->shiftTimeID = $shiftTimeID;
+        $this->getShiftTimes();
         
     }
 
