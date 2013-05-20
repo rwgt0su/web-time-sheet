@@ -158,7 +158,7 @@ class request_reports {
 
             if (isset($_POST['divisionID'])) {
                 $myDivID = $_POST['divisionID'];
-                popupmessage('isset '.$_POST['divisionID']);
+                //popupmessage('isset '.$_POST['divisionID']);
             } else {
                 if ($this->config->adminLvl >= 50) {
                     $myDivID = "All";
