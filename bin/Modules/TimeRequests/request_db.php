@@ -233,9 +233,9 @@ function getFilterEmpID($config, $empID){
 function getLimitFilter($config, $prevNum, $limit){
     return " LIMIT ".$config->mysqli->real_escape_string($prevNum).",  ".$config->mysqli->real_escape_string($limit);
 }
-function getFilerDivision($config, $divID){
+function getFilerDivision($config, $divID, $table="REQ."){
     if($divID != 'All')
-        $return = " AND REQ.DIVISIONID = '".$config->mysqli->real_escape_string($divID). "'";
+        $return = " AND ".$table."DIVISIONID = '".$config->mysqli->real_escape_string($divID). "'";
     else
         $return = '';
     return $return;
