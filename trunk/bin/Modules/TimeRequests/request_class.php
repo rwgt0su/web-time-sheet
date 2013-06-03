@@ -88,8 +88,8 @@ class request_class {
             if ($this->toExpunge) {
                 echo '</form>';
                 $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
-                        <input type="hidden" name="expungeBtn1" value="true" />
-                        <input type="hidden" name="refNo1" value="' . $this->toExpungeRefNo . '" />
+                        <input type="hidden" name="expungeBtn5" value="true" />
+                        <input type="hidden" name="refNo5" value="' . $this->toExpungeRefNo . '" />
                         ';
                 $this->expungeRequest($this->hiddenInput);
             }
@@ -454,23 +454,33 @@ class request_class {
             }
         } else {
 
-            if ($confirmBtn && !empty($_POST['expungedReason']) && $_SESSION['admin']) {
-                $myq = "UPDATE REQUEST 
-                    SET STATUS='EXPUNGED',
-                    HRAPP_ID='0',
-                    EX_REASON='" . $this->config->mysqli->real_escape_string($_POST['expungedReason']) . "',
-                    AUDITID='" . $this->config->mysqli->real_escape_string($_SESSION['userIDnum']) . "',
-                    IP= INET_ATON('" . $this->config->mysqli->real_escape_string($_SERVER['REMOTE_ADDR']) . "')
-                    WHERE REFER='" . $this->config->mysqli->real_escape_string($this->toExpungeRefNo) . "'";
-                $result = $this->config->mysqli->query($myq);
+            if ($confirmBtn && !empty($_POST['expungedReason'])) {
+                $tempRequestForm = new time_request_form($this->config);
+                $tempRequestForm->reqID = $this->toExpungeRefNo;
+                if($_SESSION['admin'] || ($_SESSION['userIDnum'] == $tempRequestForm->empID)){
+                    $myq = "UPDATE REQUEST 
+                        SET STATUS='EXPUNGED',
+                        HRAPP_ID='0',
+                        EX_REASON='" . $this->config->mysqli->real_escape_string($_POST['expungedReason']) . "',
+                        AUDITID='" . $this->config->mysqli->real_escape_string($_SESSION['userIDnum']) . "',
+                        IP= INET_ATON('" . $this->config->mysqli->real_escape_string($_SERVER['REMOTE_ADDR']) . "')
+                        WHERE REFER='" . $this->config->mysqli->real_escape_string($this->toExpungeRefNo) . "'";
+                    $result = $this->config->mysqli->query($myq);
 
-                if (!SQLerrorCatch($this->config->mysqli, $result, $myq, $debug = false)) {
-                    addLog($this->config, 'Expunged Time Request with Ref# ' . $this->toExpungeRefNo);
-                    popUpMessage('Request ' . $this->toExpungeRefNo . ' expunged. 
-                                <div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
-                                ' . $extraInputs . '                     
-                                <input type="submit" name="okBtn" value="OK" />
-                                </form></div>');
+                    if (!SQLerrorCatch($this->config->mysqli, $result, $myq, $debug = false)) {
+                        addLog($this->config, 'Expunged Time Request with Ref# ' . $this->toExpungeRefNo);
+                        popUpMessage('Request ' . $this->toExpungeRefNo . ' expunged. 
+                                    <div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
+                                    ' . $extraInputs . '                     
+                                    <input type="submit" name="okBtn" value="OK" />
+                                    </form></div>');
+                    }
+                } else{
+                    popUpMessage('Cannot Expunge request, please see a supervisor 
+                        <div align="center"><form method="POST" action="' . $_SERVER['REQUEST_URI'] . '">
+                        ' . $extraInputs . '                     
+                        <input type="submit" name="okBtn" value="OK" />
+                        </form></div>');
                 }
             } else {
                 if (!isset($_POST['okBtn'])) {
