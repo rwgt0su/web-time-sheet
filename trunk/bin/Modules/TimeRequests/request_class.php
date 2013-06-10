@@ -88,8 +88,8 @@ class request_class {
             if ($this->toExpunge) {
                 echo '</form>';
                 $this->hiddenInput .= '<input type="hidden" name="timeRequestTableRows" value="2" />
-                        <input type="hidden" name="expungeBtn5" value="true" />
-                        <input type="hidden" name="refNo5" value="' . $this->toExpungeRefNo . '" />
+                        <input type="hidden" name="expungeBtn1" value="true" />
+                        <input type="hidden" name="refNo1" value="' . $this->toExpungeRefNo . '" />
                         ';
                 $this->expungeRequest($this->hiddenInput);
             }
@@ -435,7 +435,7 @@ class request_class {
 
     public function expungeRequest($extraInputs = '') {
         $confirmBtn = isset($_POST['confirmBtn']) ? true : false;
-
+        
         if ($this->toUnExpunge) {
             if (!isset($_POST['okBtn'])) {
                 $myq = "UPDATE REQUEST 
