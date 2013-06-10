@@ -40,7 +40,7 @@ class request_reports {
             $this->showDivisionDropDown();
         $this->filters .= getTimeRequestFiltersBetweenDates($this->config, $this->startDate, $this->endDate);
         //$filters .= " AND (STATUS='APPROVED' OR STATUS='DENIED')";
-        $hiddenInputs = $this->setHiddenPostInputs();
+        $hiddenInputs .= $this->setHiddenPostInputs();
         $requests->debug = false;
         $requests->showTimeRequestTable($this->config, $this->filters, $orderBy = "ORDER BY REFER DESC", $hiddenInputs);
     }
