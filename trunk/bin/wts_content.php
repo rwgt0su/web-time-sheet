@@ -175,7 +175,7 @@ function displayContent($wts_content, $config){
         if(dirname($_SERVER['REQUEST_URI']) != "")
             $reqURI = dirname($_SERVER['REQUEST_URI'])."/";
         else
-            $reqURI = "";
+            $reqURI = dirname($_SERVER['REQUEST_URI']);
         if(str_replace($reqURI, "", $_SERVER['PHP_SELF']) != "printFriendly.php" && $config->showPrinterFriendly){
             echo '<a target="_blank" href="printFriendly.php?' . str_replace($_SERVER['PHP_SELF']."?", "", $_SERVER['REQUEST_URI']) . '"> Print Tables</a>';
         }
