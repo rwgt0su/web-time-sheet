@@ -238,11 +238,11 @@ function SQLerrorCatch($mysqli, $result, $myq='', $debug=false) {
     catch (Exception $e) {
         $message = $e->getMessage();
         $isError = true;
-        popUpMessage($dbgMsg.'<br/><br/> '.$message, "Error Message");
+        popUpMessage($dbgMsg.'<br/><br/> '.$message, "Error Message", $width='800');
         return true;
     }
     if ($debug && !$isError){
-        popUpMessage($dbgMsg, "Debug Message");
+        popUpMessage($dbgMsg, "Debug Message", $width='800');
     }
     
     return $isError;
