@@ -172,10 +172,9 @@ function displayContent($wts_content, $config){
                 <div class="clear"></div></div><div class="divider"></div>
             <?php
         }
-        if(!empty(dirname($_SERVER['REQUEST_URI'])))
-            $reqURI = dirname($_SERVER['REQUEST_URI'])."/";
-        else
-            $reqURI = dirname($_SERVER['REQUEST_URI']);
+        $reqURI = dirname($_SERVER['REQUEST_URI']);
+        if(!empty($reqURI))
+            $reqURI = $reqURI."/";
         popupmessage(str_replace($reqURI, "", $_SERVER['PHP_SELF']));
         if((str_replace($reqURI, "", $_SERVER['PHP_SELF']) != "printFriendly.php" || str_replace($reqURI, "", $_SERVER['PHP_SELF']) != "/printFriendly.php") && $config->showPrinterFriendly){
             echo '<a target="_blank" href="printFriendly.php?' . str_replace($_SERVER['PHP_SELF']."?", "", $_SERVER['REQUEST_URI']) . '"> Print Tables</a>';
