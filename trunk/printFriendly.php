@@ -3,13 +3,6 @@
 <?php
 require_once('bin/common.php');
 ?>
-<script language="Javascript1.2">
-  <!--
-  function printpage() {
-  window.print();
-  }
-  //-->
-</script>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -21,6 +14,13 @@ require_once('bin/common.php');
         <link type="text/css" href="templetes/DarkTemp/styles/print.css" rel="stylesheet" media="print" />
         <link rel="stylesheet" href="templetes/DarkTemp/styles/tableSort.css" />
         <script type="text/javascript" src="bin/jQuery/js/tableSort.js"></script>
+        <script language="Javascript1.2">
+            <!--
+            function printpage() {
+            window.print();
+            }
+            //-->
+        </script>
 
     </head>
     <body onload="printpage()"> 
