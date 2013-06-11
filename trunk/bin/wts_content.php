@@ -175,7 +175,7 @@ function displayContent($wts_content, $config){
         $reqURI = dirname($_SERVER['REQUEST_URI']);
         //if(!empty($reqURI))
             $reqURI = $reqURI."/";
-        popupmessage(str_replace($reqURI, "", $_SERVER['PHP_SELF']));
+        popupmessage(str_replace($reqURI, "", $_SERVER['PHP_SELF']).' URI '.$reqURI.' self '.$_SERVER['PHP_SELF']);
         if((str_replace($reqURI, "", $_SERVER['PHP_SELF']) != "printFriendly.php" || str_replace($reqURI, "", $_SERVER['PHP_SELF']) != "/printFriendly.php") && $config->showPrinterFriendly){
             echo '<a target="_blank" href="printFriendly.php?' . str_replace($_SERVER['PHP_SELF']."?", "", $_SERVER['REQUEST_URI']) . '"> Print Tables</a>';
         }
