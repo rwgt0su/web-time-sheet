@@ -104,7 +104,7 @@ Class request_db {
                     VALUES ('".$reqClass->empID."', '" . date('Y-m-d', $submitForDate) . "',
                         '".$reqClass->begTime1.$reqClass->begTime2."00', '".$reqClass->endTime1.$reqClass->endTime2."00',
                         '".$reqClass->shiftHours."', '".$reqClass->subTypeID."', '".$reqClass->typeID."', 
-                        '".$reqClass->empComment."', 'PENDING', NOW(), '".$reqClass->hrNotes."', 
+                        '".$this->config->mysqli->real_escape_string($reqClass->empComment)."', 'PENDING', NOW(), '".$this->config->mysqli->real_escape_string($reqClass->hrNotes)."', 
                         '".$_SESSION['userIDnum']."',INET_ATON('".$_SERVER['REMOTE_ADDR']."'))";
         $result = getQueryResult($this->config, $myq, $debug = false);
         return $result;
