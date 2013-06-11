@@ -173,7 +173,7 @@ function displayContent($wts_content, $config){
             <?php
         }
         $reqURI = dirname($_SERVER['REQUEST_URI']);
-        if(!empty($reqURI))
+        //if(!empty($reqURI))
             $reqURI = $reqURI."/";
         popupmessage(str_replace($reqURI, "", $_SERVER['PHP_SELF']));
         if((str_replace($reqURI, "", $_SERVER['PHP_SELF']) != "printFriendly.php" || str_replace($reqURI, "", $_SERVER['PHP_SELF']) != "/printFriendly.php") && $config->showPrinterFriendly){
