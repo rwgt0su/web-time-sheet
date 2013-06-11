@@ -545,11 +545,11 @@ class request_class {
                     echo 'START TIME: <div style="display: inline;font-size:20px">' . $req['Start'] . '</div><br/>';
                     echo 'END TIME: <div style="display: inline;font-size:20px">' . $req['End'] . '</div><br/>';
                     echo 'CALCULATED HOURS: <div style="display: inline;font-size:20px">' . $req['Hrs'] . '</div><br/>';
-                    echo 'EMPLOYEE NOTES: <div style="display: inline;font-size:20px">' . $req['Comment'] . '</div><br/><br/><br/>';
+                    echo 'EMPLOYEE NOTES: <div style="display: inline;font-size:20px">' . $req['Comment'] . '</div><br/><br/>';
 
                     if ($this->config->adminLvl >= 25) {
                         if(strcmp($req['Name'], $req['Audit_Name'])!=0)
-                            echo '<h2>Employee Signature: _______________________________________  Date: _____________________</h2>';
+                            echo '<br/><h2>Employee Signature: _______________________________________  Date: _____________________</h2>';
                         else{
                             $fname = capitolizeFirstLetterOnly($req['Emp_Fname']);
                             $lname = capitolizeFirstLetterOnly($req['Emp_Lname']);
