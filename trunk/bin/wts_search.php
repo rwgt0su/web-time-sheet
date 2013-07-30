@@ -285,6 +285,7 @@ function displayUserLookup($config) {
             $dateSelect = isset($_POST['dateSelect']) ? $_POST['dateSelect'] : '' ;
             $invLogComments = isset($_POST['nvLogComments']) ? $mysqli->real_escape_string(strtoupper($_POST['nvLogComments'])) : '';
             $gpID = isset($_POST['gpID']) ? $_POST['gpID'] : 0;
+            $divID = isset($_POST['divisionID']) ? $_POST['divisionID'] : false;
             
             if($num_deputies > 0){
                 $i=0;
@@ -310,12 +311,14 @@ function displayUserLookup($config) {
             echo '<input type="hidden" name="checkOutType" value="'.$checkOutType.'" />';
             echo '<input type="hidden" name="dateSelect" value="' . $dateSelect . '" />';
             echo '<input type="hidden" name="invLogComments" value="' . $invLogComments . '" />';
+            echo '<input type="hidden" name="divisionID" value="' . $divID . '" />';
             echo '<input type="hidden" name="addBtn" value="true" />';
         }
         $mysqli = $config->mysqli;
         //Get additional search inputs
         $searchUser = isset($_POST['searchUser']) ? $mysqli->real_escape_string($_POST['searchUser']) : '';
-        $isFullTime = isset($_POST['fullTime']) ? true : false;
+        //$isFullTime = isset($_POST['fullTime']) ? true : false;
+        $isFullTime = false;
         $isReserve = isset($_POST['reserve']) ? true : false;
         $searchFullTime = isset($_POST['searchFullTime']) ? $_POST['searchFullTime'] : true;
         $searchReserves = isset($_POST['searchReserves']) ? $_POST['searchReserves'] : true;
@@ -337,12 +340,12 @@ function displayUserLookup($config) {
         
         echo '<h3>Search for Employees by Last Name: </h3>';
         //show check boxes and keep checked box checked after results return
-        if($searchFullTime){
-            echo '<input type="checkbox" name="fullTime" ';
-            if ($isFullTime)
-                echo 'CHECKED';
-            echo ' />Full Time Employee&nbsp;&nbsp;  ';
-        }
+//        if($searchFullTime){
+//            echo '<input type="checkbox" name="fullTime" ';
+//            if ($isFullTime)
+//                echo 'CHECKED';
+//            echo ' />Full Time Employee&nbsp;&nbsp;  ';
+//        }
         if($searchReserves){
             echo '<input type="checkbox" name="reserve" ';
             if ($isReserve)
