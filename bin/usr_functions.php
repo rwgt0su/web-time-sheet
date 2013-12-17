@@ -547,7 +547,7 @@ function displayUpdateProfile($config){
 
                         <tr><td>Emergency Contact: </td><td> <?php echo $emergency; ?> </td></tr> 
 
-                        <tr><td></td><td><?php if($_SESSION['userIDnum']==$foundUserID) echo '<input type="submit" name="updateBtn" value="Update Profile" />'; ?></td></tr>
+                        <tr><td></td><td><?php if($_SESSION['userIDnum']==$foundUserID || $config->adminLvl >= 25) echo '<input type="submit" name="updateBtn" value="Update Profile" />'; ?></td></tr>
                         <?php 
                     }
                     ?>
