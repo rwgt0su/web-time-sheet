@@ -1442,7 +1442,7 @@ function showItemExchange($config, $radioLogID) {
                     SQLerrorCatch($mysqliReserve, $result, $myq);
                     $row = $result->fetch_assoc();
                 } else {
-                    $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME FROM EMPLOYEE WHERE IDNUM=' . $deputyID[$i];
+                    $myq = 'SELECT RADIO, CELLPH, LNAME, FNAME, DIVISIONID FROM EMPLOYEE WHERE IDNUM=' . $deputyID[$i];
                     $result = $mysqli->query($myq);
                     SQLerrorCatch($mysqli, $result, $myq);
                     $row = $result->fetch_assoc();
@@ -1457,7 +1457,7 @@ function showItemExchange($config, $radioLogID) {
                 echo '<br/>';
                 if ($exchangeBtn) {
                     $hiddenInputs = '<input type="hidden" value="'.$_POST['dateSelect'].'" name="dateSelect">
-                        <input type="hidden" name="divisionID" value="'.$_POST['divisionID'].'" />
+                        <input type="hidden" name="divisionID" value="'.$row['DIVISIONID'].'" />
                         <input type="hidden" value="'.$_POST['exchangeLogID'].'" name="exchangeLogID">
                         <input type="hidden" value="'.$_POST['itemID'].'" name="itemID">
                         <input type="hidden" value="'.$deputyID[$i].'" name="deputyID0">
@@ -1472,7 +1472,7 @@ function showItemExchange($config, $radioLogID) {
                         SQLerrorCatch($mysqli, $noteResult);
 
                         $tempReserve = isset($_POST['isReserve' . $i]) ? '1' : '0';
-                        $insertLogID = checkOutItem($config, $deputyID[$i], $row['RADIO'], $radioID, $item['itemTypeID'], "SHIFT", $tempReserve, "0", $divID, $noLog = true);
+                        $insertLogID = checkOutItem($config, $deputyID[$i], $row['RADIO'], $radioID, $item['itemTypeID'], "SHIFT", $tempReserve, "0", $row['DIVISIONID'], $noLog = true);
 
                         addLog($config, 'Exchanged Log Ref #' . $radioLogID . ' with Ref #' . $insertLogID);
                         echo '<br/><font color="red">Exchanged Ref #' . $radioLogID . ' with Ref #' . $insertLogID . '</font><br/>';
