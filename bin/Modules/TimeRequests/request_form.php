@@ -553,7 +553,7 @@ class time_request_form {
                 echo '<font color="red">Must have an end time</font>';
                 $noErrors = false;
             }
-        } elseif (($this->typeID == '5' || $this->typeID == '6')) {
+        } elseif (($this->typeID == '5' || $this->typeID == '6') && ($this->subTypeID != '13')) {
             //Is Overtime Pay or AT Gain
             if (strtotime(date('Y-m-d', strtotime($this->useDate))) > strtotime(date('Y-m-d'))) {
                 //Current Date must be less than the submitted date
