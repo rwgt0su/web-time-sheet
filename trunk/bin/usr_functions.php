@@ -139,7 +139,7 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
         //show SQL error msg if query failed
         if (!$result) {
             throw new Exception("Database Error [{$mysqli->errno}] {$mysqli->error}");
-        }
+        } else {}
         
         //no loop, should be exactly one result
         $resultAssoc = $result->fetch_assoc(); 
@@ -231,14 +231,14 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
        else{
             if ($user != "" && $pass != "") {
                 //Attempt login and registration for Mahoning County Domain
-                if(strcmp($domain, "MAHONINGCO") == 0){
+//                if(strcmp($domain, "MAHONINGCO") == 0){
                     $ldap_domain = $config->ldap_MCO_domain;
                     $cnx = ldap_connect($config->ldap_MCO_server);
-                }
-                else{
-                    $ldap_domain =$config->domain;
-                    $cnx = ldap_connect($config->ldap_server);
-                }
+//                }
+//                else{
+//                    $ldap_domain =$config->domain;
+//                    $cnx = ldap_connect($config->ldap_server);
+//                }
                 $ldaprdn = $user . '@' . $ldap_domain;
                 ldap_set_option($cnx, LDAP_OPT_PROTOCOL_VERSION, 3);  //Set the LDAP Protocol used by your AD service
                 ldap_set_option($cnx, LDAP_OPT_REFERRALS, 0);         //This was necessary for my AD to do anything
@@ -256,16 +256,27 @@ function loginLDAPUser($user,$pass,$config, $domain=false){
                         else
                             $dn = $dn . ",DC=" . $dc;
                     }
-                    if(strcmp($domain, "MAHONINGCO") == 0)
-                        $dn = $config->ldap_MCO_OU.$dn;
+//                    if(strcmp($domain, "MAHONINGCO") == 0)
+//                        $dn = $config->ldap_MCO_OU.$dn;
                     $userToFind = $user;
                     $filter = "(&(objectCategory=person)(objectClass=user)";
                     $filter.="(|(samaccountname=*" . $userToFind . "*)(sn=*" . $userToFind . "*)(displayname=*" . $userToFind . "*)";
                     $filter.="(mail=*" . $userToFind . "*)(department=*" . $userToFind . "*)(title=*" . $userToFind . "*)))";  //Search fields
+                    $isAuthOU = false;
+                    $dnAppend = $dn;
+                    foreach ($config->ldap_MCSO_OUS as $dn) {
+                        $dn = $dn.$dnAppend;
+                        $res = ldap_search($cnx, $dn, $filter);
+                        $info = ldap_get_entries($cnx, $res);
+                        if($info['count'] > 0){
+                            $isAuthOU = true;
+                            break;
+                        }
+                    }
                     $res = ldap_search($cnx, $dn, $filter);
                     
                     $info = ldap_get_entries($cnx, $res);
-                    if($info['count'] > 0){
+                    if($isAuthOU){
                         if(strcmp($domain, "MAHONINGCO") == 0)
                             registerUser($user, $pass, $pass, $admin, "1", "1");
                         else
@@ -760,7 +771,6 @@ function displayLogin($config){
                                         <?php if (isset($_POST['submitBtn'])) echo "style=\"background:#FFFFFF;border:1px solid #FF0000;\""; ?>/></td></tr>
                 <tr><td>Domain:</td><td> 
                         <select name="domainOPT">
-                            <option value="SHERIFF">SHERIFF</option>
                             <option value="MAHONINGCO">MAHONING COUNTY</option>
                         </select> 
                                         </td></tr>
