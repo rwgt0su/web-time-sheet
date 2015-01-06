@@ -17,6 +17,7 @@ Class Config {
     public $anchorID;
     public $isGoToAnchor;
     public $showPrinterFriendly;
+    public $ldap_MCSO_OUS;
 
     public function Config() {
         $this->mysqli = connectToSQL();
@@ -53,6 +54,7 @@ Class Config {
         $this->ldap_MCO_domain = "mahoningcountyoh.gov";
         $this->ldap_MCO_server = "10.2.35.25";
         $this->ldap_MCO_OU = "OU=Sheriff,OU=Departments,";
+        $this->ldap_MCSO_OUS = array("OU=Sheriff,OU=Departments,", "OU=E-911,OU=ADMIN BLDG,OU=Departments,");
     }
 
     public function getTitle() {
