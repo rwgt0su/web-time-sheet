@@ -114,7 +114,7 @@ function viewClandar($config, $month, $year){
             LEFT JOIN WTS_SUBTIMETYPES AS SUB ON SUB.IDNUM=REQUEST.SUBTYPE_ID
 
             WHERE 1 ".$requestReport->filters."
-                AND DATE_FORMAT(USEDATE,'%m') = '".date('m', mktime(0, 0, 0, $month, 1, $year))."'
+                AND DATE_FORMAT(USEDATE,'%m-%Y') = '".date('m-Y', mktime(0, 0, 0, $month, 1, $year))."'
                 AND REQUEST.STATUS = 'APPROVED'
             GROUP BY REQUEST.USEDATE, IF(REQUEST.TIMETYPEID IS NULL, SUB.IDNUM, NEWTYPE_ID)
             ORDER BY REQUEST.USEDATE";
