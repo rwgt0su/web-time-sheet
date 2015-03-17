@@ -60,8 +60,9 @@ function displayAnnounce($config){
         
         //display announcements based on selected division
         $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH` FROM `NEWS` 
-            WHERE `PUBLISH` = 1 
+            WHERE `PUBLISH` = 1
             ".$divq."
+            ORDER BY TSTAMP ASC
             LIMIT 0 , 30 ";
         $result = $mysqli->query($myq);
 
@@ -80,6 +81,7 @@ function displayAnnounce($config){
             $myq = "SELECT `SHORTNAME` , `TITLE` , `BODY` , `PUBLISH` FROM `NEWS` 
                 WHERE `PUBLISH` = 1 
                 AND DIVID = '1'
+                ORDER BY TSTAMP DESC
                 LIMIT 0 , 30 ";
             $result2 = $mysqli->query($myq);
 
