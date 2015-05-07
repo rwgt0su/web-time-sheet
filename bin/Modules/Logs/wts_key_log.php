@@ -4,14 +4,14 @@ function showKeyLogDetails($config, $keyLogID, $isEditing = false, $isApprove = 
     $checkOutKey = isset($_POST['addKeyLog']) ? true : false;
     $checkInKey = isset($_POST['checkInKey']) ? true : false;
     $updateKeyLog = isset($_POST['updateKeyLog']) ? true : false;
-    $num_deputies = isset($_POST['num_deputies']) ? $_POST['num_deputies'] : 0;
-    $totalRows = isset($_POST['totalRows']) ? $_POST['totalRows'] : 0;
     $itemIDs = '';
     $debug = '';
 
     $mysqli = $config->mysqli;
     $mysqliReserve = connectToSQL($reserveDB = TRUE);
 
+    $num_deputies = isset($_POST['num_deputies']) ? $mysqli->real_escape_string($_POST['num_deputies']) : 0;
+    $totalRows = isset($_POST['totalRows']) ? $mysqli->real_escape_string($_POST['totalRows']) : 0;
     $invLogComments = isset($_POST['invLogCommments']) ? $mysqli->real_escape_string(strtoupper($_POST['invLogCommments'])) : '';
 
     if ($checkOutKey) {
@@ -103,7 +103,7 @@ function showKeyLogDetails($config, $keyLogID, $isEditing = false, $isApprove = 
                 $groupID = $nextGroupID;
 
             for ($z = 0; $z < $totalItems; $z++) {
-                $keyLogID = checkOutItem($config, '', '', $itemIDs[$z], $itemType[$z], $checkOutType, '0', $groupID, false, $invLogComments);
+                $keyLogID = checkOutItem($config, '', '', $itemIDs[$z], $itemType[$z], $checkOutType, '0', $groupID, $divID, false, $invLogComments);
             }
             echo '<input type="submit" name="goBtn" value="Back To Logs" />';
         } else {
