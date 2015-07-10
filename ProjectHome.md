@@ -1,0 +1,1 @@
+PHP web interface to collect employee work hours, store data in an SQL database, and generate reports using SQL queries.
